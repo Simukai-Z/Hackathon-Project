@@ -17,4 +17,5 @@ _**Feature ideas:​**_
 1. **Aid Students with different learning disabilitys, ADHD Dislexia ect.**
 
 1. **Ability to help those with different learning styles.​**
+
 (side note: make sure to fact check AI when gathering information)
