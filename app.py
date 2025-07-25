@@ -1,11 +1,32 @@
-import json
 import os
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from uuid import uuid4
+import json
+import dotenv
 import datetime
+from uuid import uuid4
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from openai import AzureOpenAI
+
+dotenv.load_dotenv()
+AOAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AOAI_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+MODEL_NAME = "gpt-35-turbo"
 
 app = Flask(__name__)
 app.secret_key = 'studycoach_secret_key'
+
+# --- API: Reset AI Chat History ---
+@app.route('/reset_history', methods=['POST'])
+def reset_history():
+    if 'user_type' not in session or 'email' not in session:
+        return jsonify({'success': False})
+    user_type = session['user_type']
+    email = session['email']
+    history_key = f"ai_history_{user_type}_{email}"
+    if history_key in session:
+        session.pop(history_key)
+        session.modified = True
+    return jsonify({'success': True})
+
 
 USERS_FILE = 'users.json'
 CLASSROOMS_FILE = 'classrooms.json'
@@ -29,6 +50,227 @@ def load_classrooms():
 def save_classrooms(classrooms):
     with open(CLASSROOMS_FILE, 'w') as f:
         json.dump(classrooms, f, indent=2)
+
+
+openai_client = AzureOpenAI(
+    api_key=AOAI_KEY,
+    azure_endpoint=AOAI_ENDPOINT,
+    api_version="2024-05-01-preview"
+)
+
+# --- API: Get AI Personality ---
+@app.route('/get_personality', methods=['GET'])
+def get_personality():
+    if 'user_type' not in session or 'email' not in session:
+        return jsonify({'personality': ''})
+    users = load_users()
+    email = session['email']
+    user_type = session['user_type']
+    if user_type == 'student':
+        user = next((u for u in users['students'] if u['email'] == email), None)
+    else:
+        user = next((u for u in users['teachers'] if u['email'] == email), None)
+    personality = user.get('ai_personality', '') if user else ''
+    return jsonify({'personality': personality})
+
+# --- API: Save AI Personality ---
+@app.route('/save_personality', methods=['POST'])
+def save_personality():
+    if 'user_type' not in session or 'email' not in session:
+        return jsonify({'success': False})
+    users = load_users()
+    email = session['email']
+    user_type = session['user_type']
+    data = request.get_json()
+    personality = data.get('personality', '')
+    if user_type == 'student':
+        user = next((u for u in users['students'] if u['email'] == email), None)
+    else:
+        user = next((u for u in users['teachers'] if u['email'] == email), None)
+    if user is not None:
+        user['ai_personality'] = personality
+        save_users(users)
+        return jsonify({'success': True})
+    return jsonify({'success': False})
+# --- AI Assistant Page ---
+@app.route('/ai')
+def ai_page():
+    return render_template('ai_assistant.html')
+
+# --- AI Chat Endpoint ---
+@app.route('/chat', methods=['POST'])
+def chat():
+    # Get user info from session
+    from flask import session
+    users = load_users()
+    classrooms_data = load_classrooms()
+    user_type = session.get('user_type')
+    email = session.get('email')
+    assignments = []
+    rubrics = []
+    class_name = None
+    data = request.get_json()
+    ai_personality = data.get('personality', 'You are a helpful tutor that follows rubrics and teaches through guidance.')
+    user_prompt = data.get('prompt', '')
+    file_content = data.get('fileContent', '')
+
+    # If there's file content, add it to the context
+    if file_content:
+        user_prompt = f"{user_prompt}\n[Student's Uploaded Content]:\n{file_content}"
+
+    # Get all accessible assignments and rubrics
+    accessible_classes = []
+    if user_type == 'student':
+        student = next((s for s in users['students'] if s['email'] == email), None)
+        if student and student.get('classrooms'):
+            accessible_classes = [c for c in classrooms_data['classrooms'] if c['code'] in student['classrooms']]
+            # Get currently selected class for context
+            selected_class = data.get('class_code') or (student['classrooms'][0] if student['classrooms'] else None)
+            class_obj = next((c for c in accessible_classes if c['code'] == selected_class), None)
+            if class_obj:
+                class_name = class_obj.get('class_name')
+    elif user_type == 'teacher':
+        teacher = next((t for t in users['teachers'] if t['email'] == email), None)
+        if teacher:
+            accessible_classes = [c for c in classrooms_data['classrooms'] if c['teacher_email'] == email]
+            selected_class = data.get('class_code')
+            class_obj = next((c for c in accessible_classes if c['code'] == selected_class), None) if selected_class else (accessible_classes[0] if accessible_classes else None)
+            if class_obj:
+                class_name = class_obj.get('class_name')
+    
+    # Collect all assignments and rubrics from accessible classes
+    all_assignments = []
+    all_rubrics = []
+    for c in accessible_classes:
+        # Add class name to assignments and rubrics for context
+        for assignment in c.get('assignments', []):
+            assignment_copy = assignment.copy()
+            assignment_copy['class_name'] = c.get('class_name', '')
+            all_assignments.append(assignment_copy)
+        for rubric in c.get('rubrics', []):
+            rubric_copy = rubric.copy()
+            rubric_copy['class_name'] = c.get('class_name', '')
+            all_rubrics.append(rubric_copy)
+    
+    assignments = all_assignments
+    rubrics = all_rubrics
+
+    # Compose rubric summary for AI
+    rubric_summary = '\n'.join([f"[{r.get('class_name', '')}] {r.get('title', '')}: {r.get('content', '')}" for r in rubrics])
+    assignment_summary = '\n'.join([f"[{a.get('class_name', '')}] {a.get('title', '')}: {a.get('description', '') or a.get('content', '')}" for a in assignments])
+    
+    current_class_info = f"Current Class: {class_name or 'None selected'}" if class_name else "No specific class selected"
+    
+    # Organize assignments and rubrics by class
+    assignments_by_class = {}
+    rubrics_by_class = {}
+    
+    for a in assignments:
+        class_name = a.get('class_name', 'Unspecified Class')
+        if class_name not in assignments_by_class:
+            assignments_by_class[class_name] = []
+        assignments_by_class[class_name].append(a)
+    
+    for r in rubrics:
+        class_name = r.get('class_name', 'Unspecified Class')
+        if class_name not in rubrics_by_class:
+            rubrics_by_class[class_name] = []
+        rubrics_by_class[class_name].append(r)
+    
+    # Create organized context with clear class separation
+    assignments_by_class_text = []
+    for class_name, class_assignments in assignments_by_class.items():
+        assignments_text = '\n'.join([f"  - {a.get('title', '')}: {a.get('description', '') or a.get('content', '')}" for a in class_assignments])
+        assignments_by_class_text.append(f"{class_name}:\n{assignments_text}")
+    
+    rubrics_by_class_text = []
+    for class_name, class_rubrics in rubrics_by_class.items():
+        rubrics_text = '\n'.join([f"  - {r.get('title', '')}: {r.get('content', '')}" for r in class_rubrics])
+        rubrics_by_class_text.append(f"{class_name}:\n{rubrics_text}")
+
+    context = f"""{current_class_info}
+
+Available Assignments By Class:
+{'='*40}
+{'\n\n'.join(assignments_by_class_text)}
+
+Available Grading Rubrics By Class:
+{'='*40}
+{'\n\n'.join(rubrics_by_class_text)}"""
+
+    system_prompt = f"""{ai_personality}
+
+You are assisting in a classroom environment. Here's your context and instructions:
+
+CURRENT CONTEXT:
+{context}
+
+CORE INSTRUCTIONS:
+1. Always consider which class an assignment or rubric belongs to when providing assistance
+2. When a student asks about an assignment:
+   - First identify which class it belongs to
+   - Use the rubrics specific to that class
+   - If multiple classes have similar assignments, ask for clarification
+3. Guide students through hints and questions, never give direct solutions
+4. For uploaded work:
+   - Match it to the correct class and assignment
+   - Review against the appropriate class rubrics
+   - Provide specific, constructive feedback
+   - Reference the correct class context in your responses
+
+INTERACTION GUIDELINES:
+- Be encouraging and supportive while maintaining academic integrity
+- If a student doesn't specify which class they're asking about, ask for clarification
+- Always frame your responses in the context of the specific class and its requirements
+- Help students understand concepts within their specific class context
+
+Remember: Each class may have different requirements and rubrics, so always ensure you're using the correct context."""
+
+    # --- Message History Logic ---
+    history_key = f"ai_history_{user_type}_{email}"
+    if history_key not in session:
+        session[history_key] = []
+    # Add user message
+    session[history_key].append({"role": "user", "content": user_prompt})
+    # Build message list: system prompt + history
+    messages = [{"role": "system", "content": system_prompt}] + session[history_key]
+
+    # If history exceeds 10, summarize and restart
+    if len(session[history_key]) > 50:
+        # Summarize history
+        summary_prompt = "Summarize the following conversation between a student/teacher and an AI tutor in 1-2 paragraphs, focusing on the main topics and guidance given.\n" + \
+            "\n".join([f"{m['role']}: {m['content']}" for m in session[history_key]])
+        summary_response = openai_client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that summarizes conversations for context retention."},
+                {"role": "user", "content": summary_prompt}
+            ],
+            max_tokens=200,
+            temperature=0.5
+        )
+        summary = summary_response.choices[0].message.content
+        # Restart history with summary
+        session[history_key] = [
+            {"role": "system", "content": f"Conversation so far (summary): {summary}"}
+        ]
+        # Add the latest user message again
+        session[history_key].append({"role": "user", "content": user_prompt})
+        messages = [{"role": "system", "content": system_prompt}] + session[history_key]
+
+    # Get AI response
+    response = openai_client.chat.completions.create(
+        model=MODEL_NAME,
+        messages=messages,
+        max_tokens=500,
+        temperature=0.6
+    )
+    ai_reply = response.choices[0].message.content
+    # Add AI reply to history
+    session[history_key].append({"role": "assistant", "content": ai_reply})
+    session.modified = True
+
+    return jsonify({'response': ai_reply})
 
 @app.route('/')
 def home():
