@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Sign Up - StudyCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+            <img src="https://img.icons8.com/color/96/000000/microsoft.png" alt="logo" style="height: 48px;">
+            <h1 style="margin: 0;">StudyCoach</h1>
+        </div>
+        <div class="card">
+            <h2>Teacher Sign Up</h2>
+            <form method="post">
+                <input type="text" name="name" placeholder="Full Name">
+                <input type="email" name="email" placeholder="Email">
+                <input type="text" name="school" placeholder="School Name">
+                <input type="text" name="class_name" placeholder="Class Name">
+                <button type="submit">Sign Up</button>
+            </form>
+            <a href="/">Back</a>
+        </div>
+    </div>
+</body>
+</html>

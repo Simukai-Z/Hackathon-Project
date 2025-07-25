@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>StudyCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    {% if session.get('user_type') %}
+        <a href="{{ url_for('logout') }}" style="position: absolute; top: 24px; right: 48px; background: #22314f; color: #fff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1em;">Sign Out</a>
+    {% else %}
+        <a href="{{ url_for('login') }}" style="position: absolute; top: 24px; right: 48px; background: #22314f; color: #fff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1em;">Login</a>
+    {% endif %}
+    <div class="container">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
+            <img src="https://img.icons8.com/color/96/000000/microsoft.png" alt="logo" style="height: 48px;">
+            <h1 style="margin: 0;">StudyCoach</h1>
+        </div>
+        <p>An online learning tool to help students with any coursework</p>
+        <div class="actions">
+            <form action="{{ url_for('teacher_signup') }}" method="get" style="display:inline;">
+                <button type="submit">Sign up as a teacher</button>
+            </form>
+            <form action="{{ url_for('student_signup') }}" method="get" style="display:inline;">
+                <button type="submit">Sign up as a student</button>
+            </form>
+        </div>
+        <div class="main-content">
+            <div class="teachers">
+                <h2>Teachers</h2>
+                <label>Add Assignment</label>
+                <select><option>Class</option></select>
+                <div>
+                    <button>Syllabus</button>
+                    <button>Rubric</button>
+                </div>
+                <label>Add Students</label>
+                <div class="assignment-box">
+                    <b>Assignment 1</b><br>
+                    Alex Johnson<br>
+                    <span>Check your calculations</span>
+                    <span class="score">75 %</span>
+                </div>
+            </div>
+            <div class="students">
+                <h2>Students</h2>
+                <label>Assignment 1</label>
+                <span class="score">75 %</span>
+                <button>Explanations (AI) &gt;</button>
+                <p>Let's go over what you missed and prepare for the next quiz</p>
+                <div class="review-box">
+                    Let's go over what you missed and prepare for the next quiz<br>
+                    <button>Video</button>
+                    <button>Flashcards</button>
+                    <button>Practice</button>
+                    <button>ABC More</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

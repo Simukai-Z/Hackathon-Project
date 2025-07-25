@@ -1,0 +1,112 @@
+{
+  "classrooms": [
+    {
+      "code": "d2e9cbc7",
+      "teacher_email": "Roblox@gmail.com",
+      "class_name": "EPIC",
+      "school": "Roblox",
+      "students": [
+        "epicrbot20099@gmail.com"
+      ],
+      "assignments": [
+        {
+          "id": "6138bbd3-a14d-45ac-8c35-070c53b350ce",
+          "title": "Hii",
+          "content": "",
+          "description": "Helloo students",
+          "rubric_id": "",
+          "timestamp": "2025-07-25T18:25:23.628595",
+          "teacher_email": "Roblox@gmail.com"
+        },
+        {
+          "id": "5c90e59c-4328-4ebf-ae99-a8be94f2cedd",
+          "title": "Hallo",
+          "content": "",
+          "description": "",
+          "rubric_id": "",
+          "timestamp": "2025-07-25T18:29:52.099858",
+          "teacher_email": "Roblox@gmail.com"
+        },
+        {
+          "id": "473c73c5-879c-4488-900e-a7857e90941d",
+          "title": "xcnbn",
+          "content": "",
+          "description": "",
+          "rubric_id": "",
+          "timestamp": "2025-07-25T18:30:31.196185",
+          "teacher_email": "Roblox@gmail.com"
+        },
+        {
+          "id": "9c084d4f-ec61-4275-b9bb-47275d273a88",
+          "title": "hhii",
+          "content": "",
+          "description": "",
+          "rubric_id": "",
+          "timestamp": "2025-07-25T18:30:52.903826",
+          "teacher_email": "Roblox@gmail.com"
+        },
+        {
+          "id": "d09e5290-7398-4008-981e-b445426e5191",
+          "title": "g",
+          "content": "text",
+          "description": "",
+          "rubric_id": "",
+          "timestamp": "2025-07-25T18:31:18.273004",
+          "teacher_email": "Roblox@gmail.com"
+        },
+        {
+          "id": "1a16d9da-4b83-4e58-9b64-227469eb7052",
+          "title": "bzb",
+          "content": "zbb",
+          "description": "zbzxbz",
+          "rubric_id": "",
+          "timestamp": "2025-07-25T18:31:27.695900",
+          "teacher_email": "Roblox@gmail.com"
+        },
+        {
+          "id": "18c10b17-7553-4d38-9318-a313c9e88b5f",
+          "title": "ts better work",
+          "content": "Helloo students",
+          "description": "",
+          "rubric_id": "",
+          "timestamp": "2025-07-25T18:42:13.089847",
+          "teacher_email": "Roblox@gmail.com"
+        },
+        {
+          "id": "77b3a162-0548-461b-9194-06e7b4f193d7",
+          "title": "EYAHHH IT WORKED!! ",
+          "content": "",
+          "description": "",
+          "rubric_id": "",
+          "timestamp": "2025-07-25T18:42:31.461399",
+          "teacher_email": "Roblox@gmail.com"
+        }
+      ]
+    },
+    {
+      "code": "701af262",
+      "teacher_email": "epic@gmail.com",
+      "class_name": "EPIC",
+      "school": "Sudo",
+      "students": []
+    },
+    {
+      "code": "42ffd86a",
+      "teacher_email": "epic99@gmail",
+      "class_name": "1234",
+      "school": "fortnite",
+      "students": [
+        "epicrbot20099@gmail.com"
+      ],
+      "assignments": [
+        {
+          "id": "7cb20131-92ad-45b1-9add-33c2d78eaa9f",
+          "title": "Epic",
+          "content": "text",
+          "timestamp": "2025-07-25T17:42:01.292852",
+          "teacher_email": "epic99@gmail"
+        }
+      ]
+    }
+  ]
+}
