@@ -1,0 +1,39 @@
+{
+  "students": [
+    {
+      "id": "e25e28ef-7c81-490d-b809-2205b2f5050b",
+      "name": "EPic",
+      "email": "epicrbot20099@gmail.com",
+      "classrooms": [
+        "42ffd86a",
+        "d2e9cbc7"
+      ]
+    }
+  ],
+  "teachers": [
+    {
+      "id": "4fd5a43d-90e3-4a93-ba6a-486008ae4637",
+      "name": "Adrian",
+      "email": "Roblox@gmail.com",
+      "school": "Roblox",
+      "class_name": "EPIC",
+      "classroom_code": "d2e9cbc7"
+    },
+    {
+      "id": "10d5fd86-64ad-4a04-9b8a-b6fd2d6d8cac",
+      "name": "Adrian",
+      "email": "epic@gmail.com",
+      "school": "Sudo",
+      "class_name": "EPIC",
+      "classroom_code": "701af262"
+    },
+    {
+      "id": "ae124bf9-1cab-49b2-8ec4-51971d13ff87",
+      "name": "Adrian",
+      "email": "epic99@gmail",
+      "school": "fortnite",
+      "class_name": "1234",
+      "classroom_code": "42ffd86a"
+    }
+  ]
+}

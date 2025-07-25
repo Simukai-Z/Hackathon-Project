@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Assignment</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container" style="max-width:600px;margin:40px auto;">
+        <h2>Edit Assignment</h2>
+        <form method="post" enctype="multipart/form-data">
+            <input type="hidden" name="class_code" value="{{ class_code }}">
+            <div style="margin-bottom:12px;">
+                <label>Title:</label><br>
+                <input type="text" name="title" value="{{ assignment.title }}" required style="width:100%;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label>Content:</label><br>
+                <input type="text" name="content" value="{{ assignment.content }}" style="width:100%;">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label>Description:</label><br>
+                <textarea name="description" style="width:100%;height:80px;">{{ assignment.description }}</textarea><br>
+                <span style="font-size:0.95em;color:#888;">Or upload .txt file:</span>
+                <input type="file" name="desc_file" accept=".txt">
+            </div>
+            <div style="margin-bottom:12px;">
+                <label>Link to Rubric:</label><br>
+                <select name="rubric_id" style="width:100%;">
+                    <option value="">-- None --</option>
+                    {% for r in rubrics %}
+                        <option value="{{ r.id }}" {% if assignment.rubric_id == r.id %}selected{% endif %}>{{ r.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit">Save Changes</button>
+            <a href="{{ url_for('teacher_main', class=class_code) }}" style="margin-left:16px;">Cancel</a>
+        </form>
+    </div>
+</body>
+</html>

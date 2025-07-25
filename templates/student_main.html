@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Main - StudyCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .tab-btn {
+            padding: 16px 32px;
+            font-weight: bold;
+            color: #888;
+            background: none;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-size: 1em;
+        }
+        .tab-btn.active {
+            color: #6c3fc7;
+            border-bottom: 3px solid #6c3fc7;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .teacher-name {
+            font-size: 1.1em;
+            font-weight: 500;
+            color: #e0d6fa;
+            opacity: 0.96;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <a href="{{ url_for('logout') }}" style="position: absolute; top: 24px; right: 48px; background: #22314f; color: #fff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1em;">Sign Out</a>
+    <div style="display: flex; min-height: 100vh;">
+        <!-- Sidebar -->
+        <div style="width: 260px; background: #f7f8fa; border-right: 1px solid #e0e0e0; padding: 24px 0 24px 0;">
+            <div style="font-weight: bold; font-size: 1.2em; color: #22314f; text-align: center; margin-bottom: 24px;">Schools</div>
+            {% if schools %}
+                {% for school, classrooms in schools.items() %}
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-weight: bold; color: #22314f; cursor: pointer;">{{ school }}</div>
+                        <ul style="list-style: none; padding-left: 16px;">
+                        {% for c in classrooms %}
+                            <li style="margin: 6px 0;">
+                                <a href="?class={{ c.code }}" style="color: #6c3fc7; text-decoration: underline; font-weight: 500;">{{ c.class_name }}</a>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="color: #888; text-align: center;">No schools joined yet.</div>
+            {% endif %}
+            <form method="post" style="margin-top: 32px; text-align: center;">
+                <input type="text" name="join_code" placeholder="Enter join code" required style="width: 80%;">
+                <button type="submit">Join Classroom</button>
+            </form>
+        </div>
+
+        <!-- Main Panel -->
+        <div style="flex: 1; padding: 40px 0; display: flex; flex-direction: column; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <h1 style="margin: 0; color: #22314f;">Welcome, {{ student.name }} (Student)</h1>
+            </div>
+            <img src="https://img.icons8.com/color/96/000000/microsoft.png" alt="logo" style="height: 48px; position: fixed; bottom: 16px; left: 16px; z-index: 100;">
+
+            {% if class_obj %}
+                <div style="width: 100%; max-width: 900px; margin-bottom: 32px;">
+                    <!-- Class Header -->
+                    <div style="display: flex; align-items: center; background: #6c3fc7; color: #fff; border-radius: 12px 12px 0 0; padding: 32px;">
+                        <img src="https://img.icons8.com/ios-filled/100/ffffff/classroom.png" alt="class banner" style="height: 80px; margin-right: 32px; border-radius: 8px; background: #fff2;">
+                        <div>
+                            <div style="font-size: 2em; font-weight: bold;">{{ class_obj.class_name or "(No Name)" }}</div>
+                            <div style="font-size: 1.1em; opacity: 0.85;">{{ class_obj.school or "(No School)" }}</div>
+                            {% if class_obj.teacher_name %}
+                                <div class="teacher-name">Teacher: {{ class_obj.teacher_name }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div style="display: flex; background: #f7f8fa; border-bottom: 1px solid #e0e0e0; border-radius: 0 0 12px 12px;">
+                        <button class="tab-btn active" onclick="showTab(event, 'stream')">Stream</button>
+                        <button class="tab-btn" onclick="showTab(event, 'classwork')">Classwork</button>
+                        <button class="tab-btn" onclick="showTab(event, 'people')">People</button>
+                    </div>
+
+                    <!-- Stream Tab (recent only) -->
+                    <div id="stream" class="tab-content active" style="background: #fff; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px #0001; padding: 32px;">
+                        <!-- Rubrics (recent only) -->
+                        <div style="margin-bottom: 32px;">
+                            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">Rubrics</div>
+                            <ul style="padding-left: 20px;">
+                                {% set rubrics = class_obj.rubrics[:2] if class_obj.rubrics else [] %}
+                                {% if rubrics %}
+                                    {% for r in rubrics %}
+                                        <li>
+                                            <b>{{ r.title or "(No Title)" }}</b>
+                                            - {{ r.content or "(No Content)" }}
+                                            {% if r.timestamp %}<span style="color: #888; font-size: 0.9em;">({{ r.timestamp[:16].replace('T',' ') }})</span>{% endif %}
+                                            {% if r.is_new %} <span style="background:#6c3fc7;color:#fff;padding:2px 8px;border-radius:8px;font-size:0.8em;">NEW</span>{% endif %}
+                                        </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="color: #888;">No rubrics yet.</span>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        <!-- Assignments (recent only) -->
+                        <div style="margin-bottom: 32px;">
+                            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">Assignments</div>
+                            <ul style="padding-left: 20px;">
+                                {% set assignments = class_obj.assignments[:2] if class_obj.assignments else [] %}
+                                {% if assignments %}
+                                    {% for a in assignments %}
+                                        <li>
+                                            <b>{{ a.title or "(No Title)" }}</b>
+                                            - {{ a.content or "(No Content)" }}
+                                            {% if a.timestamp %}<span style="color: #888; font-size: 0.9em;">({{ a.timestamp[:16].replace('T',' ') }})</span>{% endif %}
+                                            {% if a.is_new %} <span style="background:#6c3fc7;color:#fff;padding:2px 8px;border-radius:8px;font-size:0.8em;">NEW</span>{% endif %}
+                                        </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="color: #888;">No assignments yet.</span>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Classwork Tab (all assignments/rubrics) -->
+                    <div id="classwork" class="tab-content" style="background: #fff; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px #0001; padding: 32px;">
+                        <div style="margin-bottom: 32px;">
+                            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">All Rubrics</div>
+                            <ul style="padding-left: 20px;">
+                                {% if class_obj.rubrics %}
+                                    {% for r in class_obj.rubrics %}
+                                        <li>
+                                            <b>{{ r.title or "(No Title)" }}</b>
+                                            - {{ r.content or "(No Content)" }}
+                                            {% if r.timestamp %}<span style="color: #888; font-size: 0.9em;">({{ r.timestamp[:16].replace('T',' ') }})</span>{% endif %}
+                                            {% if r.is_new %} <span style="background:#6c3fc7;color:#fff;padding:2px 8px;border-radius:8px;font-size:0.8em;">NEW</span>{% endif %}
+                                        </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="color: #888;">No rubrics yet.</span>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        <div style="margin-bottom: 32px;">
+                            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">All Assignments</div>
+                            <ul style="padding-left: 20px;">
+                                {% if class_obj.assignments %}
+                                    {% for a in class_obj.assignments %}
+                                        <li>
+                                            <b>{{ a.title or "(No Title)" }}</b>
+                                            - {{ a.content or "(No Content)" }}
+                                            {% if a.timestamp %}<span style="color: #888; font-size: 0.9em;">({{ a.timestamp[:16].replace('T',' ') }})</span>{% endif %}
+                                            {% if a.is_new %} <span style="background:#6c3fc7;color:#fff;padding:2px 8px;border-radius:8px;font-size:0.8em;">NEW</span>{% endif %}
+                                        </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="color: #888;">No assignments yet.</span>
+                                {% endif %}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- People Tab (all students + teacher) -->
+                    <div id="people" class="tab-content" style="background: #fff; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px #0001; padding: 32px;">
+                        <div style="margin-bottom: 32px;">
+                            <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">Students</div>
+                            <ul style="padding-left: 20px;">
+                                {% if class_obj.students and class_obj.students|length > 0 %}
+                                    {% for s in class_obj.students %}
+                                        {% set student_obj = None %}
+                                        {% for u in students %}
+                                            {% if u.email == s %}
+                                                {% set student_obj = u %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if student_obj %}
+                                            <li>{{ student_obj.name }} ({{ student_obj.email }})</li>
+                                        {% else %}
+                                            <li>{{ s }}</li>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <li>No students yet.</li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        <div style="margin-bottom: 12px;">
+                            <b>Teacher:</b> {{ class_obj.teacher_name or class_obj.teacher_email or "(No teacher email)" }}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card" style="width: 100%; max-width: 600px;">
+                    <b>Select a classroom from the sidebar to view its stream.</b>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        function showTab(e, id) {
+            e.preventDefault();
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            e.target.classList.add('active');
+            document.getElementById(id).classList.add('active');
+        }
+    </script>
+</body>
+</html>

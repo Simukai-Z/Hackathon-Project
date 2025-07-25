@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Main - StudyCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .tab-btn { 
+            padding: 16px 32px; 
+            font-weight: bold; 
+            cursor: pointer;
+            border: none;
+            background: none;
+        }
+        .tab-btn.active {
+            color: #6c3fc7;
+            border-bottom: 3px solid #6c3fc7;
+        }
+        .tab-btn:not(.active) {
+            color: #888;
+        }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .recent-label {
+            background: #e0e4fa;
+            color: #6c3fc7;
+            padding: 2px 8px;
+            font-size: 0.8em;
+            border-radius: 6px;
+            margin-left: 8px;
+        }
+        .student-badge {
+            background: #eee;
+            color: #6c3fc7;
+            border-radius: 6px;
+            padding: 3px 10px;
+            margin-right: 8px;
+        }
+        .join-link-box {
+            background: #e0e4fa;
+            color: #6c3fc7;
+            font-weight: bold;
+            border-radius: 8px;
+            padding: 10px 24px;
+            font-size: 1.1em;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+        }
+        .join-link-url {
+            font-family: monospace;
+            background: #fff;
+            padding: 4px 12px;
+            border-radius: 6px;
+            margin-left: 10px;
+            border: 1px solid #d9d9f7;
+            color: #22314f;
+        }
+        .copy-btn {
+            margin-left: 16px;
+            background: #6c3fc7;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .copy-btn:hover {
+            background: #5230a6;
+        }
+        .copied-label {
+            color: #2eb872;
+            font-size: 0.96em;
+            margin-left: 8px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <a href="{{ url_for('logout') }}" style="position: absolute; top: 24px; right: 48px; background: #22314f; color: #fff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1em;">Sign Out</a>
+    <div style="display: flex; min-height: 100vh;">
+        <!-- Sidebar (same as before) -->
+        <div style="width: 260px; background: #f7f8fa; border-right: 1px solid #e0e0e0; padding: 24px 0 24px 0;">
+            <div style="font-weight: bold; font-size: 1.2em; color: #22314f; text-align: center; margin-bottom: 24px;">Schools</div>
+            {% if schools %}
+                {% for school, classrooms in schools.items() %}
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-weight: bold; color: #22314f; cursor: pointer;">{{ school }}</div>
+                        <ul style="list-style: none; padding-left: 16px;">
+                        {% for c in classrooms %}
+                            <li style="margin: 6px 0;">
+                                <a href="?class={{ c.code }}" style="color: #6c3fc7; text-decoration: underline; font-weight: 500;">{{ c.class_name }}</a>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div style="color: #888; text-align: center;">No schools joined yet.</div>
+            {% endif %}
+            <form method="post" style="margin-top: 32px; text-align: center;">
+                <input type="text" name="join_code" placeholder="Enter join code" required style="width: 80%;">
+                <button type="submit">Join Classroom</button>
+            </form>
+        </div>
+
+        <!-- Main Panel -->
+        <div style="flex: 1; padding: 40px 0; display: flex; flex-direction: column; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                <h1 style="margin: 0; color: #22314f;">Welcome, {{ teacher.name }} (Teacher)</h1>
+            </div>
+            <img src="https://img.icons8.com/color/96/000000/microsoft.png" alt="logo" style="height: 48px; position: fixed; bottom: 16px; left: 16px; z-index: 100;">
+
+            {% if class_obj %}
+                <div style="width: 100%; max-width: 900px; margin-bottom: 32px;">
+                    <!-- Class Header -->
+                    <div style="display: flex; align-items: center; background: #6c3fc7; color: #fff; border-radius: 12px 12px 0 0; padding: 32px;">
+                        <img src="https://img.icons8.com/ios-filled/100/ffffff/classroom.png" alt="class banner" style="height: 80px; margin-right: 32px; border-radius: 8px; background: #fff2;">
+                        <div>
+                            <div style="font-size: 2em; font-weight: bold;">{{ class_obj.class_name or "(No Name)" }}</div>
+                            <div style="font-size: 1.1em; opacity: 0.85;">{{ class_obj.school or "(No School)" }}</div>
+                            <div style="font-size: 1em; opacity: 0.95; margin-top: 6px;">
+                                Teacher: 
+                                {% if class_obj.teacher_name %}
+                                    {{ class_obj.teacher_name }}
+                                {% else %}
+                                    {{ class_obj.teacher_email }}
+                                {% endif %}
+                            </div>
+                            {% if class_obj.code %}
+                                <div class="join-link-box" style="margin-top:18px;">
+                                    Class Join Link: 
+                                    <input class="join-link-url" id="join-link-input" type="text"
+                                           value="" readonly
+                                           style="width:380px; margin-left:18px;"
+                                           onclick="copyJoinLink()"
+                                           title="Click to copy!">
+                                    <button class="copy-btn" onclick="copyJoinLink()">Copy</button>
+                                    <span id="copied-label" class="copied-label">Copied!</span>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div style="display: flex; background: #f7f8fa; border-bottom: 1px solid #e0e0e0; border-radius: 0 0 12px 12px;">
+                        <button class="tab-btn active" onclick="showTab('stream')">Stream</button>
+                        <button class="tab-btn" onclick="showTab('classwork')">Classwork</button>
+                        <button class="tab-btn" onclick="showTab('people')">People</button>
+                    </div>
+
+                    <!-- Stream Tab -->
+                    <div id="tab-stream" class="tab-content active" style="background: #fff; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px #0001; padding: 32px;">
+                        <div style="margin-bottom: 24px;">
+                        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">Add Rubric</div>
+                        <form method="post" action="{{ url_for('add_rubric') }}" enctype="multipart/form-data" style="margin-bottom: 24px;">
+                            <input type="hidden" name="class_code" value="{{ class_obj.code }}">
+                            <input type="text" name="title" placeholder="Rubric title" required style="width: 30%;">
+                            <input type="text" name="content" placeholder="Rubric content (or upload .txt)" style="width: 40%;">
+                            <input type="file" name="rubric_file" accept=".txt">
+                            <button type="submit">Add Rubric</button>
+                        </form>
+                        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">Recent Rubrics</div>
+                        <ul style="padding-left: 20px;">
+                            {% if class_obj.rubrics and class_obj.rubrics|length > 0 %}
+                                {% for r in class_obj.rubrics[:2] %}
+                                    <li>
+                                        <b>{{ r.title or "(No Title)" }}</b>
+                                        - {{ r.content or "(No Content)" }}
+                                        {% if r.timestamp %}
+                                            <span style="color: #888; font-size: 0.9em;">({{ r.timestamp[:16].replace('T',' ') }})</span>
+                                        {% endif %}
+                                        {% if r.is_new %} <span class="recent-label">NEW</span>{% endif %}
+                                    </li>
+                                {% endfor %}
+                            {% else %}
+                                <span style="color: #888;">No rubrics yet.</span>
+                            {% endif %}
+                        </ul>
+                        </div>
+                        <div style="margin-bottom: 24px;">
+                        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">Add Assignment</div>
+                        <form method="post" action="{{ url_for('add_assignment') }}" enctype="multipart/form-data" style="margin-bottom: 24px;">
+    <input type="hidden" name="class_code" value="{{ class_obj.code }}">
+    <input type="text" name="title" placeholder="Assignment title" required style="width: 20%;">
+    <input type="text" name="content" placeholder="Assignment content (short summary, or upload .txt below)" style="width: 20%;">
+    <label for="content_file" style="margin-left:8px; font-size:0.98em; color:#22314f;">or upload content as .txt:</label>
+    <input type="file" id="content_file" name="content_file" accept=".txt" style="margin-left:8px;">
+    <input type="text" name="description" placeholder="Assignment description (detailed, or upload .txt below)" style="width: 25%;">
+    <label for="desc_file" style="margin-left:8px; font-size:0.98em; color:#22314f;">or upload description as .txt:</label>
+    <input type="file" id="desc_file" name="desc_file" accept=".txt" style="margin-left:8px;">
+    <select name="rubric_id" style="width: 20%; margin-left:8px;">
+        <option value="">-- Link to Rubric (optional) --</option>
+        {% for r in class_obj.rubrics %}
+            <option value="{{ r.id }}">{{ r.title }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit" style="margin-left:8px;">Add Assignment</button>
+                        </form>
+                        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">Recent Assignments</div>
+                        <ul style="padding-left: 20px;">
+    {% if class_obj.assignments and class_obj.assignments|length > 0 %}
+        {% for a in class_obj.assignments[:2] %}
+            <li>
+                <b>{{ a.title or "(No Title)" }}</b>
+                - {{ a.content or "(No Content)" }}
+                <br><span style="color:#444;font-size:0.95em;">Desc: {{ a.description or '(No Description)' }}</span>
+                {% if a.rubric_id %}<br><span style="color:#6c3fc7;font-size:0.95em;">Rubric: {{ (class_obj.rubrics|selectattr('id','equalto',a.rubric_id)|list|first).title if (class_obj.rubrics|selectattr('id','equalto',a.rubric_id)|list) else 'Unknown' }}</span>{% endif %}
+                {% if a.timestamp %}
+                    <span style="color: #888; font-size: 0.9em;">({{ a.timestamp[:16].replace('T',' ') }})</span>
+                {% endif %}
+                {% if a.is_new %} <span class="recent-label">NEW</span>{% endif %}
+                <a href="{{ url_for('edit_assignment', class_code=class_obj.code, assignment_id=a.id) }}" style="margin-left:16px; color:#6c3fc7; text-decoration:underline; font-size:0.95em;">Edit</a>
+            </li>
+        {% endfor %}
+    {% else %}
+        <span style="color: #888;">No assignments yet.</span>
+    {% endif %}
+                        </ul>
+                        </div>
+                    </div>
+
+                    <!-- Classwork Tab -->
+                    <div id="tab-classwork" class="tab-content" style="background: #fff; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px #0001; padding: 32px;">
+                        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 16px;">All Rubrics</div>
+                        <ul>
+                            {% if class_obj.rubrics and class_obj.rubrics|length > 0 %}
+                                {% for r in class_obj.rubrics %}
+                                    <li>
+                                        <b>{{ r.title or "(No Title)" }}</b> - {{ r.content or "(No Content)" }}
+                                        {% if r.timestamp %}
+                                            <span style="color: #888; font-size: 0.9em;">({{ r.timestamp[:16].replace('T',' ') }})</span>
+                                        {% endif %}
+                                    </li>
+                                {% endfor %}
+                            {% else %}
+                                <span style="color: #888;">No rubrics yet.</span>
+                            {% endif %}
+                        </ul>
+    <div style="font-size: 1.2em; font-weight: bold; margin: 32px 0 16px 0;">All Assignments</div>
+    <ul>
+        {% if class_obj.assignments and class_obj.assignments|length > 0 %}
+            {% for a in class_obj.assignments %}
+                <li>
+                    <b>{{ a.title or "(No Title)" }}</b> - {{ a.content or "(No Content)" }}
+                    <br><span style="color:#444;font-size:0.95em;">Desc: {{ a.description or '(No Description)' }}</span>
+                    {% if a.timestamp %}
+                        <span style="color: #888; font-size: 0.9em;">({{ a.timestamp[:16].replace('T',' ') }})</span>
+                    {% endif %}
+                    <a href="{{ url_for('edit_assignment', class_code=class_obj.code, assignment_id=a.id) }}" style="margin-left:16px; color:#6c3fc7; text-decoration:underline; font-size:0.95em;">Edit</a>
+                </li>
+            {% endfor %}
+        {% else %}
+            <span style="color: #888;">No assignments yet.</span>
+        {% endif %}
+    </ul>
+                    </div>
+
+                    <!-- People Tab -->
+                    <div id="tab-people" class="tab-content" style="background: #fff; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px #0001; padding: 32px;">
+                        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 8px;">Students</div>
+                        <ul>
+                            {% if class_obj.students and class_obj.students|length > 0 %}
+                                {% for s in class_obj.students %}
+                                    {% set student_obj = None %}
+                                    {% for u in students %}
+                                        {% if u.email == s %}
+                                            {% set student_obj = u %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if student_obj %}
+                                        <li><span class="student-badge">{{ student_obj.name }}</span> ({{ student_obj.email }})</li>
+                                    {% else %}
+                                        <li>{{ s }}</li>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <li>No students yet.</li>
+                            {% endif %}
+                        </ul>
+                        <div style="margin-top:24px;">
+                            <b>Teacher:</b> {{ class_obj.teacher_name or class_obj.teacher_email or "(No teacher)" }}
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card" style="width: 100%; max-width: 600px;">
+                    <b>Select a classroom from the sidebar to view its stream.</b>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    <script>
+        // Set join link on page load
+        window.onload = function() {
+            var code = "{{ class_obj.code }}";
+            if(code) {
+                var joinPath = "/classroom/join/" + code;
+                var url = window.location.origin + joinPath;
+                document.getElementById('join-link-input').value = url;
+            }
+        };
+        function showTab(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(tabEl => tabEl.classList.remove('active'));
+            document.querySelector('[onclick="showTab(\''+tab+'\')"]').classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+        function copyJoinLink() {
+            const input = document.getElementById('join-link-input');
+            const copiedLabel = document.getElementById('copied-label');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+            } catch (e) {}
+            copiedLabel.style.display = 'inline';
+            setTimeout(() => {
+                copiedLabel.style.display = 'none';
+            }, 900);
+        }
+    </script>
+</body>
+</html>
