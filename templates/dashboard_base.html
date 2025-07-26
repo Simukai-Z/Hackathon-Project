@@ -334,5 +334,58 @@
 .dark-mode .list-group-item:hover {
     background-color: var(--background-dark);
 }
+
+/* Quick Actions Section */
+.quick-actions {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-lg);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.dark-mode .quick-actions {
+    border-bottom-color: var(--border-dark);
+}
+
+.action-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.action-group-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-secondary-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: var(--spacing-sm);
+}
+
+.dark-mode .action-group-title {
+    color: var(--text-secondary-dark);
+}
+
+.study-tools-link {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    text-decoration: none;
+    color: var(--text-primary-light);
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    font-weight: 500;
+    transition: all var(--transition-fast);
+}
+
+.study-tools-link:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    text-decoration: none;
+    color: white;
+}
+
+.study-tools-link .nav-icon {
+    font-size: 1.1rem;
+}
 </style>
 {% endblock %}

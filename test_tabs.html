@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tab Test</title>
+    <style>
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #f0f0f0;
+            border: none;
+        }
+        
+        .tab-btn.active {
+            background: #007bff;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tab Test</h1>
+    
+    <div class="tab-buttons">
+        <button class="tab-btn active" onclick="showTab('students')">Students</button>
+        <button class="tab-btn" onclick="showTab('assignments')">Assignments</button>
+        <button class="tab-btn" onclick="showTab('rubrics')">Rubrics</button>
+    </div>
+    
+    <div id="students" class="tab-content active">
+        <h2>Students Tab</h2>
+        <p>This is the students content.</p>
+    </div>
+    
+    <div id="assignments" class="tab-content">
+        <h2>Assignments Tab</h2>
+        <p>This is the assignments content.</p>
+    </div>
+    
+    <div id="rubrics" class="tab-content">
+        <h2>Rubrics Tab</h2>
+        <p>This is the rubrics content.</p>
+    </div>
+    
+    <script>
+        function showTab(tabId) {
+            console.log('showTab called with:', tabId);
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+                console.log('Removed active from:', tab.id);
+            });
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabId);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+                console.log('Added active to:', tabId);
+            } else {
+                console.error('Tab not found:', tabId);
+            }
+            
+            const selectedBtn = document.querySelector(`[onclick="showTab('${tabId}')"]`);
+            if (selectedBtn) {
+                selectedBtn.classList.add('active');
+                console.log('Added active to button for:', tabId);
+            } else {
+                console.error('Button not found for:', tabId);
+            }
+        }
+    </script>
+</body>
+</html>

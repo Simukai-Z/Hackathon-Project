@@ -3,6 +3,16 @@
 {% block title %}Student Dashboard - StudyCoach{% endblock %}
 
 {% block sidebar_content %}
+<div class="quick-actions">
+    <div class="action-group">
+        <div class="action-group-title">Study Tools</div>
+        <a href="{{ url_for('study_tools.study_tools_dashboard') }}" class="nav-item study-tools-link">
+            <span class="nav-icon">🎓</span>
+            Flash Cards & Study Guides
+        </a>
+    </div>
+</div>
+
 <div class="schools-nav">
     {% if schools %}
         {% for school, classrooms in schools.items() %}
@@ -131,154 +141,270 @@
         <div id="assignments" class="tab-content">
             <div class="assignments-grid">
                 {% for assignment in class_obj.assignments %}
-                    <div class="assignment-card card">
-                        <div class="card-header">
-                            <h3>{{ assignment.title }}</h3>
-                            {% if assignment.is_new %}
-                                <span class="badge badge-new">New</span>
-                            {% endif %}
-                        </div>
-                        <div class="card-body">
-                            <div class="assignment-description">
-                                <h4><i class="fas fa-info-circle"></i> Assignment Description:</h4>
-                                <div class="description-content">
-                                    {{ assignment.description or assignment.content or "No description provided" }}
-                                </div>
-                            </div>
-                            
-                            {% if assignment.rubric_id %}
-                                {% set rubric = class_obj.rubrics|selectattr("id", "equalto", assignment.rubric_id)|first %}
-                                {% if rubric %}
-                                    <div class="rubric-badge">
-                                        📋 Using rubric: {{ rubric.title }}
-                                    </div>
+                    {% set submission = assignment.submissions|selectattr("student_email", "equalto", student.email)|first if assignment.submissions else none %}
+                    
+                    <!-- Compact Assignment Card -->
+                    <div class="assignment-card-compact card" onclick="openAssignmentModal('{{ assignment.id }}', '{{ loop.index }}')">
+                        <div class="assignment-compact-header">
+                            <div class="assignment-title-section">
+                                <h3>{{ assignment.title }}</h3>
+                                {% if assignment.is_new %}
+                                    <span class="badge badge-new">New</span>
                                 {% endif %}
-                            {% endif %}
-                            
-                            <!-- Check if student has already submitted -->
-                            {% set submission = assignment.submissions|selectattr("student_email", "equalto", student.email)|first if assignment.submissions else none %}
-                            
-                            {% if submission %}
-                                <div class="submission-status">
-                                    <div class="my-submission-info">
-                                        <h4>Your Submission:</h4>
-                                        {% if submission.submission_text %}
-                                            <div class="submitted-text">
-                                                <strong>Text:</strong>
-                                                <div class="text-content">{{ submission.submission_text }}</div>
-                                            </div>
-                                        {% endif %}
-                                        {% if submission.submission_link %}
-                                            <div class="submitted-link">
-                                                <strong>Link:</strong>
-                                                <a href="{{ submission.submission_link }}" target="_blank" rel="noopener noreferrer">
-                                                    🔗 {{ submission.submission_link }}
-                                                </a>
-                                            </div>
-                                        {% endif %}
-                                        {% if submission.filename %}
-                                            <div class="submitted-file">
-                                                <strong>File:</strong>
-                                                <a href="{{ url_for('student_uploaded_file', filename=submission.filename) }}" target="_blank">
-                                                    📎 {{ submission.filename.split('_')[-1] }}
-                                                </a>
-                                            </div>
-                                        {% endif %}
-                                        <small>Submitted: {{ submission.timestamp|datetime }}</small>
-                                    </div>
-                                    
+                            </div>
+                            <div class="assignment-status-indicator">
+                                {% if submission %}
                                     {% if submission.grade is not none %}
-                                        <div class="grade-display">
-                                            <div class="grade-header">
-                                                <span class="grade-badge">Grade: {{ submission.grade }}%</span>
-                                                <span class="grade-status">
-                                                    {% if submission.grade >= 90 %}🏆 Excellent
-                                                    {% elif submission.grade >= 80 %}⭐ Good
-                                                    {% elif submission.grade >= 70 %}👍 Satisfactory
-                                                    {% elif submission.grade >= 60 %}⚠️ Needs Improvement
-                                                    {% else %}❌ Needs Work
-                                                    {% endif %}
-                                                </span>
-                                            </div>
-                                            {% if submission.feedback %}
-                                                <div class="feedback-section">
-                                                    <div class="feedback-header">
-                                                        <i class="fas fa-comment-alt"></i>
-                                                        <strong>Instructor Feedback</strong>
-                                                    </div>
-                                                    <div class="feedback-content">
-                                                        {{ submission.feedback }}
-                                                    </div>
-                                                    <div class="feedback-metadata">
-                                                        <small>
-                                                            <i class="fas fa-user"></i> {{ submission.graded_by }}
-                                                            {% if submission.graded_timestamp %}
-                                                                • <i class="fas fa-clock"></i> {{ submission.graded_timestamp|datetime }}
-                                                            {% endif %}
-                                                        </small>
-                                                    </div>
-                                                </div>
-                                            {% endif %}
+                                        <div class="status-badge status-graded">
+                                            <i class="fas fa-check-circle"></i>
+                                            <span>{{ submission.grade }}%</span>
                                         </div>
                                     {% else %}
-                                        <div class="submitted-status">
-                                            <div class="status-badge">
-                                                ✅ Submitted - Waiting for grade
+                                        <div class="status-badge status-submitted">
+                                            <i class="fas fa-clock"></i>
+                                            <span>Submitted</span>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="status-badge status-pending">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        <span>Not Submitted</span>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="assignment-compact-body">
+                            <div class="assignment-preview">
+                                {{ (assignment.description or assignment.content or "No description provided")[:100] }}
+                                {% if (assignment.description or assignment.content or "")| length > 100 %}...{% endif %}
+                            </div>
+                            <div class="assignment-meta">
+                                <span class="assignment-date">
+                                    <i class="fas fa-calendar"></i>
+                                    {{ assignment.timestamp|datetime }}
+                                </span>
+                                {% if assignment.rubric_id %}
+                                    {% set rubric = class_obj.rubrics|selectattr("id", "equalto", assignment.rubric_id)|first %}
+                                    {% if rubric %}
+                                        <span class="rubric-indicator">
+                                            <i class="fas fa-clipboard-list"></i>
+                                            {{ rubric.title }}
+                                        </span>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="assignment-compact-footer">
+                            <span class="click-hint">
+                                <i class="fas fa-mouse-pointer"></i>
+                                Click to view details & submit
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Comprehensive Assignment Modal -->
+                    <div id="assignmentModal{{ assignment.id }}" class="assignment-modal" onclick="closeAssignmentModal('{{ assignment.id }}')">
+                        <div class="assignment-modal-content" onclick="event.stopPropagation()">
+                            <div class="assignment-modal-header">
+                                <div class="modal-title-section">
+                                    <h2>{{ assignment.title }}</h2>
+                                    {% if assignment.is_new %}
+                                        <span class="badge badge-new">New</span>
+                                    {% endif %}
+                                </div>
+                                <button class="modal-close-btn" onclick="closeAssignmentModal('{{ assignment.id }}')">&times;</button>
+                            </div>
+                            
+                            <div class="assignment-modal-body">
+                                <!-- Assignment Description Section -->
+                                <div class="modal-section">
+                                    <div class="section-header">
+                                        <i class="fas fa-info-circle"></i>
+                                        <h3>Assignment Description</h3>
+                                    </div>
+                                    <div class="section-content description-content">
+                                        {{ assignment.description or assignment.content or "No description provided" }}
+                                    </div>
+                                </div>
+
+                                <!-- Rubric Section -->
+                                {% if assignment.rubric_id %}
+                                    {% set rubric = class_obj.rubrics|selectattr("id", "equalto", assignment.rubric_id)|first %}
+                                    {% if rubric %}
+                                        <div class="modal-section">
+                                            <div class="section-header">
+                                                <i class="fas fa-clipboard-list"></i>
+                                                <h3>Grading Rubric: {{ rubric.title }}</h3>
                                             </div>
-                                            <div class="submission-actions">
-                                                <form method="post" action="{{ url_for('unsubmit_assignment') }}" class="unsubmit-form" onsubmit="return confirmUnsubmit()">
-                                                    <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
-                                                    <button type="submit" class="btn btn-warning btn-sm">
-                                                        <i class="fas fa-undo"></i>
-                                                        Unsubmit
-                                                    </button>
-                                                </form>
-                                                <small class="unsubmit-help">
-                                                    <i class="fas fa-info-circle"></i>
-                                                    You can unsubmit and resubmit until this assignment is graded
-                                                </small>
+                                            <div class="section-content rubric-content">
+                                                {{ rubric.content }}
                                             </div>
                                         </div>
                                     {% endif %}
-                                </div>
-                            {% else %}
-                                <!-- Assignment submission form -->
-                                <div class="submission-form">
-                                    <button class="btn btn-primary" onclick="toggleSubmissionForm('{{ assignment.id }}')">
-                                        Submit Assignment
-                                    </button>
-                                    
-                                    <form id="submission-form-{{ assignment.id }}" class="submission-form-content" style="display: none;" action="{{ url_for('submit_assignment') }}" method="post" enctype="multipart/form-data">
-                                        <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
-                                        
-                                        <div class="form-group">
-                                            <label for="submission_text_{{ assignment.id }}">Text Submission:</label>
-                                            <textarea name="submission_text" id="submission_text_{{ assignment.id }}" rows="5" class="form-control" placeholder="Type your assignment response here..."></textarea>
+                                {% endif %}
+
+                                <!-- Current Submission Status -->
+                                {% if submission %}
+                                    <div class="modal-section submission-section">
+                                        <div class="section-header">
+                                            <i class="fas fa-paper-plane"></i>
+                                            <h3>Your Submission</h3>
+                                            <span class="submission-date">{{ submission.timestamp|datetime }}</span>
                                         </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="submission_link_{{ assignment.id }}">Link Submission (optional):</label>
-                                            <input type="url" name="submission_link" id="submission_link_{{ assignment.id }}" class="form-control" placeholder="https://docs.google.com/document/...">
-                                            <small class="form-text">Submit a link to your Google Docs, Drive file, or other online resource</small>
+                                        <div class="section-content">
+                                            {% if submission.submission_text %}
+                                                <div class="submission-item">
+                                                    <strong><i class="fas fa-align-left"></i> Text Submission:</strong>
+                                                    <div class="submission-text-display">{{ submission.submission_text }}</div>
+                                                </div>
+                                            {% endif %}
+                                            {% if submission.submission_link %}
+                                                <div class="submission-item">
+                                                    <strong><i class="fas fa-link"></i> Link Submission:</strong>
+                                                    <a href="{{ submission.submission_link }}" target="_blank" rel="noopener noreferrer" class="submission-link">
+                                                        🔗 {{ submission.submission_link }}
+                                                    </a>
+                                                </div>
+                                            {% endif %}
+                                            {% if submission.filename %}
+                                                <div class="submission-item">
+                                                    <strong><i class="fas fa-file"></i> File Submission:</strong>
+                                                    <a href="{{ url_for('student_uploaded_file', filename=submission.filename) }}" target="_blank" class="submission-file">
+                                                        📎 {{ submission.filename.split('_')[-1] }}
+                                                    </a>
+                                                </div>
+                                            {% endif %}
                                         </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="submission_file_{{ assignment.id }}">Upload File (optional):</label>
-                                            <input type="file" name="submission_file" id="submission_file_{{ assignment.id }}" class="form-control" accept=".txt,.pdf,.doc,.docx,.png,.jpg,.jpeg">
-                                            <small class="form-text">Supported formats: txt, pdf, doc, docx, images</small>
+                                    </div>
+
+                                    <!-- Grade and Feedback Section -->
+                                    {% if submission.grade is not none %}
+                                        <div class="modal-section grade-section">
+                                            <div class="section-header">
+                                                <i class="fas fa-star"></i>
+                                                <h3>Grade & Feedback</h3>
+                                            </div>
+                                            <div class="section-content">
+                                                <div class="grade-display-large">
+                                                    <div class="grade-circle">
+                                                        <span class="grade-number">{{ submission.grade }}%</span>
+                                                        <span class="grade-letter">
+                                                            {% if submission.grade >= 90 %}A
+                                                            {% elif submission.grade >= 80 %}B
+                                                            {% elif submission.grade >= 70 %}C
+                                                            {% elif submission.grade >= 60 %}D
+                                                            {% else %}F
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                    <div class="grade-status-large">
+                                                        {% if submission.grade >= 90 %}🏆 Excellent Work!
+                                                        {% elif submission.grade >= 80 %}⭐ Good Job!
+                                                        {% elif submission.grade >= 70 %}👍 Satisfactory
+                                                        {% elif submission.grade >= 60 %}⚠️ Needs Improvement
+                                                        {% else %}❌ Needs Significant Work
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                                {% if submission.feedback %}
+                                                    <div class="feedback-display-large">
+                                                        <h4><i class="fas fa-comment-alt"></i> Instructor Feedback</h4>
+                                                        <div class="feedback-content-large">{{ submission.feedback }}</div>
+                                                        <div class="feedback-meta">
+                                                            <span><i class="fas fa-user"></i> {{ submission.graded_by }}</span>
+                                                            {% if submission.graded_timestamp %}
+                                                                <span><i class="fas fa-clock"></i> {{ submission.graded_timestamp|datetime }}</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
                                         </div>
-                                        
-                                        <div class="form-actions">
-                                            <button type="submit" class="btn btn-success">Submit Assignment</button>
-                                            <button type="button" class="btn btn-secondary" onclick="toggleSubmissionForm('{{ assignment.id }}')">Cancel</button>
+                                    {% endif %}
+
+                                    <!-- Unsubmit Section -->
+                                    {% if submission.grade is none %}
+                                        <div class="modal-section action-section">
+                                            <div class="section-header">
+                                                <i class="fas fa-undo"></i>
+                                                <h3>Modify Submission</h3>
+                                            </div>
+                                            <div class="section-content">
+                                                <div class="unsubmit-notice">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    You can unsubmit and resubmit until this assignment is graded.
+                                                </div>
+                                                <form method="post" action="{{ url_for('unsubmit_assignment') }}" class="unsubmit-form-modal" onsubmit="return confirmUnsubmit()">
+                                                    <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                                                    <button type="submit" class="btn btn-warning">
+                                                        <i class="fas fa-undo"></i>
+                                                        Unsubmit Assignment
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </div>
-                                    </form>
-                                </div>
-                            {% endif %}
-                        </div>
-                        <div class="card-footer">
-                            <a href="{{ url_for('ai_page') }}" class="btn btn-primary btn-sm">Get Help</a>
-                            <time>{{ assignment.timestamp|datetime }}</time>
+                                    {% endif %}
+                                {% else %}
+                                    <!-- Submission Form Section -->
+                                    <div class="modal-section submission-form-section">
+                                        <div class="section-header">
+                                            <i class="fas fa-paper-plane"></i>
+                                            <h3>Submit Your Work</h3>
+                                        </div>
+                                        <div class="section-content">
+                                            <form id="modalSubmissionForm{{ assignment.id }}" action="{{ url_for('submit_assignment') }}" method="post" enctype="multipart/form-data" class="submission-form-modal">
+                                                <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                                                
+                                                <div class="form-group-modal">
+                                                    <label for="modal_text_{{ assignment.id }}">
+                                                        <i class="fas fa-align-left"></i> Text Submission
+                                                    </label>
+                                                    <textarea name="submission_text" id="modal_text_{{ assignment.id }}" rows="6" class="form-control-modal" placeholder="Type your assignment response here..."></textarea>
+                                                </div>
+                                                
+                                                <div class="form-group-modal">
+                                                    <label for="modal_link_{{ assignment.id }}">
+                                                        <i class="fas fa-link"></i> Link Submission (optional)
+                                                    </label>
+                                                    <input type="url" name="submission_link" id="modal_link_{{ assignment.id }}" class="form-control-modal" placeholder="https://docs.google.com/document/...">
+                                                    <small class="form-help">Submit a link to your Google Docs, Drive file, or other online resource</small>
+                                                </div>
+                                                
+                                                <div class="form-group-modal">
+                                                    <label for="modal_file_{{ assignment.id }}">
+                                                        <i class="fas fa-file-upload"></i> Upload File (optional)
+                                                    </label>
+                                                    <input type="file" name="submission_file" id="modal_file_{{ assignment.id }}" class="form-control-modal" accept=".txt,.pdf,.doc,.docx,.png,.jpg,.jpeg">
+                                                    <small class="form-help">Supported formats: txt, pdf, doc, docx, images (max 16MB)</small>
+                                                </div>
+                                                
+                                                <div class="form-actions-modal">
+                                                    <button type="submit" class="btn btn-success btn-large">
+                                                        <i class="fas fa-paper-plane"></i>
+                                                        Submit Assignment
+                                                    </button>
+                                                    <button type="button" class="btn btn-secondary" onclick="closeAssignmentModal('{{ assignment.id }}')">
+                                                        <i class="fas fa-times"></i>
+                                                        Cancel
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="assignment-modal-footer">
+                                <a href="{{ url_for('ai_page') }}" class="btn btn-primary" target="_blank">
+                                    <i class="fas fa-robot"></i>
+                                    Get AI Help
+                                </a>
+                                <button class="btn btn-secondary" onclick="closeAssignmentModal('{{ assignment.id }}')">
+                                    Close
+                                </button>
+                            </div>
                         </div>
                     </div>
                 {% else %}
@@ -957,6 +1083,820 @@
         max-width: none;
     }
 }
+
+/* Feedback Popup Button */
+.feedback-popup-btn {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    width: 100%;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+}
+
+.feedback-popup-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+}
+
+.dark-mode .feedback-popup-btn {
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+}
+
+/* Feedback Modal */
+.feedback-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.feedback-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+    overflow: hidden;
+}
+
+.dark-mode .feedback-modal-content {
+    background-color: #2d3748;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.feedback-modal-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.feedback-modal-header h3 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+}
+
+.modal-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 2rem;
+    cursor: pointer;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s;
+}
+
+.modal-close-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.feedback-modal-body {
+    padding: 1.5rem;
+}
+
+.assignment-context {
+    background: #f8f9fa;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.dark-mode .assignment-context {
+    background: #4a5568;
+}
+
+.context-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.grade-display-modal {
+    background: #28a745;
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.feedback-content-modal {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.25rem;
+    line-height: 1.7;
+    color: #333;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 300px;
+    overflow-y: auto;
+    font-size: 1rem;
+}
+
+.dark-mode .feedback-content-modal {
+    background: #4a5568;
+    border-color: #2d3748;
+    color: #e2e8f0;
+}
+
+.feedback-metadata-modal {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+    gap: 1rem;
+}
+
+.dark-mode .feedback-metadata-modal {
+    border-top-color: #4a5568;
+}
+
+.metadata-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.dark-mode .metadata-item {
+    color: #a0aec0;
+}
+
+.feedback-modal-footer {
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: center;
+}
+
+.dark-mode .feedback-modal-footer {
+    background: #4a5568;
+}
+
+@media (max-width: 768px) {
+    .feedback-modal-content {
+        margin: 10% auto;
+        width: 95%;
+    }
+    
+    .feedback-modal-header {
+        padding: 1rem;
+    }
+    
+    .feedback-modal-body {
+        padding: 1rem;
+    }
+    
+    .feedback-metadata-modal {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* Compact Assignment Cards */
+.assignment-card-compact {
+    cursor: pointer;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.25rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.assignment-card-compact:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    border-color: #007bff;
+}
+
+.dark-mode .assignment-card-compact {
+    background: #2d3748;
+    border-color: #4a5568;
+}
+
+.dark-mode .assignment-card-compact:hover {
+    border-color: #63b3ed;
+}
+
+.assignment-compact-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.assignment-title-section h3 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.dark-mode .assignment-title-section h3 {
+    color: #e2e8f0;
+}
+
+.assignment-status-indicator {
+    flex-shrink: 0;
+}
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.status-graded {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.status-submitted {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffeaa7;
+}
+
+.status-pending {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.dark-mode .status-graded {
+    background: #1e4d30;
+    color: #68d391;
+    border-color: #2f855a;
+}
+
+.dark-mode .status-submitted {
+    background: #744210;
+    color: #ffd60a;
+    border-color: #975a16;
+}
+
+.dark-mode .status-pending {
+    background: #742a2a;
+    color: #fc8181;
+    border-color: #c53030;
+}
+
+.assignment-compact-body {
+    margin-bottom: 1rem;
+}
+
+.assignment-preview {
+    color: #6c757d;
+    line-height: 1.5;
+    margin-bottom: 0.75rem;
+    font-size: 0.95rem;
+}
+
+.dark-mode .assignment-preview {
+    color: #a0aec0;
+}
+
+.assignment-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.85rem;
+    color: #8e9caa;
+}
+
+.dark-mode .assignment-meta {
+    color: #718096;
+}
+
+.assignment-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.assignment-compact-footer {
+    border-top: 1px solid #e9ecef;
+    padding-top: 0.75rem;
+    text-align: center;
+}
+
+.dark-mode .assignment-compact-footer {
+    border-top-color: #4a5568;
+}
+
+.click-hint {
+    color: #007bff;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+}
+
+.dark-mode .click-hint {
+    color: #63b3ed;
+}
+
+/* Comprehensive Assignment Modal */
+.assignment-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.assignment-modal-content {
+    background-color: #ffffff;
+    margin: 2% auto;
+    border-radius: 16px;
+    width: 95%;
+    max-width: 900px;
+    max-height: 95vh;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.dark-mode .assignment-modal-content {
+    background-color: #2d3748;
+}
+
+.assignment-modal-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.modal-title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.modal-title-section h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.assignment-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0;
+}
+
+.modal-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.dark-mode .modal-section {
+    border-bottom-color: #4a5568;
+}
+
+.modal-section:last-child {
+    border-bottom: none;
+}
+
+.section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.dark-mode .section-header {
+    border-bottom-color: #4a5568;
+}
+
+.section-header h3 {
+    margin: 0;
+    color: #2d3748;
+    font-size: 1.125rem;
+    font-weight: 600;
+}
+
+.dark-mode .section-header h3 {
+    color: #e2e8f0;
+}
+
+.section-header i {
+    color: #667eea;
+    font-size: 1.25rem;
+}
+
+.section-content {
+    line-height: 1.6;
+    color: #4a5568;
+}
+
+.dark-mode .section-content {
+    color: #cbd5e0;
+}
+
+.description-content {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    border-left: 4px solid #667eea;
+}
+
+.dark-mode .description-content {
+    background: #4a5568;
+}
+
+.rubric-content {
+    background: #fff3cd;
+    padding: 1.25rem;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    border-left: 4px solid #ffc107;
+}
+
+.dark-mode .rubric-content {
+    background: #975a16;
+    color: #ffd60a;
+}
+
+.submission-section {
+    background: #f0f7ff;
+}
+
+.dark-mode .submission-section {
+    background: #2a4a6b;
+}
+
+.submission-date {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-weight: normal;
+}
+
+.submission-item {
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.dark-mode .submission-item {
+    background: #4a5568;
+    border-color: #2d3748;
+}
+
+.submission-text-display {
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 6px;
+    white-space: pre-wrap;
+    font-family: inherit;
+}
+
+.dark-mode .submission-text-display {
+    background: #2d3748;
+}
+
+.submission-link, .submission-file {
+    color: #007bff;
+    text-decoration: none;
+    margin-top: 0.5rem;
+    display: inline-block;
+}
+
+.submission-link:hover, .submission-file:hover {
+    text-decoration: underline;
+}
+
+/* Grade Display */
+.grade-section {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.dark-mode .grade-section {
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+}
+
+.grade-display-large {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.grade-circle {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
+}
+
+.grade-number {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.grade-letter {
+    font-size: 1.25rem;
+    font-weight: 600;
+    opacity: 0.9;
+}
+
+.grade-status-large {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #28a745;
+}
+
+.dark-mode .grade-status-large {
+    color: #68d391;
+}
+
+.feedback-display-large {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+
+.dark-mode .feedback-display-large {
+    background: #4a5568;
+    border-color: #2d3748;
+}
+
+.feedback-display-large h4 {
+    margin: 0 0 1rem 0;
+    color: #667eea;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.feedback-content-large {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+
+.dark-mode .feedback-content-large {
+    background: #2d3748;
+}
+
+.feedback-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: #6c757d;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.dark-mode .feedback-meta {
+    color: #a0aec0;
+    border-top-color: #4a5568;
+}
+
+/* Action Section */
+.action-section {
+    background: #fff8e1;
+}
+
+.dark-mode .action-section {
+    background: #744210;
+}
+
+.unsubmit-notice {
+    background: #e3f2fd;
+    border: 1px solid #bbdefb;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #1565c0;
+}
+
+.dark-mode .unsubmit-notice {
+    background: #1e3a8a;
+    border-color: #3b82f6;
+    color: #93c5fd;
+}
+
+/* Submission Form */
+.submission-form-section {
+    background: #f0fff4;
+}
+
+.dark-mode .submission-form-section {
+    background: #1a2f1a;
+}
+
+.form-group-modal {
+    margin-bottom: 1.5rem;
+}
+
+.form-group-modal label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin-bottom: 0.5rem;
+}
+
+.dark-mode .form-group-modal label {
+    color: #e2e8f0;
+}
+
+.form-control-modal {
+    width: 100%;
+    padding: 0.875rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+    font-family: inherit;
+}
+
+.form-control-modal:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.dark-mode .form-control-modal {
+    background: #4a5568;
+    border-color: #2d3748;
+    color: #e2e8f0;
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.375rem;
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.dark-mode .form-help {
+    color: #a0aec0;
+}
+
+.form-actions-modal {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn-large {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+/* Modal Footer */
+.assignment-modal-footer {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.dark-mode .assignment-modal-footer {
+    background: #4a5568;
+    border-top-color: #2d3748;
+}
+
+@media (max-width: 768px) {
+    .assignment-modal-content {
+        margin: 5% auto;
+        width: 98%;
+        max-height: 90vh;
+    }
+    
+    .assignment-modal-header {
+        padding: 1rem;
+    }
+    
+    .modal-section {
+        padding: 1rem;
+    }
+    
+    .grade-display-large {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .grade-circle {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .grade-number {
+        font-size: 1.75rem;
+    }
+    
+    .assignment-modal-footer {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .form-actions-modal {
+        flex-direction: column;
+    }
+    
+    .assignment-compact-header {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: flex-start;
+    }
+}
 </style>
 {% endblock %}
 
@@ -995,5 +1935,87 @@ function confirmUnsubmit() {
         'You can only do this before the assignment is graded.'
     );
 }
+
+// Feedback Modal Functions
+function showFeedbackModal(index) {
+    const modal = document.getElementById('feedbackModal' + index);
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    }
+}
+
+function closeFeedbackModal(index) {
+    const modal = document.getElementById('feedbackModal' + index);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto'; // Restore scrolling
+    }
+}
+
+// Assignment Modal Functions
+function openAssignmentModal(assignmentId, loopIndex) {
+    const modal = document.getElementById('assignmentModal' + assignmentId);
+    if (modal) {
+        modal.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeAssignmentModal(assignmentId) {
+    const modal = document.getElementById('assignmentModal' + assignmentId);
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Close modals when pressing Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        // Close feedback modals
+        const openFeedbackModals = document.querySelectorAll('.feedback-modal[style*="block"]');
+        openFeedbackModals.forEach(modal => {
+            modal.style.display = 'none';
+        });
+        
+        // Close assignment modals
+        const openAssignmentModals = document.querySelectorAll('.assignment-modal[style*="block"]');
+        openAssignmentModals.forEach(modal => {
+            modal.style.display = 'none';
+        });
+        
+        document.body.style.overflow = 'auto';
+    }
+});
+
+// Form validation for modal submission
+document.addEventListener('DOMContentLoaded', function() {
+    const modalForms = document.querySelectorAll('.submission-form-modal');
+    modalForms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const textArea = form.querySelector('textarea[name="submission_text"]');
+            const linkInput = form.querySelector('input[name="submission_link"]');
+            const fileInput = form.querySelector('input[name="submission_file"]');
+            
+            const hasText = textArea && textArea.value.trim();
+            const hasLink = linkInput && linkInput.value.trim();
+            const hasFile = fileInput && fileInput.files.length > 0;
+            
+            if (!hasText && !hasLink && !hasFile) {
+                e.preventDefault();
+                alert('Please provide at least one form of submission (text, link, or file).');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+                submitBtn.disabled = true;
+            }
+        });
+    });
+});
 </script>
 {% endblock %}

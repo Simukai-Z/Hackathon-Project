@@ -1,0 +1,857 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Study: {{ card_set.title }} - StudyCoach{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+/* Study Flash Cards Styles */
+.study-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.study-header h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.header-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-md);
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.progress-info {
+    display: flex;
+    gap: var(--spacing-lg);
+}
+
+.progress-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+/* Study Mode Controls */
+.study-controls {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.dark-mode .study-controls {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    align-items: end;
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.control-group label {
+    font-weight: 600;
+    color: var(--text-primary-light);
+    font-size: 0.9rem;
+}
+
+.dark-mode .control-group label {
+    color: var(--text-primary-dark);
+}
+
+.form-select {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--background-light);
+    color: var(--text-primary-light);
+    font-size: 0.9rem;
+}
+
+.dark-mode .form-select {
+    border-color: var(--border-dark);
+    background: var(--background-dark);
+    color: var(--text-primary-dark);
+}
+
+.control-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Flash Card Display */
+.card-container {
+    perspective: 1000px;
+    margin-bottom: var(--spacing-xl);
+}
+
+.flashcard {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    margin: 0 auto;
+    max-width: 600px;
+    cursor: pointer;
+}
+
+.flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.flashcard.flipped .flashcard-inner {
+    transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    font-size: 1.25rem;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+    word-wrap: break-word;
+}
+
+.flashcard-front {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.flashcard-back {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    transform: rotateY(180deg);
+}
+
+.card-type-indicator {
+    position: absolute;
+    top: var(--spacing-md);
+    left: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.flip-hint {
+    position: absolute;
+    bottom: var(--spacing-md);
+    right: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* Study Navigation */
+.study-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.nav-button {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    min-width: 120px;
+    justify-content: center;
+}
+
+.nav-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: var(--background-light);
+    color: var(--text-primary-light);
+    border: 1px solid var(--border-light);
+}
+
+.dark-mode .btn-secondary {
+    background: var(--background-dark);
+    color: var(--text-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--background-primary-light);
+    transform: translateY(-1px);
+}
+
+.dark-mode .btn-secondary:hover:not(:disabled) {
+    background: var(--background-primary-dark);
+}
+
+.card-progress {
+    text-align: center;
+    color: var(--text-secondary-light);
+}
+
+.dark-mode .card-progress {
+    color: var(--text-secondary-dark);
+}
+
+.progress-bar {
+    width: 200px;
+    height: 8px;
+    background: var(--background-light);
+    border-radius: var(--radius-md);
+    margin: var(--spacing-xs) auto;
+    overflow: hidden;
+}
+
+.dark-mode .progress-bar {
+    background: var(--background-dark);
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: var(--radius-md);
+    transition: width 0.3s ease;
+}
+
+/* Answer Feedback */
+.answer-feedback {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.feedback-button {
+    padding: var(--spacing-md) var(--spacing-xl);
+    border: none;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1rem;
+}
+
+.btn-incorrect {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 2px solid #fecaca;
+}
+
+.btn-incorrect:hover {
+    background: #fecaca;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-correct {
+    background: #dcfce7;
+    color: #166534;
+    border: 2px solid #bbf7d0;
+}
+
+.btn-correct:hover {
+    background: #bbf7d0;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Study Statistics */
+.study-stats {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.dark-mode .study-stats {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: var(--spacing-md);
+    text-align: center;
+}
+
+.stat-item {
+    padding: var(--spacing-md);
+    background: var(--background-light);
+    border-radius: var(--radius-md);
+}
+
+.dark-mode .stat-item {
+    background: var(--background-dark);
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .stat-value {
+    color: var(--text-primary-dark);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: var(--spacing-xs);
+}
+
+.dark-mode .stat-label {
+    color: var(--text-secondary-dark);
+}
+
+/* Study Options */
+.study-options {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5a67d8;
+    transform: translateY(-1px);
+    text-decoration: none;
+    color: white;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #667eea;
+    border: 2px solid #667eea;
+}
+
+.btn-outline:hover {
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .study-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .header-meta {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        text-align: center;
+    }
+    
+    .progress-info {
+        justify-content: center;
+    }
+    
+    .controls-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .control-buttons {
+        justify-content: center;
+    }
+    
+    .flashcard {
+        height: 300px;
+    }
+    
+    .flashcard-front, .flashcard-back {
+        font-size: 1rem;
+        padding: var(--spacing-lg);
+    }
+    
+    .study-navigation {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .answer-feedback {
+        flex-direction: column;
+    }
+    
+    .study-options {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Study Header -->
+    <div class="study-header">
+        <h1>
+            <i class="fas fa-graduation-cap"></i>
+            {{ card_set.title }}
+        </h1>
+        <div class="header-meta">
+            <div class="progress-info">
+                <div class="progress-item">
+                    <i class="fas fa-clone"></i>
+                    <span>{{ cards_with_priority|length }} cards</span>
+                </div>
+                <div class="progress-item">
+                    <i class="fas fa-book"></i>
+                    <span>{{ card_set.subject }}</span>
+                </div>
+                <div class="progress-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span>{{ set_progress.get('mastery_level', 0) }}% mastery</span>
+                </div>
+            </div>
+            <div>
+                Last studied: {{ set_progress.get('last_studied', 'Never')[:10] if set_progress.get('last_studied') != 'Never' else 'Never' }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Controls -->
+    <div class="study-controls">
+        <div class="controls-grid">
+            <div class="control-group">
+                <label for="studyMode">
+                    <i class="fas fa-cog"></i> Study Mode
+                </label>
+                <select id="studyMode" class="form-select" onchange="changeStudyMode()">
+                    <option value="spaced">Spaced Repetition (Recommended)</option>
+                    <option value="sequential">Sequential Order</option>
+                    <option value="random">Random Order</option>
+                    <option value="difficult">Difficult Cards Only</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label for="cardCount">
+                    <i class="fas fa-list-ol"></i> Cards to Study
+                </label>
+                <select id="cardCount" class="form-select">
+                    <option value="5">5 cards</option>
+                    <option value="10" selected>10 cards</option>
+                    <option value="15">15 cards</option>
+                    <option value="20">20 cards</option>
+                    <option value="all">All cards</option>
+                </select>
+            </div>
+            
+            <div class="control-buttons">
+                <button type="button" class="btn btn-primary" onclick="startStudySession()">
+                    <i class="fas fa-play"></i>
+                    Start Session
+                </button>
+                <a href="{{ url_for('study_tools.quiz_flashcards', set_id=set_id) }}" class="btn btn-outline">
+                    <i class="fas fa-question-circle"></i>
+                    Quiz Mode
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Statistics -->
+    <div class="study-stats">
+        <h3 style="text-align: center; margin-bottom: var(--spacing-lg); color: var(--text-primary-light);">
+            <i class="fas fa-chart-bar"></i>
+            Study Progress
+        </h3>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-value">{{ set_progress.get('total_reviews', 0) }}</div>
+                <div class="stat-label">Total Reviews</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ set_progress.get('mastery_level', 0) }}%</div>
+                <div class="stat-label">Mastery Level</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ cards_with_priority|selectattr('accuracy', 'ge', 80)|list|length }}</div>
+                <div class="stat-label">Mastered Cards</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ cards_with_priority|selectattr('priority', 'gt', 2)|list|length }}</div>
+                <div class="stat-label">Need Practice</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Card Display -->
+    <div class="card-container" id="cardContainer" style="display: none;">
+        <div class="flashcard" id="currentFlashcard" onclick="flipCard()">
+            <div class="flashcard-inner">
+                <div class="flashcard-front">
+                    <div class="card-type-indicator">Question</div>
+                    <div id="cardQuestion">Click "Start Session" to begin studying</div>
+                    <div class="flip-hint">Click to flip</div>
+                </div>
+                <div class="flashcard-back">
+                    <div class="card-type-indicator">Answer</div>
+                    <div id="cardAnswer">Answer will appear here</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Study Navigation -->
+    <div class="study-navigation" id="studyNavigation" style="display: none;">
+        <button type="button" class="nav-button btn-secondary" id="prevBtn" onclick="prevCard()" disabled>
+            <i class="fas fa-chevron-left"></i>
+            Previous
+        </button>
+        
+        <div class="card-progress">
+            <div id="cardCounter">1 / 1</div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <button type="button" class="nav-button btn-secondary" id="nextBtn" onclick="nextCard()">
+            Next
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- Answer Feedback -->
+    <div class="answer-feedback" id="answerFeedback" style="display: none;">
+        <button type="button" class="feedback-button btn-incorrect" onclick="recordAnswer(false)">
+            <i class="fas fa-times"></i>
+            I got it wrong
+        </button>
+        <button type="button" class="feedback-button btn-correct" onclick="recordAnswer(true)">
+            <i class="fas fa-check"></i>
+            I got it right
+        </button>
+    </div>
+
+    <!-- Study Options -->
+    <div class="study-options">
+        <a href="{{ url_for('study_tools.flashcards_list') }}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i>
+            Back to Flash Cards
+        </a>
+        <a href="{{ url_for('study_tools.create_flashcard_set') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Create New Set
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Study session data
+let studyCards = JSON.parse('{{ cards_with_priority | tojson | safe | escapejs }}');
+let currentCardIndex = 0;
+let sessionCards = [];
+let sessionStarted = false;
+let cardFlipped = false;
+
+// Initialize study session
+function startStudySession() {
+    const studyMode = document.getElementById('studyMode').value;
+    const cardCount = document.getElementById('cardCount').value;
+    
+    // Prepare cards based on study mode
+    sessionCards = prepareStudyCards(studyMode, cardCount);
+    
+    if (sessionCards.length === 0) {
+        alert('No cards available for the selected study mode.');
+        return;
+    }
+    
+    // Show study interface
+    document.getElementById('cardContainer').style.display = 'block';
+    document.getElementById('studyNavigation').style.display = 'flex';
+    document.getElementById('answerFeedback').style.display = 'flex';
+    
+    // Start with first card
+    currentCardIndex = 0;
+    sessionStarted = true;
+    displayCurrentCard();
+    updateNavigation();
+    
+    // Scroll to card
+    document.getElementById('cardContainer').scrollIntoView({ behavior: 'smooth' });
+}
+
+function prepareStudyCards(mode, count) {
+    let cards = [...studyCards];
+    
+    // Filter based on mode
+    switch (mode) {
+        case 'spaced':
+            // Already sorted by priority (spaced repetition)
+            break;
+        case 'sequential':
+            cards.sort((a, b) => a.index - b.index);
+            break;
+        case 'random':
+            cards = shuffleArray(cards);
+            break;
+        case 'difficult':
+            cards = cards.filter(card => card.accuracy < 70 || card.incorrect_count > 0);
+            break;
+    }
+    
+    // Limit count
+    if (count !== 'all') {
+        cards = cards.slice(0, parseInt(count));
+    }
+    
+    return cards;
+}
+
+function shuffleArray(array) {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+}
+
+function displayCurrentCard() {
+    if (!sessionStarted || currentCardIndex >= sessionCards.length) return;
+    
+    const card = sessionCards[currentCardIndex];
+    document.getElementById('cardQuestion').textContent = card.card.question;
+    document.getElementById('cardAnswer').textContent = card.card.answer;
+    
+    // Reset card to front
+    document.getElementById('currentFlashcard').classList.remove('flipped');
+    cardFlipped = false;
+    
+    updateNavigation();
+}
+
+function flipCard() {
+    if (!sessionStarted) return;
+    
+    const flashcard = document.getElementById('currentFlashcard');
+    flashcard.classList.toggle('flipped');
+    cardFlipped = !cardFlipped;
+}
+
+function updateNavigation() {
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const counter = document.getElementById('cardCounter');
+    const progressFill = document.getElementById('progressFill');
+    
+    // Update counter
+    counter.textContent = `${currentCardIndex + 1} / ${sessionCards.length}`;
+    
+    // Update progress bar
+    const progress = ((currentCardIndex + 1) / sessionCards.length) * 100;
+    progressFill.style.width = `${progress}%`;
+    
+    // Update buttons
+    prevBtn.disabled = currentCardIndex === 0;
+    
+    if (currentCardIndex === sessionCards.length - 1) {
+        nextBtn.innerHTML = '<i class="fas fa-flag-checkered"></i> Finish';
+    } else {
+        nextBtn.innerHTML = 'Next <i class="fas fa-chevron-right"></i>';
+    }
+}
+
+function prevCard() {
+    if (currentCardIndex > 0) {
+        currentCardIndex--;
+        displayCurrentCard();
+    }
+}
+
+function nextCard() {
+    if (currentCardIndex < sessionCards.length - 1) {
+        currentCardIndex++;
+        displayCurrentCard();
+    } else {
+        // Finish session
+        finishSession();
+    }
+}
+
+async function recordAnswer(isCorrect) {
+    if (!sessionStarted) return;
+    
+    const card = sessionCards[currentCardIndex];
+    
+    try {
+        const response = await fetch(`/study-tools/flashcards/{{ set_id }}/record-answer`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                card_index: card.index,
+                is_correct: isCorrect
+            })
+        });
+        
+        if (response.ok) {
+            // Update local card data
+            if (isCorrect) {
+                card.correct_count++;
+            } else {
+                card.incorrect_count++;
+            }
+            
+            // Calculate new accuracy
+            const total = card.correct_count + card.incorrect_count;
+            card.accuracy = total > 0 ? (card.correct_count / total) * 100 : 0;
+            
+            // Move to next card after a short delay
+            setTimeout(() => {
+                nextCard();
+            }, 500);
+        }
+    } catch (error) {
+        console.error('Error recording answer:', error);
+    }
+}
+
+function finishSession() {
+    sessionStarted = false;
+    
+    // Calculate session stats
+    const totalCards = sessionCards.length;
+    const correctAnswers = sessionCards.reduce((sum, card) => sum + card.correct_count, 0);
+    const incorrectAnswers = sessionCards.reduce((sum, card) => sum + card.incorrect_count, 0);
+    
+    // Show completion message
+    alert(`Study session complete!\n\nCards studied: ${totalCards}\nTotal reviews: ${correctAnswers + incorrectAnswers}\n\nGreat job! Your progress has been saved.`);
+    
+    // Refresh the page to show updated stats
+    location.reload();
+}
+
+function changeStudyMode() {
+    if (sessionStarted) {
+        if (confirm('Changing study mode will restart your session. Continue?')) {
+            sessionStarted = false;
+            document.getElementById('cardContainer').style.display = 'none';
+            document.getElementById('studyNavigation').style.display = 'none';
+            document.getElementById('answerFeedback').style.display = 'none';
+        } else {
+            // Reset to previous mode
+            return;
+        }
+    }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(event) {
+    if (!sessionStarted) return;
+    
+    switch(event.key) {
+        case ' ':
+        case 'Enter':
+            event.preventDefault();
+            flipCard();
+            break;
+        case 'ArrowLeft':
+            event.preventDefault();
+            prevCard();
+            break;
+        case 'ArrowRight':
+            event.preventDefault();
+            nextCard();
+            break;
+        case '1':
+            event.preventDefault();
+            recordAnswer(false);
+            break;
+        case '2':
+            event.preventDefault();
+            recordAnswer(true);
+            break;
+    }
+});
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Study Flash Cards loaded');
+    console.log(`${studyCards.length} cards available for study`);
+});
+</script>
+{% endblock %}

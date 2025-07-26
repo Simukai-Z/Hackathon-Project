@@ -3,10 +3,14 @@ import json
 import re
 import dotenv
 import datetime
+import hashlib
 from uuid import uuid4
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.utils import secure_filename
 from openai import AzureOpenAI
+
+# Import study tools blueprint
+from routes.study_tools import study_tools_bp
 
 dotenv.load_dotenv()
 AOAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -15,6 +19,9 @@ MODEL_NAME = "gpt-35-turbo"
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
+
+# Register blueprints
+app.register_blueprint(study_tools_bp, url_prefix='/study-tools')
 
 # Configure file upload settings
 UPLOAD_FOLDER = 'uploads'

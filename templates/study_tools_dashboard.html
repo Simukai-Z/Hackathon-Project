@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Study Tools Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="dashboard-header">
+        <h1>Study Tools Dashboard</h1>
+        <p>Create flash cards and study guides to enhance your learning</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-content">
+                <h3>{{ total_flashcard_sets }}</h3>
+                <p>Flash Card Sets</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-content">
+                <h3>{{ total_flashcards }}</h3>
+                <p>Total Flash Cards</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📖</div>
+            <div class="stat-content">
+                <h3>{{ total_study_guides }}</h3>
+                <p>Study Guides</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-content">
+                <h3>{{ average_score }}%</h3>
+                <p>Average Score</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-grid">
+        <div class="action-card">
+            <h3>📚 Flash Cards</h3>
+            <p>Create and study with AI-generated flash cards</p>
+            <div class="button-group">
+                <a href="/study-tools/flashcards" class="btn btn-primary">View Flash Cards</a>
+                <a href="/study-tools/create-flashcards" class="btn btn-secondary">Create New Set</a>
+            </div>
+        </div>
+        <div class="action-card">
+            <h3>📖 Study Guides</h3>
+            <p>Generate comprehensive study guides from your content</p>
+            <div class="button-group">
+                <a href="/study-tools/study-guides" class="btn btn-primary">View Study Guides</a>
+                <a href="/study-tools/create-study-guide" class="btn btn-secondary">Create New Guide</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="recent-activity">
+        <h2>Recent Activity</h2>
+        {% if recent_activity %}
+            <div class="activity-list">
+                {% for activity in recent_activity %}
+                <div class="activity-item">
+                    <div class="activity-time">{{ activity.timestamp }}</div>
+                    <div class="activity-content">{{ activity.description }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="no-activity">No recent activity. Start creating flash cards or study guides!</p>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.dashboard-header h1 {
+    color: var(--primary-color);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.dashboard-header p {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-content h3 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.stat-content p {
+    color: var(--text-muted);
+    margin: 0.5rem 0 0 0;
+}
+
+.action-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.action-card:hover {
+    transform: translateY(-2px);
+}
+
+.action-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.action-card p {
+    color: var(--text-muted);
+    margin-bottom: 1.5rem;
+}
+
+.button-group {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.recent-activity {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.recent-activity h2 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--background-light);
+    border-radius: 8px;
+}
+
+.activity-time {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    min-width: 120px;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.no-activity {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    padding: 2rem;
+}
+
+/* Dark mode support */
+body.dark-mode .stat-card,
+body.dark-mode .action-card,
+body.dark-mode .recent-activity {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+body.dark-mode .activity-item {
+    background: var(--dark-bg);
+}
+</style>
+{% endblock %}
