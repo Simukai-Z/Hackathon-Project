@@ -37,6 +37,9 @@
 <a href="{{ url_for('grading_page') }}" class="btn btn-info">
     <i class="fas fa-clipboard-check"></i> Grading Center
 </a>
+<a href="{{ url_for('teacher_feedback_history') }}" class="btn btn-success">
+    <i class="fas fa-history"></i> Feedback History
+</a>
 {% if class_obj %}
     <button class="btn btn-primary" onclick="document.getElementById('addRubricModal').style.display='block'">
         Add Rubric
@@ -220,9 +223,14 @@
                                                     </span>
                                                 </div>
                                                 {% if submission.feedback %}
-                                                    <div class="feedback-display">
-                                                        <strong>Feedback:</strong>
-                                                        <div class="feedback-content">{{ submission.feedback }}</div>
+                                                    <div class="feedback-display-enhanced">
+                                                        <div class="feedback-header">
+                                                            <i class="fas fa-comment-alt"></i>
+                                                            <strong>Feedback Provided</strong>
+                                                        </div>
+                                                        <div class="feedback-content-enhanced">
+                                                            {{ submission.feedback }}
+                                                        </div>
                                                     </div>
                                                 {% endif %}
                                                 <div class="grade-metadata">
@@ -980,6 +988,56 @@
 
 .feedback-display {
     margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.feedback-display-enhanced {
+    margin-top: 1rem;
+    background: rgba(22, 163, 74, 0.1);
+    border: 1px solid var(--success-light);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+}
+
+.dark-mode .feedback-display-enhanced {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: var(--success-dark);
+}
+
+.feedback-display-enhanced .feedback-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--success-light);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.dark-mode .feedback-display-enhanced .feedback-header {
+    color: var(--success-dark);
+}
+
+.feedback-content-enhanced {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .feedback-content-enhanced {
+    background: rgba(21, 21, 21, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary-dark);
+}
+
+.feedback-content {
+    background-color: rgba(255, 255, 255, 0.1);
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    margin-top: 0.25rem;
     font-style: italic;
 }
 

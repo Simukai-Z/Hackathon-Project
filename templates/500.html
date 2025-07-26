@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - StudyCoach{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-content">
+        <h1 class="error-code">500</h1>
+        <h2 class="error-title">Internal Server Error</h2>
+        <p class="error-description">
+            Something went wrong on our end. We're working to fix it.
+        </p>
+        <div class="error-actions">
+            <a href="{{ url_for('home') }}" class="btn btn-primary">Go Home</a>
+            <button onclick="location.reload()" class="btn btn-secondary">Try Again</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.error-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    text-align: center;
+}
+
+.error-content {
+    max-width: 500px;
+    padding: 2rem;
+}
+
+.error-code {
+    font-size: 6rem;
+    font-weight: bold;
+    color: var(--danger-light);
+    margin: 0;
+    line-height: 1;
+}
+
+.error-title {
+    font-size: 2rem;
+    margin: 1rem 0;
+    color: var(--text-primary-light);
+}
+
+.error-description {
+    font-size: 1.1rem;
+    color: var(--text-secondary-light);
+    margin-bottom: 2rem;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.dark-mode .error-code {
+    color: var(--danger-dark);
+}
+
+.dark-mode .error-title {
+    color: var(--text-primary-dark);
+}
+
+.dark-mode .error-description {
+    color: var(--text-secondary-dark);
+}
+</style>
+{% endblock %}

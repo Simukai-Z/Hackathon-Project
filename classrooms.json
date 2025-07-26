@@ -88,12 +88,45 @@
               "submission_text": "",
               "filename": "epicrbot20099gmail.com_77b3a162-0548-461b-9194-06e7b4f193d7_Testassinmen.txt",
               "timestamp": "2025-07-25T23:28:55.704622",
-              "grade": 10,
-              "feedback": "EPic, thank you for your submission. However, based on the grading criteria provided, there are significant areas that need improvement. \n\n1. **Content Quality and Completeness (40%)**: The submission lacks substantive content. The file contains only the phrase \"Helloo students,\" which does not provide any meaningful information or demonstrate completion of the assignment. This results in a very low score for content quality and completeness.\n\n2. **Understanding and Analysis (30%)**: There is no evidence of understanding or analysis in the submission. Without any substantial content, it is impossible to assess your grasp of the material or your ability to analyze it.\n\n3. **Organization and Clarity (20%)**: The submission is extremely brief and does not exhibit any organization or clarity. A single phrase does not allow for any assessment of these criteria.\n\n4. **Following Instructions (10%)**: The assignment instructions were not followed adequately. The submission does not meet the expectations outlined in the assignment details, as it lacks content and does not include any link submission.\n\nTo improve your grade, I recommend providing a comprehensive and detailed response that addresses the assignment title and description. Ensure your submission is organized, clear, and demonstrates a thorough understanding and analysis of the topic. Additionally, carefully follow all instructions provided in the assignment details.",
+              "grade": 50,
+              "feedback": "EPic, your submission lacks the necessary content and detail required for a comprehensive evaluation. The assignment appears incomplete, as it only contains a brief greeting without any substantial information or analysis related to the assignment title or description. To improve, ensure that your work addresses the assignment topic thoroughly and demonstrates a clear understanding of the subject matter. Additionally, organizing your thoughts clearly and following the assignment instructions will help enhance the quality of your submissions in the future.",
               "graded_by": "AI (via Roblox@gmail.com)",
-              "graded_timestamp": "2025-07-26T00:51:00.518948"
+              "graded_timestamp": "2025-07-26T04:06:19.095433"
             }
           ]
+        },
+        {
+          "id": "d4d29f81-1236-427f-9b27-1b1821a78e1b",
+          "title": "TestAssignment",
+          "content": "Assignment: AI & Society ReflectionObjective:Reflect on the impact of AI in modern society by writing a short essay that analyzes both the benefits and potential risks of AI technologies.Instructions:- Write a 3-paragraph essay.- Paragraph 1: Introduction to AI and its increasing role in society.- Paragraph 2: Describe at least two benefits and one risk of AI with examples.- Paragraph 3: Your opinion on how society should handle AI advancements.- Length: 300\u2013500 words- Submit as a .txt or .docx file.",
+          "description": "",
+          "rubric_id": "a9798a70-fe3a-4b5e-98fb-b76593a58517",
+          "timestamp": "2025-07-26T03:53:20.586560",
+          "teacher_email": "Roblox@gmail.com",
+          "submissions": [
+            {
+              "id": "3bc7a9c5-58b0-4a0c-a3bd-9d30d83a8c12",
+              "student_email": "epicrbot20099@gmail.com",
+              "assignment_id": "d4d29f81-1236-427f-9b27-1b1821a78e1b",
+              "submission_text": "Test submission for unsubmit functionality",
+              "submission_link": "",
+              "filename": null,
+              "timestamp": "2025-07-26T04:19:23.961405",
+              "grade": 50,
+              "feedback": "EPic, your submission appears to be a placeholder or a test rather than a complete assignment. It lacks content quality and completeness, as there is no substantive information or analysis provided. The understanding and analysis of the topic cannot be assessed due to the absence of content. The organization and clarity are also not applicable here, as there is no structured information to evaluate. Additionally, it seems that the assignment instructions were not followed, as the submission does not align with the expected content for an assignment titled \"TestAssignment.\" To improve, please ensure that your future submissions include detailed and relevant content that demonstrates your understanding and analysis of the topic.",
+              "graded_by": "AI (via Roblox@gmail.com)",
+              "graded_timestamp": "2025-07-26T06:59:51.233610+00:00"
+            }
+          ]
+        }
+      ],
+      "rubrics": [
+        {
+          "id": "a9798a70-fe3a-4b5e-98fb-b76593a58517",
+          "title": "TestRubric",
+          "content": "Grading Rubric: AI & Society Reflection\n\n1. Content Understanding (30 points)\n- Demonstrates understanding of AI's role in society (10)\n- Clearly explains at least two benefits (10)\n- Identifies and explains one potential risk (10)\n\n2. Organization & Structure (25 points)\n- Clear introduction, body, and conclusion (10)\n- Logical flow of ideas (10)\n- Proper paragraphing (5)\n\n3. Support & Examples (25 points)\n- Provides relevant examples for points made (15)\n- Evidence is well-integrated (10)\n\n4. Grammar & Mechanics (10 points)\n- Correct spelling, grammar, punctuation\n\n5. Personal Insight & Opinion (10 points)\n- Thoughtful personal reflection or stance on AI in society\n\nTotal: 100 points\n",
+          "timestamp": "2025-07-26T03:53:54.744549",
+          "teacher_email": "Roblox@gmail.com"
         }
       ]
     },

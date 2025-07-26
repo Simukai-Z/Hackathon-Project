@@ -4,10 +4,15 @@
 
 {% block content %}
 <div class="chat-container">
-    <div class="chat-sidebar card">
-        <div class="chat-settings">
+    <div class="settings-backdrop" id="settings-backdrop" onclick="toggleSettings()"></div>
+    
+    <div class="chat-sidebar card" id="chat-sidebar">
+        <div class="chat-header">
+            <img src="{{ url_for('static', filename='study_coach_logo.png') }}" alt="Study Coach" class="chat-logo">
             <h3>AI Assistant Settings</h3>
-            
+            <button class="btn btn-sm btn-secondary close-settings" onclick="toggleSettings()">×</button>
+        </div>
+        <div class="chat-settings">
             <div class="form-group">
                 <label for="ai-name-input" class="form-label">AI Name</label>
                 <input type="text" id="ai-name-input" class="form-control" value="StudyCoach AI">
@@ -42,17 +47,14 @@
                 </button>
             </div>
         </div>
-        
-        <div class="classroom-selector">
-            <select id="classroom-select" class="form-control">
-                <option value="">Select a classroom...</option>
-            </select>
-        </div>
     </div>
     
     <div class="chat-main card">
-        <div class="chat-header">
-            <h2 id="ai-name">StudyCoach AI</h2>
+        <div class="chat-main-header">
+            <div class="header-left">
+                <button class="btn btn-secondary btn-sm settings-toggle" onclick="toggleSettings()">⚙️ Settings</button>
+                <h2 id="ai-name">StudyCoach AI</h2>
+            </div>
             <button class="btn btn-secondary btn-sm" onclick="window.history.back()">Back</button>
         </div>
         
@@ -77,19 +79,107 @@
 {% block extra_css %}
 <style>
 .chat-container {
-    display: grid;
-    grid-template-columns: 280px 1fr;
+    display: flex;
     gap: var(--spacing-lg);
     max-width: 1600px;
     margin: var(--spacing-md) auto;
     padding: 0 var(--spacing-md);
+    position: relative;
+}
+
+.settings-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+.settings-backdrop.show {
+    opacity: 1;
+    visibility: visible;
 }
 
 .chat-sidebar {
+    width: 350px;
     height: calc(100vh - 140px);
     overflow-y: auto;
-    position: sticky;
+    position: fixed;
+    left: -370px;
     top: calc(48px + var(--spacing-md));
+    z-index: 1000;
+    transition: left 0.3s ease-in-out;
+    box-shadow: var(--shadow-lg);
+}
+
+.chat-sidebar.open {
+    left: var(--spacing-md);
+}
+
+.chat-sidebar .chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: var(--spacing-md);
+}
+
+.close-settings {
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0.25rem 0.5rem;
+}
+
+.chat-main {
+    flex: 1;
+    height: calc(100vh - 140px);
+    display: flex;
+    flex-direction: column;
+    transition: margin-left 0.3s ease-in-out;
+}
+
+.chat-main.settings-open {
+    margin-left: 370px;
+}
+
+.chat-main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: var(--spacing-md);
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.settings-toggle {
+    font-size: 0.9rem;
+}
+
+.chat-history {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    margin: -var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.chat-input {
+    border-top: 1px solid var(--border-light);
+    margin: 0 -var(--spacing-lg);
+    margin-bottom: -var(--spacing-lg);
+    padding: var(--spacing-lg);
 }
 
 /* Improve dark mode sidebar */
@@ -108,20 +198,21 @@
     font-weight: 500;
 }
 
-.chat-main {
-    display: flex;
-    flex-direction: column;
-    height: calc(100vh - 140px);
-}
-
-/* Improve dark mode main chat area */
 .dark-mode .chat-main {
     background-color: #1a1a1a;
     border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.dark-mode .chat-header h2 {
+.dark-mode .chat-main-header {
+    border-color: var(--border-dark);
+}
+
+.dark-mode .chat-main-header h2 {
     color: var(--text-primary-dark);
+}
+
+.dark-mode .chat-input {
+    border-color: var(--border-dark);
 }
 
 .chat-header {
@@ -164,6 +255,19 @@
     padding: var(--spacing-md);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
+    position: relative;
+}
+
+.message-sender {
+    font-weight: 600;
+    font-size: 0.85em;
+    margin-bottom: var(--spacing-xs);
+    opacity: 0.9;
+}
+
+.message-text {
+    line-height: 1.5;
+    word-wrap: break-word;
 }
 
 .chat-message.ai .message-content {
@@ -187,6 +291,11 @@
     background-color: var(--primary-dark);
     color: white;
     border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .message-sender {
+    color: inherit;
+    opacity: 0.9;
 }
 
 .chat-input {
@@ -261,6 +370,21 @@
 .chat-input-area {
     display: flex;
     gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.chat-input-area input {
+    flex: 1;
+}
+
+.file-upload-area {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.file-upload-area input {
+    flex: 1;
 }
 
 .chat-settings {
@@ -278,16 +402,6 @@
 
 .file-upload {
     margin-top: var(--spacing-xs);
-}
-
-.classroom-selector {
-    margin-top: var(--spacing-lg);
-    padding-top: var(--spacing-lg);
-    border-top: 1px solid var(--border-light);
-}
-
-.dark-mode .classroom-selector {
-    border-color: var(--border-dark);
 }
 
 /* Improve button styling in dark mode */
@@ -342,17 +456,32 @@
 }
 
 @media (max-width: 768px) {
-    .chat-container {
-        grid-template-columns: 1fr;
-    }
-    
     .chat-sidebar {
-        height: auto;
-        position: static;
+        width: 90vw;
+        left: -95vw;
     }
     
-    .chat-main {
-        height: 600px;
+    .chat-sidebar.open {
+        left: 5vw;
+    }
+    
+    .chat-main.settings-open {
+        margin-left: 0;
+    }
+    
+    .settings-backdrop.show {
+        display: block;
+    }
+    
+    .header-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-sm);
+    }
+    
+    .chat-history {
+        height: auto;
+        min-height: 300px;
     }
 }
 
@@ -362,8 +491,17 @@
         flex-direction: column;
     }
     
-    .chat-main {
-        height: 500px;
+    .chat-sidebar {
+        width: 95vw;
+        left: -100vw;
+    }
+    
+    .chat-sidebar.open {
+        left: 2.5vw;
+    }
+    
+    .header-left h2 {
+        font-size: 1.2rem;
     }
 }
 </style>
@@ -388,6 +526,23 @@
                     aiPersonality = data.personality;
                 }
             });
+
+        // Settings toggle functionality
+        window.toggleSettings = function() {
+            const sidebar = document.getElementById('chat-sidebar');
+            const chatMain = document.querySelector('.chat-main');
+            const backdrop = document.getElementById('settings-backdrop');
+            
+            if (sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                chatMain.classList.remove('settings-open');
+                backdrop.classList.remove('show');
+            } else {
+                sidebar.classList.add('open');
+                chatMain.classList.add('settings-open');
+                backdrop.classList.add('show');
+            }
+        }
 
         function renderHistory() {
             const historyDiv = document.getElementById('chat-history');
@@ -430,17 +585,11 @@
             renderHistory();
             
             let personality = document.getElementById('ai-personality').value;
-            // Get selected classroom code if available
-            let class_code = '';
-            const select = document.getElementById('classroom-select');
-            if (select && select.style.display !== 'none') {
-                class_code = select.value;
-            }
             // Call backend
             const res = await fetch('{{ url_for("chat") }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt, personality, class_code, fileContent })
+                body: JSON.stringify({ prompt, personality, class_code: '', fileContent })
             });
             const data = await res.json();
             chatHistory.push({ role: 'ai', content: data.response });
@@ -532,54 +681,6 @@
     });
 </script>
 {% endblock %}
-            });
-
-        function renderHistory() {
-            const historyDiv = document.getElementById('chat-history');
-            historyDiv.innerHTML = '';
-            chatHistory.forEach(msg => {
-                const div = document.createElement('div');
-                div.className = 'chat-message ' + msg.role;
-                div.innerText = (msg.role === 'user' ? 'You: ' : aiName + ': ') + msg.content;
-                historyDiv.appendChild(div);
-            });
-            historyDiv.scrollTop = historyDiv.scrollHeight;
-        }
-        renderHistory();
-
-        document.getElementById('chat-form').onsubmit = async function(e) {
-            e.preventDefault();
-            const input = document.getElementById('user-input');
-            const fileInput = document.getElementById('chat-file');
-            const prompt = input.value.trim();
-            if (!prompt && !fileInput.files[0]) return;
-
-            let fileContent = '';
-            if (fileInput.files[0]) {
-                const reader = new FileReader();
-                reader.onload = async function(evt) {
-                    fileContent = evt.target.result;
-                    await sendMessage(prompt, fileContent);
-                };
-                reader.readAsText(fileInput.files[0]);
-            } else {
-                await sendMessage(prompt, '');
-            }
-            input.value = '';
-            fileInput.value = '';
-        };
-
-        async function sendMessage(prompt, fileContent) {
-            const displayContent = fileContent ? prompt + "\n[Attached File Content]:\n" + fileContent : prompt;
-            chatHistory.push({ role: 'user', content: displayContent });
-            renderHistory();
-            
-            let personality = document.getElementById('ai-personality').value;
-            // Get selected classroom code if available
-            let class_code = '';
-            const select = document.getElementById('classroom-select');
-            if (select && select.style.display !== 'none') {
-                class_code = select.value;
             }
             // Call backend
             const res = await fetch('{{ url_for("chat") }}', {

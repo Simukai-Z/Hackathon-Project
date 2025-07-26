@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}StudyCoach{% endblock %}</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='study_coach_logo.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='study_coach_logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='study_coach_logo.png') }}">
+    
     <!-- Fonts -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap">
@@ -23,8 +28,8 @@
     <header class="header">
         <div class="container">
             <nav class="nav">
-                <a href="{{ url_for('home') }}" class="nav-link">
-                    <strong>StudyCoach</strong>
+                <a href="{{ url_for('home') }}" class="nav-link logo-link">
+                    <img src="{{ url_for('static', filename='study_coach_logo.png') }}" alt="Study Coach" class="header-logo">
                 </a>
                 
                 {% if session.get('user_type') %}

@@ -189,17 +189,55 @@
                                     
                                     {% if submission.grade is not none %}
                                         <div class="grade-display">
-                                            <strong>Grade: {{ submission.grade }}%</strong>
+                                            <div class="grade-header">
+                                                <span class="grade-badge">Grade: {{ submission.grade }}%</span>
+                                                <span class="grade-status">
+                                                    {% if submission.grade >= 90 %}🏆 Excellent
+                                                    {% elif submission.grade >= 80 %}⭐ Good
+                                                    {% elif submission.grade >= 70 %}👍 Satisfactory
+                                                    {% elif submission.grade >= 60 %}⚠️ Needs Improvement
+                                                    {% else %}❌ Needs Work
+                                                    {% endif %}
+                                                </span>
+                                            </div>
                                             {% if submission.feedback %}
-                                                <div class="feedback">
-                                                    <p><strong>Feedback:</strong></p>
-                                                    <p>{{ submission.feedback }}</p>
+                                                <div class="feedback-section">
+                                                    <div class="feedback-header">
+                                                        <i class="fas fa-comment-alt"></i>
+                                                        <strong>Instructor Feedback</strong>
+                                                    </div>
+                                                    <div class="feedback-content">
+                                                        {{ submission.feedback }}
+                                                    </div>
+                                                    <div class="feedback-metadata">
+                                                        <small>
+                                                            <i class="fas fa-user"></i> {{ submission.graded_by }}
+                                                            {% if submission.graded_timestamp %}
+                                                                • <i class="fas fa-clock"></i> {{ submission.graded_timestamp|datetime }}
+                                                            {% endif %}
+                                                        </small>
+                                                    </div>
                                                 </div>
                                             {% endif %}
                                         </div>
                                     {% else %}
                                         <div class="submitted-status">
-                                            ✅ Submitted - Waiting for grade
+                                            <div class="status-badge">
+                                                ✅ Submitted - Waiting for grade
+                                            </div>
+                                            <div class="submission-actions">
+                                                <form method="post" action="{{ url_for('unsubmit_assignment') }}" class="unsubmit-form" onsubmit="return confirmUnsubmit()">
+                                                    <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
+                                                    <button type="submit" class="btn btn-warning btn-sm">
+                                                        <i class="fas fa-undo"></i>
+                                                        Unsubmit
+                                                    </button>
+                                                </form>
+                                                <small class="unsubmit-help">
+                                                    <i class="fas fa-info-circle"></i>
+                                                    You can unsubmit and resubmit until this assignment is graded
+                                                </small>
+                                            </div>
                                         </div>
                                     {% endif %}
                                 </div>
@@ -673,15 +711,108 @@
 }
 
 .grade-display {
-    background-color: #e3f2fd;
-    color: #1976d2;
-    padding: 1rem;
-    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+    border: 2px solid var(--primary-light);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1rem;
 }
 
 .dark-mode .grade-display {
-    background-color: #1a237e;
-    color: #90caf9;
+    background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
+    border-color: var(--primary-dark);
+    color: var(--text-primary-dark);
+}
+
+.grade-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.grade-badge {
+    background: var(--primary-light);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.dark-mode .grade-badge {
+    background: var(--primary-dark);
+}
+
+.grade-status {
+    font-weight: 500;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .grade-status {
+    color: var(--text-primary-dark);
+}
+
+.feedback-section {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    border-left: 4px solid var(--success-light);
+}
+
+.dark-mode .feedback-section {
+    background: rgba(21, 21, 21, 0.9);
+    border-left-color: var(--success-dark);
+}
+
+.feedback-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--success-light);
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.dark-mode .feedback-header {
+    color: var(--success-dark);
+}
+
+.feedback-content {
+    color: var(--text-primary-light);
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+    white-space: pre-wrap;
+    background: rgba(248, 249, 250, 0.8);
+    padding: 0.75rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .feedback-content {
+    color: var(--text-primary-dark);
+    background: rgba(10, 10, 10, 0.8);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.feedback-metadata {
+    color: var(--text-secondary-light);
+    font-size: 0.85rem;
+}
+
+.dark-mode .feedback-metadata {
+    color: var(--text-secondary-dark);
+}
+
+.feedback-metadata i {
+    color: var(--primary-light);
+    margin-right: 0.25rem;
+}
+
+.dark-mode .feedback-metadata i {
+    color: var(--primary-dark);
 }
 
 .submitted-status {
@@ -695,18 +826,6 @@
 .dark-mode .submitted-status {
     background-color: #1b5e20;
     color: #81c784;
-}
-
-.feedback {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    border-left: 3px solid var(--primary-light);
-    background-color: #f8f9fa;
-}
-
-.dark-mode .feedback {
-    border-color: var(--primary-dark);
-    background-color: var(--bg-secondary-dark);
 }
 
 .form-actions {
@@ -755,6 +874,89 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* Unsubmit Functionality Styles */
+.submitted-status {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.status-badge {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.2);
+}
+
+.submission-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.unsubmit-form {
+    margin: 0;
+}
+
+.unsubmit-help {
+    font-size: 0.8rem;
+    color: var(--muted-color, #6c757d);
+    text-align: center;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    max-width: 280px;
+}
+
+.btn-warning {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: #212529;
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.2);
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #e0a800, #e8690b);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    border-radius: 6px;
+}
+
+.btn i {
+    margin-right: 0.25rem;
+}
+
+@media (max-width: 768px) {
+    .submitted-status {
+        gap: 0.75rem;
+    }
+    
+    .submission-actions {
+        align-items: stretch;
+    }
+    
+    .btn-warning {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .unsubmit-help {
+        text-align: center;
+        max-width: none;
+    }
+}
 </style>
 {% endblock %}
 
@@ -781,6 +983,17 @@ function toggleSubmissionForm(assignmentId) {
     } else {
         form.style.display = 'none';
     }
+}
+
+function confirmUnsubmit() {
+    return confirm(
+        'Are you sure you want to unsubmit this assignment?\n\n' +
+        '⚠️ This action will:\n' +
+        '• Remove your current submission\n' +
+        '• Delete any uploaded files\n' +
+        '• Allow you to submit again\n\n' +
+        'You can only do this before the assignment is graded.'
+    );
 }
 </script>
 {% endblock %}

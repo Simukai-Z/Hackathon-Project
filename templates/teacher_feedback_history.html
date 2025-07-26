@@ -1,0 +1,441 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Feedback History - StudyCoach{% endblock %}
+
+{% block dashboard_content %}
+<div class="feedback-history-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            <i class="fas fa-history"></i>
+            Your Feedback History
+        </h1>
+        <div class="page-actions">
+            <a href="{{ url_for('teacher_main') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="feedback-stats">
+        <div class="stat-card">
+            <div class="stat-number">{{ feedback_history|length }}</div>
+            <div class="stat-label">Total Feedback Given</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">
+                {% set recent_feedback = feedback_history|selectattr("graded_timestamp", "defined")|list %}
+                {% set this_week = [] %}
+                {% for feedback in recent_feedback %}
+                    {% set days_ago = (moment().utc() - moment(feedback.graded_timestamp).utc()).days %}
+                    {% if days_ago <= 7 %}
+                        {% set _ = this_week.append(feedback) %}
+                    {% endif %}
+                {% endfor %}
+                {{ this_week|length }}
+            </div>
+            <div class="stat-label">This Week</div>
+        </div>
+    </div>
+
+    <div class="search-section">
+        <div class="search-controls">
+            <input type="text" id="feedback-search" class="form-control" placeholder="Search by student name, assignment, or feedback content...">
+            <select id="class-filter" class="form-control">
+                <option value="">All Classes</option>
+                {% for feedback in feedback_history %}
+                    {% if feedback.class_name not in (feedback_history|map(attribute='class_name')|list)[:loop.index-1] %}
+                        <option value="{{ feedback.class_name }}">{{ feedback.class_name }}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div class="feedback-list">
+        {% if feedback_history %}
+            {% for feedback in feedback_history %}
+                <div class="feedback-card" data-class="{{ feedback.class_name }}" data-student="{{ feedback.student_name }}" data-assignment="{{ feedback.assignment_title }}">
+                    <div class="feedback-header">
+                        <div class="student-info">
+                            <h3 class="student-name">{{ feedback.student_name }}</h3>
+                            <span class="assignment-info">{{ feedback.assignment_title }} • {{ feedback.class_name }}</span>
+                        </div>
+                        <div class="feedback-meta">
+                            <div class="grade-display">
+                                <span class="grade-badge grade-{{ 'excellent' if feedback.grade >= 90 else 'good' if feedback.grade >= 80 else 'satisfactory' if feedback.grade >= 70 else 'needs-improvement' if feedback.grade >= 60 else 'needs-work' }}">
+                                    {{ feedback.grade }}%
+                                </span>
+                            </div>
+                            <div class="timestamp">
+                                <i class="fas fa-clock"></i>
+                                {{ feedback.graded_timestamp|datetime if feedback.graded_timestamp else 'Unknown date' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="submission-preview">
+                        <h4><i class="fas fa-file-text"></i> Student Submission Preview</h4>
+                        <div class="submission-content">
+                            {{ feedback.submission_preview }}
+                        </div>
+                    </div>
+
+                    <div class="feedback-content">
+                        <h4><i class="fas fa-comment-alt"></i> Your Feedback</h4>
+                        <div class="feedback-text">
+                            {{ feedback.feedback }}
+                        </div>
+                    </div>
+
+                    <div class="feedback-actions">
+                        <a href="{{ url_for('teacher_main', class=feedback.class_code) }}" class="btn btn-outline btn-sm">
+                            <i class="fas fa-eye"></i>
+                            View in Context
+                        </a>
+                        <button class="btn btn-outline btn-sm" onclick="copyFeedback('{{ loop.index }}')">
+                            <i class="fas fa-copy"></i>
+                            Copy Feedback
+                        </button>
+                        <textarea id="feedback-{{ loop.index }}" style="display: none;">{{ feedback.feedback }}</textarea>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <i class="fas fa-comment-slash"></i>
+                <h3>No Feedback History</h3>
+                <p>You haven't provided any feedback on student assignments yet.</p>
+                <a href="{{ url_for('teacher_main') }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Start Grading Assignments
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.feedback-history-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.dark-mode .page-header {
+    border-bottom-color: var(--border-dark);
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary-light);
+    margin: 0;
+}
+
+.dark-mode .page-title {
+    color: var(--text-primary-dark);
+}
+
+.page-title i {
+    margin-right: 0.75rem;
+    color: var(--primary-light);
+}
+
+.dark-mode .page-title i {
+    color: var(--primary-dark);
+}
+
+.feedback-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--background-light);
+    border: 2px solid var(--primary-light);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    text-align: center;
+}
+
+.dark-mode .stat-card {
+    background: var(--surface-dark);
+    border-color: var(--primary-dark);
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-light);
+    margin-bottom: 0.5rem;
+}
+
+.dark-mode .stat-number {
+    color: var(--primary-dark);
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: var(--text-secondary-light);
+    font-weight: 500;
+}
+
+.dark-mode .stat-label {
+    color: var(--text-secondary-dark);
+}
+
+.search-section {
+    margin-bottom: 2rem;
+}
+
+.search-controls {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+}
+
+.feedback-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.feedback-card {
+    background: var(--background-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .feedback-card {
+    background: var(--surface-dark);
+    border-color: var(--border-dark);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+}
+
+.student-name {
+    color: var(--text-primary-light);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+}
+
+.dark-mode .student-name {
+    color: var(--text-primary-dark);
+}
+
+.assignment-info {
+    color: var(--text-secondary-light);
+    font-size: 0.9rem;
+}
+
+.dark-mode .assignment-info {
+    color: var(--text-secondary-dark);
+}
+
+.feedback-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+}
+
+.grade-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: white;
+}
+
+.grade-excellent { background-color: var(--success-light); }
+.grade-good { background-color: var(--primary-light); }
+.grade-satisfactory { background-color: var(--warning-light); }
+.grade-needs-improvement { background-color: #ff9800; }
+.grade-needs-work { background-color: var(--danger-light); }
+
+.dark-mode .grade-excellent { background-color: var(--success-dark); }
+.dark-mode .grade-good { background-color: var(--primary-dark); }
+.dark-mode .grade-satisfactory { background-color: var(--warning-dark); }
+.dark-mode .grade-needs-work { background-color: var(--danger-dark); }
+
+.timestamp {
+    color: var(--text-secondary-light);
+    font-size: 0.8rem;
+}
+
+.dark-mode .timestamp {
+    color: var(--text-secondary-dark);
+}
+
+.submission-preview, .feedback-content {
+    margin-bottom: 1rem;
+}
+
+.submission-preview h4, .feedback-content h4 {
+    color: var(--text-primary-light);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.dark-mode .submission-preview h4, .dark-mode .feedback-content h4 {
+    color: var(--text-primary-dark);
+}
+
+.submission-content, .feedback-text {
+    background: var(--surface-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    line-height: 1.6;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .submission-content, .dark-mode .feedback-text {
+    background: var(--background-dark);
+    border-color: var(--border-dark);
+    color: var(--text-primary-dark);
+}
+
+.feedback-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary-light);
+}
+
+.dark-mode .empty-state {
+    color: var(--text-secondary-dark);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    color: var(--text-secondary-light);
+    margin-bottom: 1rem;
+}
+
+.dark-mode .empty-state i {
+    color: var(--text-secondary-dark);
+}
+
+@media (max-width: 768px) {
+    .feedback-history-container {
+        padding: 1rem;
+    }
+    
+    .page-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .search-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .feedback-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .feedback-meta {
+        align-items: flex-start;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+// Search functionality
+document.getElementById('feedback-search').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const classFilter = document.getElementById('class-filter').value;
+    filterFeedback(searchTerm, classFilter);
+});
+
+document.getElementById('class-filter').addEventListener('change', function() {
+    const searchTerm = document.getElementById('feedback-search').value.toLowerCase();
+    const classFilter = this.value;
+    filterFeedback(searchTerm, classFilter);
+});
+
+function filterFeedback(searchTerm, classFilter) {
+    const cards = document.querySelectorAll('.feedback-card');
+    
+    cards.forEach(card => {
+        const studentName = card.dataset.student.toLowerCase();
+        const assignment = card.dataset.assignment.toLowerCase();
+        const className = card.dataset.class;
+        const feedbackText = card.querySelector('.feedback-text').textContent.toLowerCase();
+        
+        const matchesSearch = searchTerm === '' || 
+            studentName.includes(searchTerm) || 
+            assignment.includes(searchTerm) || 
+            feedbackText.includes(searchTerm);
+        
+        const matchesClass = classFilter === '' || className === classFilter;
+        
+        if (matchesSearch && matchesClass) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+// Copy feedback functionality
+function copyFeedback(index) {
+    const textarea = document.getElementById('feedback-' + index);
+    textarea.select();
+    textarea.setSelectionRange(0, 99999); // For mobile devices
+    
+    navigator.clipboard.writeText(textarea.value).then(function() {
+        // Show success message
+        const button = event.target.closest('button');
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        button.classList.add('btn-success');
+        button.classList.remove('btn-outline');
+        
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('btn-success');
+            button.classList.add('btn-outline');
+        }, 2000);
+    });
+}
+</script>
+{% endblock %}

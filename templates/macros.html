@@ -1,0 +1,33 @@
+
+{# Template macro for generating safe grading buttons #}
+{% macro grading_button(classroom_id, assignment_id, student_email, student_name, assignment_title, current_grade='', current_feedback='') %}
+<button type="button" 
+        class="btn btn-warning btn-sm"
+        data-classroom-id="{{ classroom_id }}"
+        data-assignment-id="{{ assignment_id }}"
+        data-student-email="{{ student_email }}"
+        data-student-name="{{ student_name | e }}"
+        data-assignment-title="{{ assignment_title | e }}"
+        data-current-grade="{{ current_grade }}"
+        data-current-feedback="{{ current_feedback | e }}"
+        onclick="showGradingModalFromData(this)">
+    <i class="fas fa-edit"></i> Update Grade
+</button>
+{% endmacro %}
+
+{% macro ai_grading_button(classroom_id, assignment_id, student_email, student_name, assignment_title) %}
+<button type="button"
+        class="btn btn-info btn-sm"
+        onclick="showAIGradingModal('{{ classroom_id }}', '{{ assignment_id }}', '{{ student_email }}', '{{ student_name | e }}', '{{ assignment_title | e }}')">
+    <i class="fas fa-robot"></i> AI Grade
+</button>
+{% endmacro %}
+
+{# Template macro for submission viewing #}
+{% macro view_submission_button(classroom_id, assignment_id, student_email) %}
+<button type="button"
+        class="btn btn-secondary btn-sm"
+        onclick="viewSubmission('{{ classroom_id }}', '{{ assignment_id }}', '{{ student_email }}')">
+    <i class="fas fa-eye"></i> View
+</button>
+{% endmacro %}

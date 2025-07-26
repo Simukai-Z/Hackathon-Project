@@ -227,7 +227,7 @@ def save_users(users):
 def update_student_activity(student_email):
     """Update the last activity timestamp for a student"""
     users = load_users()
-    current_time = datetime.datetime.utcnow().isoformat()
+    current_time = datetime.datetime.now(datetime.UTC).isoformat()
     
     # Find and update the student
     for student in users['students']:
@@ -244,7 +244,7 @@ def format_last_activity(last_activity):
     
     try:
         last_active = datetime.datetime.fromisoformat(last_activity)
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.UTC)
         diff = now - last_active
         
         seconds = diff.total_seconds()
@@ -272,7 +272,7 @@ def calculate_activity_score(last_activity):
     
     try:
         last_active = datetime.datetime.fromisoformat(last_activity)
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.UTC)
         hours_since = (now - last_active).total_seconds() / 3600
         
         # Activity score decreases over time
@@ -428,6 +428,21 @@ def chat():
     user_prompt = data.get('prompt', '')
     file_content = data.get('fileContent', '')
 
+    # Get the user's name based on their type
+    user_name = "User"
+    user_role = "User"
+    
+    if user_type == 'student' and email:
+        student = next((s for s in users['students'] if s['email'] == email), None)
+        if student:
+            user_name = student.get('name', 'Student')
+            user_role = "Student"
+    elif user_type == 'teacher' and email:
+        teacher = next((t for t in users['teachers'] if t['email'] == email), None)
+        if teacher:
+            user_name = teacher.get('name', 'Teacher')
+            user_role = "Teacher"
+
     # If there's file content, add it to the context
     if file_content:
         user_prompt = f"{user_prompt}\n[Student's Uploaded Content]:\n{file_content}"
@@ -504,9 +519,47 @@ def chat():
 
     # Add student performance context for personalized feedback
     performance_context = ""
+    submissions_context = ""
+    
     if user_type == 'student' and email:
         performance = calculate_student_performance(email)
         recent_grades = performance.get('recent_grades', [])
+        
+        # Get detailed student submissions for AI analysis
+        student_submissions = get_student_submissions(email)
+        if student_submissions:
+            submissions_info = []
+            for submission in student_submissions[-5:]:  # Last 5 submissions
+                sub_info = {
+                    'assignment': submission.get('assignment_title', 'Unknown'),
+                    'class': submission.get('class_name', 'Unknown'),
+                    'grade': submission.get('grade'),
+                    'feedback': submission.get('feedback', ''),
+                    'submission_text': submission.get('submission_text', ''),
+                    'submission_link': submission.get('submission_link', ''),
+                    'timestamp': submission.get('timestamp', '')
+                }
+                
+                sub_text = f"""
+Assignment: {sub_info['assignment']} (Class: {sub_info['class']})
+Submission Content: {sub_info['submission_text'][:300]}{'...' if len(sub_info['submission_text']) > 300 else ''}
+{f"Link: {sub_info['submission_link']}" if sub_info['submission_link'] else ""}
+Grade: {sub_info['grade'] if sub_info['grade'] is not None else 'Not graded yet'}
+Teacher Feedback: {sub_info['feedback'][:200] if sub_info['feedback'] else 'No feedback yet'}{'...' if sub_info['feedback'] and len(sub_info['feedback']) > 200 else ''} 
+Submitted: {sub_info['timestamp']}"""
+                submissions_info.append(sub_text)
+            
+            submissions_context = f"""
+STUDENT SUBMISSION HISTORY:
+{'='*35}
+{chr(10).join(submissions_info)}
+
+AI ANALYSIS INSTRUCTIONS:
+- Review the student's previous submissions to understand their writing style and common areas for improvement
+- Reference specific past work when providing feedback (e.g., "Like in your recent assignment on...")
+- Note patterns in teacher feedback to reinforce consistent improvement areas
+- Compare current questions to past submission quality to provide targeted advice
+- Help student connect feedback from previous assignments to current work"""
         
         if recent_grades:
             grades_text = []
@@ -530,6 +583,45 @@ PERSONALIZATION INSTRUCTIONS:
 - If student is struggling (<60): Be extra encouraging, break down concepts, offer additional help
 - Reference their recent assignment performance when relevant to build connection
 """
+    
+    elif user_type == 'teacher' and email:
+        # Get teacher's feedback history for easy reference
+        teacher_feedback_history = []
+        for classroom in accessible_classes:
+            for assignment in classroom.get('assignments', []):
+                for submission in assignment.get('submissions', []):
+                    if submission.get('graded_by') == email and submission.get('feedback'):
+                        feedback_info = {
+                            'student': submission.get('student_email', 'Unknown'),
+                            'assignment': assignment.get('title', 'Unknown'),
+                            'class': classroom.get('class_name', 'Unknown'),
+                            'grade': submission.get('grade'),
+                            'feedback': submission.get('feedback', ''),
+                            'timestamp': submission.get('graded_timestamp', '')
+                        }
+                        teacher_feedback_history.append(feedback_info)
+        
+        if teacher_feedback_history:
+            recent_feedback = teacher_feedback_history[-10:]  # Last 10 pieces of feedback
+            feedback_summary = []
+            for feedback in recent_feedback:
+                feedback_text = f"""
+Student: {feedback['student']} | Assignment: {feedback['assignment']} (Class: {feedback['class']})
+Grade: {feedback['grade']} | Feedback: {feedback['feedback'][:150]}{'...' if len(feedback['feedback']) > 150 else ''}
+Date: {feedback['timestamp']}"""
+                feedback_summary.append(feedback_text)
+            
+            submissions_context = f"""
+YOUR RECENT FEEDBACK HISTORY:
+{'='*35}
+{chr(10).join(feedback_summary)}
+
+TEACHER ASSISTANCE INSTRUCTIONS:
+- Reference your previous feedback patterns to maintain consistency
+- Help you recall what you've told students about similar assignments
+- Suggest improvements based on recurring issues you've noted
+- Help you develop more effective feedback strategies
+- Assist with identifying common student challenges from your grading history"""
 
     context = f"""{current_class_info}
 
@@ -541,35 +633,66 @@ Available Grading Rubrics By Class:
 {'='*40}
 {'\n\n'.join(rubrics_by_class_text)}
 
-{performance_context}"""
+{performance_context}
+
+{submissions_context}"""
 
     system_prompt = f"""{ai_personality}
 
 You are assisting in a classroom environment. Here's your context and instructions:
 
+USER INFORMATION:
+Name: {user_name}
+Role: {user_role}
+Email: {email}
+
 CURRENT CONTEXT:
 {context}
 
 CORE INSTRUCTIONS:
-1. Always consider which class an assignment or rubric belongs to when providing assistance
-2. When a student asks about an assignment:
+1. Always address the user by their name ({user_name}) and acknowledge their role as a {user_role}
+2. Adapt your responses based on their role:
+   - If they are a Student: Guide them through learning with hints and questions, never give direct solutions
+   - If they are a Teacher: Provide more direct assistance with curriculum, grading, and classroom management
+3. Always consider which class an assignment or rubric belongs to when providing assistance
+4. When someone asks about an assignment:
    - First identify which class it belongs to
    - Use the rubrics specific to that class
    - If multiple classes have similar assignments, ask for clarification
-3. Guide students through hints and questions, never give direct solutions
-4. For uploaded work:
+5. For uploaded work:
    - Match it to the correct class and assignment
    - Review against the appropriate class rubrics
    - Provide specific, constructive feedback
    - Reference the correct class context in your responses
 
+ENHANCED PERSONALIZATION INSTRUCTIONS:
+6. For Students - Use their submission history to provide targeted advice:
+   - Reference specific past assignments when relevant ("In your recent essay on..., you showed strength in...")
+   - Identify patterns in teacher feedback and help reinforce those lessons
+   - Connect current questions to previous work to show growth opportunities
+   - Provide improvement suggestions based on their actual submission style and common areas for growth
+   - Be encouraging about progress while addressing consistent feedback themes
+
+7. For Teachers - Help with feedback consistency and effectiveness:
+   - Reference your previous feedback patterns to maintain consistency across students
+   - Help recall what you've previously told students about similar work
+   - Suggest improvements based on recurring issues you've identified in student work
+   - Assist with developing more effective feedback strategies
+   - Help identify common challenges students face based on your grading history
+
 INTERACTION GUIDELINES:
 - Be encouraging and supportive while maintaining academic integrity
-- If a student doesn't specify which class they're asking about, ask for clarification
+- Always greet users by name and acknowledge if they are a student or teacher
+- If someone doesn't specify which class they're asking about, ask for clarification
 - Always frame your responses in the context of the specific class and its requirements
-- Help students understand concepts within their specific class context
+- For students: Help them understand concepts through guided discovery, referencing their actual work
+- For teachers: Provide direct, practical assistance with educational tasks, drawing from their feedback history
+- Use specific examples from submission history when appropriate to make advice more relevant and actionable
 
-Remember: Each class may have different requirements and rubrics, so always ensure you're using the correct context."""
+IMPORTANT: NEVER ask students to upload assignments they've already submitted. If a student asks about an assignment they've submitted, their submission content and teacher feedback will be automatically provided to you in the conversation. Use this information directly to provide feedback and analysis.
+
+Remember: Each class may have different requirements and rubrics, so always ensure you're using the correct context. 
+Use the submission history data to provide more personalized, relevant guidance that connects to the user's actual academic experience."""
 
     # --- Message History Logic ---
     history_key = f"ai_history_{user_type}_{email}"
@@ -603,15 +726,87 @@ Remember: Each class may have different requirements and rubrics, so always ensu
         session[history_key].append({"role": "user", "content": user_prompt})
         messages = [{"role": "system", "content": system_prompt}] + session[history_key]
 
-    # Get AI response
+    # Enhanced AI response with automatic submission retrieval
+    enhanced_prompt = user_prompt
+    
+    # If student is asking about a specific assignment, automatically provide submission content
+    if user_type == 'student' and email:
+        print(f"DEBUG: Student {email} asking: {user_prompt}")
+        
+        # Check if the user is asking about a specific assignment
+        student_submissions = get_student_submissions(email)
+        print(f"DEBUG: Found {len(student_submissions)} submissions for student")
+        
+        matching_submissions = []
+        
+        # More flexible assignment matching
+        user_prompt_lower = user_prompt.lower()
+        
+        for submission in student_submissions:
+            assignment_title = submission.get('assignment_title', '').lower()
+            print(f"DEBUG: Checking assignment '{assignment_title}' against prompt '{user_prompt_lower}'")
+            
+            # Multiple matching strategies
+            matches = False
+            
+            # Strategy 1: Exact assignment title match
+            if assignment_title and assignment_title in user_prompt_lower:
+                matches = True
+                print(f"DEBUG: Exact match found for '{assignment_title}'")
+            
+            # Strategy 2: Individual words from assignment title
+            elif assignment_title:
+                title_words = [word for word in assignment_title.split() if len(word) > 2]  # Skip short words
+                if title_words and any(word in user_prompt_lower for word in title_words):
+                    matches = True
+                    print(f"DEBUG: Word match found for '{assignment_title}' with words {title_words}")
+            
+            # Strategy 3: Check if user mentions assignment-related keywords
+            assignment_keywords = ['assignment', 'homework', 'essay', 'reflection', 'paper', 'submission']
+            if any(keyword in user_prompt_lower for keyword in assignment_keywords):
+                # If they mention assignment keywords, look for partial title matches
+                if assignment_title:
+                    title_parts = assignment_title.replace(':', ' ').replace('-', ' ').split()
+                    if any(part in user_prompt_lower for part in title_parts if len(part) > 2):
+                        matches = True
+                        print(f"DEBUG: Keyword + partial match found for '{assignment_title}' with parts {title_parts}")
+            
+            if matches:
+                matching_submissions.append(submission)
+                print(f"DEBUG: Added matching submission for '{assignment_title}'")
+        
+        print(f"DEBUG: Total matching submissions: {len(matching_submissions)}")
+        
+        # If we found matching assignments, add submission content to the prompt
+        if matching_submissions:
+            submission_content = []
+            for submission in matching_submissions:
+                content = f"""
+--- YOUR SUBMISSION FOR "{submission.get('assignment_title', 'Unknown')}" ---
+Submitted Content: {submission.get('submission_text', 'No text submission')}
+{f"Submitted Link: {submission.get('submission_link', '')}" if submission.get('submission_link') else ""}
+Grade: {submission.get('grade', 'Not graded yet')}
+Teacher Feedback: {submission.get('feedback') if submission.get('feedback') else 'No written feedback provided' if submission.get('grade') is not None else 'Not graded yet'}
+Graded by: {submission.get('graded_by', 'Not graded')}
+Submitted on: {submission.get('timestamp', 'Unknown date')}
+---"""
+                submission_content.append(content)
+            
+            enhanced_prompt = f"{user_prompt}\n\n[AUTOMATIC SUBMISSION RETRIEVAL - The student is asking about an assignment they've already submitted. Here's their submission content:]\n{''.join(submission_content)}"
+            print(f"DEBUG: Enhanced prompt created with {len(submission_content)} submissions")
+
+    # Get AI response with enhanced prompt
+    messages_enhanced = messages[:-1] + [{"role": "user", "content": enhanced_prompt}]
+    
     response = openai_client.chat.completions.create(
         model=MODEL_NAME,
-        messages=messages,
+        messages=messages_enhanced,
         max_tokens=500,
         temperature=0.6
     )
     ai_reply = response.choices[0].message.content
-    # Add AI reply to history
+    
+    # Add original user message and AI reply to history (not the enhanced prompt)
     session[history_key].append({"role": "assistant", "content": ai_reply})
     session.modified = True
 
@@ -625,6 +820,10 @@ def home():
         elif session['user_type'] == 'teacher':
             return redirect(url_for('teacher_main'))
     return render_template('home.html')
+
+@app.route('/logo_test')
+def logo_test():
+    return render_template('logo_test.html')
 
 @app.route('/student_signup', methods=['GET', 'POST'])
 def student_signup():
@@ -750,7 +949,7 @@ def student_main():
                 break
 
     # Sort rubrics/assignments by timestamp desc, add 'new' badge if <24h
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.UTC)
     def is_new(ts):
         try:
             dt = datetime.datetime.fromisoformat(ts)
@@ -831,7 +1030,7 @@ def submit_assignment():
         'submission_text': submission_text,
         'submission_link': submission_link,
         'filename': filename,
-        'timestamp': datetime.datetime.utcnow().isoformat(),
+        'timestamp': datetime.datetime.now(datetime.UTC).isoformat(),
         'grade': None,
         'feedback': None,
         'graded_by': None,
@@ -848,6 +1047,71 @@ def submit_assignment():
     
     save_classrooms(classrooms)
     flash('Assignment submitted successfully!')
+    return redirect(url_for('student_main'))
+
+@app.route('/unsubmit_assignment', methods=['POST'])
+def unsubmit_assignment():
+    if 'user_type' not in session or session['user_type'] != 'student':
+        return redirect(url_for('login'))
+    
+    # Track student activity
+    update_student_activity(session['email'])
+    
+    assignment_id = request.form.get('assignment_id')
+    
+    if not assignment_id:
+        flash('Invalid assignment ID')
+        return redirect(url_for('student_main'))
+    
+    # Find the assignment and classroom
+    classrooms = load_classrooms()
+    assignment = None
+    classroom = None
+    submission = None
+    
+    for c in classrooms.get('classrooms', []):
+        if session['email'] in c.get('students', []):
+            for a in c.get('assignments', []):
+                if a['id'] == assignment_id:
+                    assignment = a
+                    classroom = c
+                    # Find the student's submission
+                    for s in a.get('submissions', []):
+                        if s.get('student_email') == session['email']:
+                            submission = s
+                            break
+                    break
+            if assignment:
+                break
+    
+    if not assignment:
+        flash('Assignment not found')
+        return redirect(url_for('student_main'))
+        
+    if not submission:
+        flash('No submission found to remove')
+        return redirect(url_for('student_main'))
+    
+    # Check if the submission has been graded - if so, don't allow unsubmission
+    if submission.get('grade') is not None:
+        flash('Cannot unsubmit assignment that has already been graded')
+        return redirect(url_for('student_main'))
+    
+    # Remove the submission
+    assignment['submissions'] = [s for s in assignment['submissions'] if s.get('student_email') != session['email']]
+    
+    # If there was a file, we should remove it from the filesystem
+    if submission.get('filename'):
+        try:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], submission['filename'])
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            print(f"Error removing file: {e}")
+            # Don't fail the unsubmit if file removal fails
+    
+    save_classrooms(classrooms)
+    flash('Assignment unsubmitted successfully! You can now resubmit if needed.')
     return redirect(url_for('student_main'))
 
 @app.route('/grade_assignment', methods=['POST'])
@@ -874,7 +1138,7 @@ def grade_assignment():
         if grade_num < 0 or grade_num > 100:
             flash('Grade must be between 0 and 100')
             return redirect(url_for('teacher_main'))
-        grade = str(int(grade_num))  # Convert to integer string for consistency
+        grade = int(grade_num)  # Keep as integer for consistency
     except ValueError:
         flash('Grade must be a valid number')
         return redirect(url_for('teacher_main'))
@@ -958,7 +1222,7 @@ def grade_assignment():
     submission['grade'] = grade
     submission['feedback'] = feedback
     submission['graded_by'] = session['email']
-    submission['graded_timestamp'] = datetime.datetime.utcnow().isoformat()
+    submission['graded_timestamp'] = datetime.datetime.now(datetime.UTC).isoformat()
     
     save_classrooms(classrooms)
     flash('Assignment graded successfully!')
@@ -1090,10 +1354,45 @@ def ai_grade_assignment():
         content_hash = hashlib.md5(content_for_hash.encode()).hexdigest()
         print(f"DEBUG: Content hash created: {content_hash[:8]}", flush=True)
         
+        # Determine what content was actually provided
+        has_text = submission.get('submission_text', '').strip()
+        has_link = submission.get('submission_link', '').strip()
+        has_file = submission.get('filename', '') and file_content and not file_content.startswith('[')
+        
+        print(f"DEBUG: Content detection - has_text: {bool(has_text)}, has_link: {bool(has_link)}, has_file: {bool(has_file)}", flush=True)
+        print(f"DEBUG: File content starts with: '{file_content[:50] if file_content else 'EMPTY'}...'", flush=True)
+        
+        # Create a list of provided submission types
+        provided_content = []
+        if has_text:
+            provided_content.append(f"Text: {submission.get('submission_text', '')}")
+        if has_link:
+            provided_content.append(f"Link: {submission.get('submission_link', '')}")
+        if has_file:
+            provided_content.append(f"File ({submission.get('filename', 'Unknown')}): {file_content}")
+        
+        if not provided_content:
+            provided_content.append("No substantial content provided")
+        
+        submission_content = "\n\n".join(provided_content)
+        print(f"DEBUG: Final submission content structure: {[type.split(':')[0] for type in provided_content]}", flush=True)
+        
         # For consistency, remove re-grading context that might bias the AI toward higher grades
         # Instead, focus on objective grading criteria
+        
+        # Build content description without mentioning what's missing
+        content_types_used = []
+        if has_text:
+            content_types_used.append("written text")
+        if has_link:
+            content_types_used.append("external link")  
+        if has_file:
+            content_types_used.append("uploaded file")
+        
+        submission_method_desc = f"The student submitted their work via {' and '.join(content_types_used) if content_types_used else 'direct input'}."
+        
         grading_prompt = f"""
-        You are a fair and consistent grading system. Grade this assignment objectively based ONLY on the content provided.
+        You are grading an assignment submission. Grade this work objectively based on the content provided.
         
         GRADING CRITERIA:
         - Content Quality and Completeness (40%)
@@ -1105,35 +1404,26 @@ def ai_grade_assignment():
         Student Name: {student_name}
         Assignment Title: {assignment.get('title', 'Assignment')}
         Assignment Description: {assignment.get('description', 'No description provided')}
-        Content Hash: {content_hash[:8]} (for grading consistency)
         
-        STUDENT SUBMISSION:
-        Text Submission: {submission.get('submission_text', 'No text submission')}
-        Link Submission: {submission.get('submission_link', 'No link submission')}
-        File Name: {submission.get('filename', 'No file attached')}
-        File Content: {file_content if file_content else 'No file content available'}
+        SUBMISSION DETAILS:
+        {submission_method_desc}
         
-        IMPORTANT GRADING INSTRUCTIONS:
-        1. Grade based on ALL the submitted content above (text, link, and file content)
-        2. If a Google Docs link is provided, note that you cannot access external links
-        3. Be consistent - the same submission should always receive the same grade
-        4. Use the full 0-100 scale appropriately: 90-100 (Excellent), 80-89 (Good), 70-79 (Satisfactory), 60-69 (Needs Improvement), Below 60 (Inadequate)
-        5. Provide specific feedback based on the grading criteria above
-        6. If there is no actual content to grade (empty text, no accessible link, no file content), assign a low grade with appropriate feedback
+        STUDENT WORK TO EVALUATE:
+        {submission_content}
         
-        Please provide:
-        1. A numerical grade (0-100)
-        2. Constructive feedback addressing strengths and specific areas for improvement
-        3. Reference the grading criteria in your feedback
+        GRADING INSTRUCTIONS:
+        - Evaluate ONLY the content provided above
+        - The student chose an appropriate submission method - do not comment on format choices
+        - Focus on content quality, understanding, organization, and instruction compliance
+        - Use grades: 90-100 (Excellent), 80-89 (Good), 70-79 (Satisfactory), 60-69 (Needs Improvement), <60 (Inadequate)
+        - Be consistent and fair
         
-        Format your response as:
+        Provide your response as:
         GRADE: [number]
-        FEEDBACK: [detailed feedback addressing the student by name, referencing specific aspects of their submission]
-        
-        Be objective, fair, and consistent in your assessment.
+        FEEDBACK: [constructive feedback addressing {student_name} directly about their work quality]
         """
         print(f"DEBUG: About to call OpenAI with prompt length: {len(grading_prompt)}", flush=True)
-        print(f"DEBUG: File content in prompt: {file_content[:100] if file_content else 'No file content'}...", flush=True)
+        print(f"DEBUG: Submission method description: {submission_method_desc}", flush=True)
         
         ai_response = openai_client.chat.completions.create(
             model="gpt-4o",
@@ -1198,7 +1488,7 @@ def ai_grade_assignment():
         submission['grade'] = grade
         submission['feedback'] = feedback
         submission['graded_by'] = f"AI (via {session['email']})"
-        submission['graded_timestamp'] = datetime.datetime.utcnow().isoformat()
+        submission['graded_timestamp'] = datetime.datetime.now(datetime.UTC).isoformat()
         
         save_classrooms(classrooms)
         
@@ -1285,7 +1575,7 @@ def teacher_main():
             if c['code'] == selected_class and c['teacher_email'] == session['email']:
                 class_obj = c
                 break
-    now = datetime.datetime.utcnow()
+    now = datetime.datetime.now(datetime.UTC)
     def is_new(ts):
         try:
             dt = datetime.datetime.fromisoformat(ts)
@@ -1337,7 +1627,7 @@ def add_rubric():
             'id': rubric_id,
             'title': title,
             'content': content,
-            'timestamp': datetime.datetime.utcnow().isoformat(),
+            'timestamp': datetime.datetime.now(datetime.UTC).isoformat(),
             'teacher_email': session['email']
         })
         save_classrooms(classrooms)
@@ -1369,7 +1659,7 @@ def add_assignment():
             'content': content,
             'description': description,
             'rubric_id': rubric_id,
-            'timestamp': datetime.datetime.utcnow().isoformat(),
+            'timestamp': datetime.datetime.now(datetime.UTC).isoformat(),
             'teacher_email': session['email']
         })
         save_classrooms(classrooms)
@@ -1581,6 +1871,14 @@ def grading_page():
                 student_info = next((u for u in users.get('students', []) if u['email'] == submission['student_email']), {})
                 student_name = student_info.get('name', submission['student_email'])
                 
+                # Convert grade to integer if it exists, to ensure consistent type
+                grade = submission.get('grade')
+                if grade is not None:
+                    try:
+                        grade = int(grade) if isinstance(grade, str) else grade
+                    except (ValueError, TypeError):
+                        grade = None
+                
                 submission_info = {
                     'classroom_name': classroom['class_name'],
                     'classroom_id': classroom['code'],
@@ -1589,7 +1887,7 @@ def grading_page():
                     'submission': submission,
                     'student_name': student_name,
                     'submitted_at': submission.get('timestamp', 'Unknown'),
-                    'grade': submission.get('grade'),
+                    'grade': grade,
                     'feedback': submission.get('feedback', ''),
                     'graded_by': submission.get('graded_by', ''),
                     'graded_timestamp': submission.get('graded_timestamp', '')
@@ -1605,7 +1903,22 @@ def grading_page():
     pending_submissions = total_submissions - graded_submissions
     
     if graded_submissions > 0:
-        average_grade = sum(s['grade'] for s in all_submissions if s['grade'] is not None) / graded_submissions
+        # Convert grades to integers before summing to handle mixed int/string grades
+        grades = []
+        for s in all_submissions:
+            if s['grade'] is not None:
+                try:
+                    # Convert grade to int, handling both string and int inputs
+                    grade_value = int(s['grade']) if isinstance(s['grade'], str) else s['grade']
+                    grades.append(grade_value)
+                except (ValueError, TypeError):
+                    # Skip invalid grades
+                    continue
+        
+        if grades:
+            average_grade = sum(grades) / len(grades)
+        else:
+            average_grade = 0
     else:
         average_grade = 0
     
@@ -1620,6 +1933,52 @@ def grading_page():
                          submissions=all_submissions,
                          stats=stats,
                          classrooms=teacher_classrooms)
+
+@app.route('/teacher/feedback_history')
+def teacher_feedback_history():
+    """View teacher's feedback history for easy reference"""
+    if 'user_type' not in session or session['user_type'] != 'teacher':
+        return redirect(url_for('login'))
+    
+    classrooms = load_classrooms()
+    users = load_users()
+    teacher_email = session['email']
+    
+    # Collect all feedback given by this teacher
+    feedback_history = []
+    
+    for classroom in classrooms.get('classrooms', []):
+        if classroom.get('teacher_email') == teacher_email:
+            for assignment in classroom.get('assignments', []):
+                for submission in assignment.get('submissions', []):
+                    if submission.get('graded_by') == teacher_email and submission.get('feedback'):
+                        # Get student name
+                        student_info = next((s for s in users.get('students', []) if s['email'] == submission.get('student_email')), {})
+                        student_name = student_info.get('name', submission.get('student_email', 'Unknown'))
+                        
+                        feedback_entry = {
+                            'student_name': student_name,
+                            'student_email': submission.get('student_email'),
+                            'assignment_title': assignment.get('title', 'Unknown Assignment'),
+                            'class_name': classroom.get('class_name', 'Unknown Class'),
+                            'class_code': classroom.get('code'),
+                            'assignment_id': assignment.get('id'),
+                            'grade': submission.get('grade'),
+                            'feedback': submission.get('feedback', ''),
+                            'graded_timestamp': submission.get('graded_timestamp', ''),
+                            'submission_preview': submission.get('submission_text', '')[:200] + '...' if submission.get('submission_text') else 'No text submission'
+                        }
+                        feedback_history.append(feedback_entry)
+    
+    # Sort by most recent first
+    feedback_history.sort(key=lambda x: x.get('graded_timestamp', ''), reverse=True)
+    
+    # Get teacher info
+    teacher = next((t for t in users.get('teachers', []) if t['email'] == teacher_email), {})
+    
+    return render_template('teacher_feedback_history.html', 
+                         feedback_history=feedback_history,
+                         teacher=teacher)
 
 @app.route('/view_submission/<classroom_id>/<assignment_id>/<student_email>')
 def view_submission(classroom_id, assignment_id, student_email):
@@ -1668,6 +2027,10 @@ def view_submission(classroom_id, assignment_id, student_email):
         'submission_link': submission.get('submission_link', ''),
         'filename': submission.get('filename', ''),
         'timestamp': submission.get('timestamp', ''),
+        'grade': submission.get('grade'),
+        'feedback': submission.get('feedback', ''),
+        'graded_by': submission.get('graded_by', ''),
+        'graded_timestamp': submission.get('graded_timestamp', ''),
         'google_docs_info': google_docs_info
     }
     
