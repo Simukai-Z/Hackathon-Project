@@ -1,0 +1,338 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Dashboard Layout -->
+<div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            {% if session.user_type == 'teacher' %}
+                <h2>Teacher Dashboard</h2>
+            {% else %}
+                <h2>Student Dashboard</h2>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-nav">
+            {% block sidebar_content %}{% endblock %}
+        </nav>
+    </aside>
+    
+    <!-- Main Content Area -->
+    <main class="dashboard-main">
+        <!-- Header with actions -->
+        <div class="dashboard-header">
+            <div class="dashboard-title">
+                {% block dashboard_title %}Dashboard{% endblock %}
+            </div>
+            <div class="dashboard-actions">
+                {% block dashboard_actions %}{% endblock %}
+            </div>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="dashboard-content">
+            {% block dashboard_content %}{% endblock %}
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Dashboard Layout */
+.dashboard {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: calc(100vh - 48px);
+    gap: 0;
+    background-color: var(--background-light);
+}
+
+.dark-mode .dashboard {
+    background-color: var(--background-dark) !important;
+    color: var(--text-primary-dark) !important;
+}
+
+/* Sidebar */
+.sidebar {
+    background-color: var(--surface-light);
+    border-right: 1px solid var(--border-light);
+    padding: var(--spacing-md);
+    position: sticky;
+    top: 48px;
+    height: calc(100vh - 48px);
+    overflow-y: auto;
+}
+
+.dark-mode .sidebar {
+    background-color: var(--surface-dark) !important;
+    border-color: var(--border-dark) !important;
+    color: var(--text-primary-dark) !important;
+}
+
+.sidebar-header {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: var(--spacing-md);
+}
+
+.dark-mode .sidebar-header {
+    border-color: var(--border-dark);
+}
+
+.sidebar-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .sidebar-header h2 {
+    color: var(--text-primary-dark);
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+/* Dashboard Main Content */
+.dashboard-main {
+    padding: var(--spacing-lg);
+    background-color: var(--background-light);
+    max-width: none;
+}
+
+.dark-mode .dashboard-main {
+    background-color: var(--background-dark) !important;
+    color: var(--text-primary-dark) !important;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+}
+
+.dashboard-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .dashboard-title {
+    color: var(--text-primary-dark);
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.dashboard-content {
+    display: grid;
+    gap: var(--spacing-md);
+    color: var(--text-primary-light);
+}
+
+.dark-mode .dashboard-content {
+    color: var(--text-primary-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .dashboard {
+        grid-template-columns: 280px 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        display: none;
+        position: fixed;
+        z-index: 100;
+        width: 100%;
+        max-width: 280px;
+        height: 100vh;
+        left: 0;
+        top: 0;
+    }
+    
+    .sidebar.active {
+        display: block;
+    }
+    
+    .dashboard-main {
+        padding: var(--spacing-md);
+    }
+}
+
+/* Common Dashboard Components */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+}
+
+.stat-card {
+    background-color: var(--surface-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    color: var(--text-primary-light);
+}
+
+.dark-mode .stat-card {
+    background-color: var(--surface-dark);
+    color: var(--text-primary-dark);
+}
+
+.stat-title {
+    color: var(--text-secondary-light);
+    font-size: 0.875rem;
+}
+
+.dark-mode .stat-title {
+    color: var(--text-secondary-dark);
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .stat-value {
+    color: var(--text-primary-dark);
+}
+
+.stat-change {
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.stat-change.positive {
+    color: var(--success-light);
+}
+
+.dark-mode .stat-change.positive {
+    color: var(--success-dark);
+}
+
+.stat-change.negative {
+    color: var(--danger-light);
+}
+
+.dark-mode .stat-change.negative {
+    color: var(--danger-dark);
+}
+
+/* Table Styles */
+.table-container {
+    overflow-x: auto;
+    background-color: var(--surface-light);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+}
+
+.dark-mode .table-container {
+    background-color: var(--surface-dark);
+    border-color: var(--border-dark);
+}
+
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+    padding: var(--spacing-md);
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.dark-mode .dashboard-table th,
+.dark-mode .dashboard-table td {
+    border-color: var(--border-dark);
+}
+
+.dashboard-table th {
+    background-color: var(--surface-light);
+    font-weight: 600;
+    color: var(--text-secondary-light);
+}
+
+.dark-mode .dashboard-table th {
+    background-color: var(--surface-dark);
+    color: var(--text-secondary-dark);
+}
+
+.dashboard-table tr:last-child td {
+    border-bottom: none;
+}
+
+.dashboard-table tr:hover td {
+    background-color: var(--background-light);
+}
+
+.dark-mode .dashboard-table tr:hover td {
+    background-color: var(--background-dark);
+}
+
+/* Card Grid */
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+}
+
+/* List Styles */
+.list-group {
+    background-color: var(--surface-light);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+}
+
+.dark-mode .list-group {
+    background-color: var(--surface-dark);
+    border-color: var(--border-dark);
+}
+
+.list-group-item {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.dark-mode .list-group-item {
+    border-color: var(--border-dark);
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.list-group-item:hover {
+    background-color: var(--background-light);
+}
+
+.dark-mode .list-group-item:hover {
+    background-color: var(--background-dark);
+}
+</style>
+{% endblock %}

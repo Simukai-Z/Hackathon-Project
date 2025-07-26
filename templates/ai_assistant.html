@@ -1,102 +1,391 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>StudyCoach AI Assistant</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <style>
-        .ai-chat-container { max-width: 700px; margin: 2rem auto; background: #fff; border-radius: 10px; box-shadow: 0 2px 8px #0001; padding: 2rem; }
-        .chat-history { height: 250px; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; padding: 1rem; margin-bottom: 1rem; background: #f9f9f9; }
-        .chat-message { margin-bottom: 1em; }
-        .chat-message.user { text-align: right; color: #2a7ae2; }
-        .chat-message.ai { text-align: left; color: #1b5e20; }
-        .settings-panel { margin-top: 2rem; background: #f3f3f3; border-radius: 8px; padding: 1rem; }
-        .settings-panel label { display: block; margin-top: 1em; }
-        .settings-panel input, .settings-panel select, .settings-panel textarea { width: 100%; margin-top: 0.3em; }
-        .ai-header { display: flex; align-items: center; justify-content: space-between; }
-        .ai-header h2 { margin: 0; }
-    </style>
-</head>
-<body>
-    <div class="ai-chat-container">
-        <div class="ai-header">
-            <h2 id="ai-name">StudyCoach AI</h2>
-            <button onclick="window.history.back()">Back</button>
-        </div>
-        <div class="chat-history" id="chat-history"></div>
-        <form id="chat-form" autocomplete="off">
-            <select id="classroom-select" style="margin-bottom: 0.5em; width: 100%; display: none;"></select>
-            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-                <input type="file" id="chat-file" accept=".txt" style="flex: 1;">
-                <button type="button" onclick="clearFile()" style="padding: 5px 10px;">Clear File</button>
+{% extends "base.html" %}
+
+{% block title %}AI Assistant - StudyCoach{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="chat-sidebar card">
+        <div class="chat-settings">
+            <h3>AI Assistant Settings</h3>
+            
+            <div class="form-group">
+                <label for="ai-name-input" class="form-label">AI Name</label>
+                <input type="text" id="ai-name-input" class="form-control" value="StudyCoach AI">
             </div>
-            <div style="display: flex; gap: 10px;">
-                <input type="text" id="user-input" placeholder="Type your question..." required style="flex: 1;">
-                <button type="submit">Send</button>
-            </div>
-        </form>
-        <div class="settings-panel">
-            <h3>AI Settings</h3>
-            <label>AI Name:
-                <input type="text" id="ai-name-input" value="StudyCoach AI">
-            </label>
-            <label>Personality:
-                <textarea id="ai-personality" rows="3" placeholder="Describe your AI's personality here...">You are a helpful tutor that follows rubrics and teaches through guidance.</textarea>
-                <input type="file" id="personality-file" accept=".txt" style="margin-top:0.5em">
-            </label>
-            <label>Preset Example Message:
-                <textarea id="preset-message" rows="2" placeholder="e.g. Can you give me a hint about my assignment?"></textarea>
-                <div style="margin-top: 0.5em;">
-                    <label style="display: inline;">Example File:
-                        <input type="file" id="preset-file" accept=".txt" style="width: auto;">
-                    </label>
+            
+            <div class="form-group">
+                <label for="ai-personality" class="form-label">Personality</label>
+                <textarea id="ai-personality" class="form-control" rows="3" 
+                          placeholder="Describe your AI's personality here...">You are a helpful tutor that follows rubrics and teaches through guidance.</textarea>
+                <div class="file-upload">
+                    <label for="personality-file" class="form-label">Upload Personality File</label>
+                    <input type="file" id="personality-file" accept=".txt" class="form-control">
                 </div>
-            </label>
-            <button type="button" onclick="applySettings()">Apply Settings</button>
-            <div style="margin-top: 1rem; border-top: 1px solid #ddd; padding-top: 1rem;">
-                <button type="button" onclick="confirmResetHistory()" class="danger-button" style="background-color: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 4px;">Reset Chat History</button>
             </div>
+            
+            <div class="form-group">
+                <label for="preset-message" class="form-label">Preset Example Message</label>
+                <textarea id="preset-message" class="form-control" rows="2" 
+                          placeholder="e.g. Can you give me a hint about my assignment?"></textarea>
+                <div class="file-upload">
+                    <label for="preset-file" class="form-label">Upload Example File</label>
+                    <input type="file" id="preset-file" accept=".txt" class="form-control">
+                </div>
+            </div>
+            
+            <div class="settings-actions">
+                <button type="button" onclick="applySettings()" class="btn btn-primary btn-block">
+                    Apply Settings
+                </button>
+                <button type="button" onclick="confirmResetHistory()" class="btn btn-danger btn-block">
+                    Reset Chat History
+                </button>
+            </div>
+        </div>
+        
+        <div class="classroom-selector">
+            <select id="classroom-select" class="form-control">
+                <option value="">Select a classroom...</option>
+            </select>
         </div>
     </div>
-    <script>
-        let chatHistory = JSON.parse(sessionStorage.getItem('aiChatHistory') || '[]');
-        let aiName = sessionStorage.getItem('aiName') || 'StudyCoach AI';
-        let aiPersonality = sessionStorage.getItem('aiPersonality') || document.getElementById('ai-personality').value;
+    
+    <div class="chat-main card">
+        <div class="chat-header">
+            <h2 id="ai-name">StudyCoach AI</h2>
+            <button class="btn btn-secondary btn-sm" onclick="window.history.back()">Back</button>
+        </div>
+        
+        <div class="chat-history" id="chat-history"></div>
+        
+        <form id="chat-form" class="chat-input" autocomplete="off">
+            <div class="chat-input-area">
+                <input type="text" id="user-input" class="form-control" 
+                       placeholder="Type your question..." required>
+                <button type="submit" class="btn btn-primary">Send</button>
+            </div>
+            
+            <div class="file-upload-area">
+                <input type="file" id="chat-file" accept=".txt" class="form-control">
+                <button type="button" onclick="clearFile()" class="btn btn-secondary btn-sm">Clear File</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
 
-        // Load personality from backend on page load
-        fetch('/get_personality')
-            .then(res => res.json())
+{% block extra_css %}
+<style>
+.chat-container {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: var(--spacing-lg);
+    max-width: 1600px;
+    margin: var(--spacing-md) auto;
+    padding: 0 var(--spacing-md);
+}
+
+.chat-sidebar {
+    height: calc(100vh - 140px);
+    overflow-y: auto;
+    position: sticky;
+    top: calc(48px + var(--spacing-md));
+}
+
+/* Improve dark mode sidebar */
+.dark-mode .chat-sidebar {
+    background-color: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .chat-sidebar h3 {
+    color: var(--text-primary-dark);
+    font-weight: 600;
+}
+
+.dark-mode .form-label {
+    color: var(--text-primary-dark);
+    font-weight: 500;
+}
+
+.chat-main {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 140px);
+}
+
+/* Improve dark mode main chat area */
+.dark-mode .chat-main {
+    background-color: #1a1a1a;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dark-mode .chat-header h2 {
+    color: var(--text-primary-dark);
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: var(--spacing-md);
+}
+
+.dark-mode .chat-header {
+    border-color: var(--border-dark);
+}
+
+.chat-header h2 {
+    margin: 0;
+}
+
+.chat-history {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    margin: -var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+}
+
+.chat-message {
+    display: flex;
+    margin-bottom: var(--spacing-md);
+    animation: fadeIn var(--transition-normal);
+}
+
+.chat-message.user {
+    flex-direction: row-reverse;
+}
+
+.message-content {
+    max-width: 70%;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+.chat-message.ai .message-content {
+    background-color: var(--surface-light);
+    margin-right: auto;
+}
+
+.chat-message.user .message-content {
+    background-color: var(--primary-light);
+    color: white;
+    margin-left: auto;
+}
+
+.dark-mode .chat-message.ai .message-content {
+    background-color: #2d2d2d;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-primary-dark);
+}
+
+.dark-mode .chat-message.user .message-content {
+    background-color: var(--primary-dark);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.chat-input {
+    border-top: 1px solid var(--border-light);
+    margin: 0 -var(--spacing-lg);
+    margin-bottom: -var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background-color: var(--surface-light);
+}
+
+.dark-mode .chat-input {
+    border-color: var(--border-dark);
+    background-color: #1a1a1a;
+}
+
+/* Improve form controls in dark mode */
+.dark-mode .form-control {
+    background-color: #2d2d2d;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-primary-dark);
+}
+
+.dark-mode .form-control:focus {
+    background-color: #333333;
+    border-color: var(--primary-dark);
+    box-shadow: 0 0 0 2px rgba(108, 63, 199, 0.2);
+}
+
+.dark-mode .form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.file-upload-area {
+    display: flex;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    align-items: center;
+}
+
+.file-upload-area input[type="file"] {
+    flex: 1;
+    margin-right: var(--spacing-md);
+    max-width: 75%;
+}
+
+/* Improve file upload styling in dark mode */
+.dark-mode .file-upload-area input[type="file"] {
+    background-color: #2d2d2d;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-primary-dark);
+}
+
+.dark-mode .file-upload-area input[type="file"]::-webkit-file-upload-button {
+    background-color: #404040;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--text-primary-dark);
+    border-radius: 4px;
+    padding: 6px 12px;
+    margin-right: 8px;
+}
+
+.dark-mode .file-upload-area input[type="file"]::-webkit-file-upload-button:hover {
+    background-color: #4d4d4d;
+}
+
+/* Improve overall text contrast in dark mode */
+.dark-mode {
+    --text-primary-dark: #ffffff;
+    --text-secondary-dark: #ffffff;
+}
+
+.chat-input-area {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.chat-settings {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.settings-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.file-upload {
+    margin-top: var(--spacing-xs);
+}
+
+.classroom-selector {
+    margin-top: var(--spacing-lg);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-light);
+}
+
+.dark-mode .classroom-selector {
+    border-color: var(--border-dark);
+}
+
+/* Improve button styling in dark mode */
+.dark-mode .btn-secondary {
+    background-color: #404040;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary-dark);
+}
+
+.dark-mode .btn-secondary:hover {
+    background-color: #4d4d4d;
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.dark-mode .btn-danger {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.dark-mode .btn-danger:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+
+.dark-mode .btn-primary {
+    background-color: var(--primary-dark);
+    border-color: var(--primary-dark);
+    color: white;
+}
+
+.dark-mode .btn-primary:hover {
+    background-color: #5a2d8a;
+    border-color: #5a2d8a;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (max-width: 1024px) {
+    .chat-container {
+        grid-template-columns: 250px 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .chat-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .chat-sidebar {
+        height: auto;
+        position: static;
+    }
+    
+    .chat-main {
+        height: 600px;
+    }
+}
+
+@media (max-width: 640px) {
+    .file-upload-area,
+    .chat-input-area {
+        flex-direction: column;
+    }
+    
+    .chat-main {
+        height: 500px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Configuration
+    let aiName = sessionStorage.getItem('aiName') || 'StudyCoach AI';
+    let aiPersonality = sessionStorage.getItem('aiPersonality') || '';
+    let presetMessage = sessionStorage.getItem('presetMessage') || '';
+    let presetFileContent = sessionStorage.getItem('presetFileContent') || '';
+    let chatHistory = JSON.parse(sessionStorage.getItem('aiChatHistory') || '[]');
+
+    // Load personality from server on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        fetch('{{ url_for("get_personality") }}')
+            .then(response => response.json())
             .then(data => {
                 if (data.personality) {
                     document.getElementById('ai-personality').value = data.personality;
                     aiPersonality = data.personality;
-                }
-            });
-        let presetMessage = sessionStorage.getItem('presetMessage') || '';
-        document.getElementById('ai-name').innerText = aiName;
-        document.getElementById('ai-name-input').value = aiName;
-        document.getElementById('ai-personality').value = aiPersonality;
-        document.getElementById('preset-message').value = presetMessage;
-        
-        // Load preset file content if it exists
-        const savedPresetFileContent = sessionStorage.getItem('presetFileContent');
-        if (savedPresetFileContent) {
-            presetFileContent = savedPresetFileContent;
-        }
-
-        // Fetch classroom list for dropdown (if available)
-        fetch('/get_user_classrooms')
-            .then(res => res.json())
-            .then(data => {
-                const select = document.getElementById('classroom-select');
-                if (data.classrooms && data.classrooms.length > 0) {
-                    select.style.display = 'block';
-                    data.classrooms.forEach(c => {
-                        const opt = document.createElement('option');
-                        opt.value = c.code;
-                        opt.textContent = c.class_name || c.code;
-                        select.appendChild(opt);
-                    });
                 }
             });
 
@@ -148,7 +437,7 @@
                 class_code = select.value;
             }
             // Call backend
-            const res = await fetch('/chat', {
+            const res = await fetch('{{ url_for("chat") }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt, personality, class_code, fileContent })
@@ -167,7 +456,7 @@
         // Save personality to backend when textarea changes
         document.getElementById('ai-personality').addEventListener('input', function(e) {
             const val = e.target.value;
-            fetch('/save_personality', {
+            fetch('{{ url_for("save_personality") }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ personality: val })
@@ -182,7 +471,152 @@
                 reader.onload = function(evt) {
                     document.getElementById('ai-personality').value = evt.target.result;
                     // Save to backend
-                    fetch('/save_personality', {
+                    fetch('{{ url_for("save_personality") }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ personality: evt.target.result })
+                    });
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        document.getElementById('preset-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type === 'text/plain') {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    presetFileContent = evt.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        window.applySettings = function() {
+            aiName = document.getElementById('ai-name-input').value || 'StudyCoach AI';
+            aiPersonality = document.getElementById('ai-personality').value;
+            presetMessage = document.getElementById('preset-message').value;
+            document.getElementById('ai-name').innerText = aiName;
+            sessionStorage.setItem('aiName', aiName);
+            sessionStorage.setItem('aiPersonality', aiPersonality);
+            sessionStorage.setItem('presetMessage', presetMessage);
+            if (presetFileContent) {
+                sessionStorage.setItem('presetFileContent', presetFileContent);
+            }
+            // Save personality to backend
+            fetch('{{ url_for("save_personality") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ personality: aiPersonality })
+            });
+        }
+
+        window.confirmResetHistory = function() {
+            if (confirm('Are you sure you want to delete your entire chat history? This action cannot be undone.')) {
+                fetch('{{ url_for("reset_history") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        chatHistory = [];
+                        sessionStorage.removeItem('aiChatHistory');
+                        renderHistory();
+                    }
+                });
+            }
+        }
+
+        window.clearFile = clearFile;
+    });
+</script>
+{% endblock %}
+            });
+
+        function renderHistory() {
+            const historyDiv = document.getElementById('chat-history');
+            historyDiv.innerHTML = '';
+            chatHistory.forEach(msg => {
+                const div = document.createElement('div');
+                div.className = 'chat-message ' + msg.role;
+                div.innerText = (msg.role === 'user' ? 'You: ' : aiName + ': ') + msg.content;
+                historyDiv.appendChild(div);
+            });
+            historyDiv.scrollTop = historyDiv.scrollHeight;
+        }
+        renderHistory();
+
+        document.getElementById('chat-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const input = document.getElementById('user-input');
+            const fileInput = document.getElementById('chat-file');
+            const prompt = input.value.trim();
+            if (!prompt && !fileInput.files[0]) return;
+
+            let fileContent = '';
+            if (fileInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = async function(evt) {
+                    fileContent = evt.target.result;
+                    await sendMessage(prompt, fileContent);
+                };
+                reader.readAsText(fileInput.files[0]);
+            } else {
+                await sendMessage(prompt, '');
+            }
+            input.value = '';
+            fileInput.value = '';
+        };
+
+        async function sendMessage(prompt, fileContent) {
+            const displayContent = fileContent ? prompt + "\n[Attached File Content]:\n" + fileContent : prompt;
+            chatHistory.push({ role: 'user', content: displayContent });
+            renderHistory();
+            
+            let personality = document.getElementById('ai-personality').value;
+            // Get selected classroom code if available
+            let class_code = '';
+            const select = document.getElementById('classroom-select');
+            if (select && select.style.display !== 'none') {
+                class_code = select.value;
+            }
+            // Call backend
+            const res = await fetch('{{ url_for("chat") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt, personality, class_code, fileContent })
+            });
+            const data = await res.json();
+            chatHistory.push({ role: 'ai', content: data.response });
+            sessionStorage.setItem('aiChatHistory', JSON.stringify(chatHistory));
+            renderHistory();
+        }
+
+        function clearFile() {
+            document.getElementById('chat-file').value = '';
+        }
+
+        // Handle personality .txt file upload
+        // Save personality to backend when textarea changes
+        document.getElementById('ai-personality').addEventListener('input', function(e) {
+            const val = e.target.value;
+            fetch('{{ url_for("save_personality") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ personality: val })
+            });
+        });
+
+        // Handle personality .txt file upload and save
+        document.getElementById('personality-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type === 'text/plain') {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    document.getElementById('ai-personality').value = evt.target.result;
+                    // Save to backend
+                    fetch('{{ url_for("save_personality") }}', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ personality: evt.target.result })
@@ -217,7 +651,7 @@
                 sessionStorage.setItem('presetFileContent', presetFileContent);
             }
             // Save personality to backend
-            fetch('/save_personality', {
+            fetch('{{ url_for("save_personality") }}', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ personality: aiPersonality })
@@ -226,7 +660,7 @@
 
         function confirmResetHistory() {
             if (confirm('Are you sure you want to delete your entire chat history? This action cannot be undone.')) {
-                fetch('/reset_history', {
+                fetch('{{ url_for("reset_history") }}', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 })

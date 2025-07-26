@@ -47,7 +47,7 @@
 {% endblock %}
 
 {% block dashboard_content %}
-<div class="dashboard-wrapper" style="max-width: none; width: 100%;">
+<div class="dashboard-wrapper">
     {% if class_obj %}
         <!-- Class Overview -->
         <div class="class-header card">
@@ -154,89 +154,6 @@
                                     </div>
                                 {% endif %}
                             {% endif %}
-                            
-                            <!-- Check if student has already submitted -->
-                            {% set submission = assignment.submissions|selectattr("student_email", "equalto", student.email)|first if assignment.submissions else none %}
-                            
-                            {% if submission %}
-                                <div class="submission-status">
-                                    <div class="my-submission-info">
-                                        <h4>Your Submission:</h4>
-                                        {% if submission.submission_text %}
-                                            <div class="submitted-text">
-                                                <strong>Text:</strong>
-                                                <div class="text-content">{{ submission.submission_text }}</div>
-                                            </div>
-                                        {% endif %}
-                                        {% if submission.submission_link %}
-                                            <div class="submitted-link">
-                                                <strong>Link:</strong>
-                                                <a href="{{ submission.submission_link }}" target="_blank" rel="noopener noreferrer">
-                                                    🔗 {{ submission.submission_link }}
-                                                </a>
-                                            </div>
-                                        {% endif %}
-                                        {% if submission.filename %}
-                                            <div class="submitted-file">
-                                                <strong>File:</strong>
-                                                <a href="{{ url_for('student_uploaded_file', filename=submission.filename) }}" target="_blank">
-                                                    📎 {{ submission.filename.split('_')[-1] }}
-                                                </a>
-                                            </div>
-                                        {% endif %}
-                                        <small>Submitted: {{ submission.timestamp|datetime }}</small>
-                                    </div>
-                                    
-                                    {% if submission.grade is not none %}
-                                        <div class="grade-display">
-                                            <strong>Grade: {{ submission.grade }}%</strong>
-                                            {% if submission.feedback %}
-                                                <div class="feedback">
-                                                    <p><strong>Feedback:</strong></p>
-                                                    <p>{{ submission.feedback }}</p>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    {% else %}
-                                        <div class="submitted-status">
-                                            ✅ Submitted - Waiting for grade
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            {% else %}
-                                <!-- Assignment submission form -->
-                                <div class="submission-form">
-                                    <button class="btn btn-primary" onclick="toggleSubmissionForm('{{ assignment.id }}')">
-                                        Submit Assignment
-                                    </button>
-                                    
-                                    <form id="submission-form-{{ assignment.id }}" class="submission-form-content" style="display: none;" action="{{ url_for('submit_assignment') }}" method="post" enctype="multipart/form-data">
-                                        <input type="hidden" name="assignment_id" value="{{ assignment.id }}">
-                                        
-                                        <div class="form-group">
-                                            <label for="submission_text_{{ assignment.id }}">Text Submission:</label>
-                                            <textarea name="submission_text" id="submission_text_{{ assignment.id }}" rows="5" class="form-control" placeholder="Type your assignment response here..."></textarea>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="submission_link_{{ assignment.id }}">Link Submission (optional):</label>
-                                            <input type="url" name="submission_link" id="submission_link_{{ assignment.id }}" class="form-control" placeholder="https://docs.google.com/document/...">
-                                            <small class="form-text">Submit a link to your Google Docs, Drive file, or other online resource</small>
-                                        </div>
-                                        
-                                        <div class="form-group">
-                                            <label for="submission_file_{{ assignment.id }}">Upload File (optional):</label>
-                                            <input type="file" name="submission_file" id="submission_file_{{ assignment.id }}" class="form-control" accept=".txt,.pdf,.doc,.docx,.png,.jpg,.jpeg">
-                                            <small class="form-text">Supported formats: txt, pdf, doc, docx, images</small>
-                                        </div>
-                                        
-                                        <div class="form-actions">
-                                            <button type="submit" class="btn btn-success">Submit Assignment</button>
-                                            <button type="button" class="btn btn-secondary" onclick="toggleSubmissionForm('{{ assignment.id }}')">Cancel</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            {% endif %}
                         </div>
                         <div class="card-footer">
                             <a href="{{ url_for('ai_page') }}" class="btn btn-primary btn-sm">Get Help</a>
@@ -340,10 +257,10 @@
 
 .tab-btn {
     flex: 1;
-    padding: 14px 32px;
+    padding: 16px 24px;
     background: none;
     border: none;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 500;
     color: #6c757d;
     cursor: pointer;
@@ -378,7 +295,7 @@
 }
 
 .tab-content {
-    padding: 24px 48px;
+    padding: 32px;
     display: none;
 }
 
@@ -393,14 +310,14 @@
 
 /* Activity Feed */
 .activity-feed {
-    max-height: 600px;
+    max-height: 500px;
     overflow-y: auto;
 }
 
 .activity-item {
     display: flex;
     align-items: center;
-    padding: 12px 20px;
+    padding: 12px;
     border-bottom: 1px solid #e9ecef;
     transition: background-color 0.2s;
     margin-bottom: 0;
@@ -450,15 +367,27 @@
     color: #212529;
 }
 
+.dark-mode .activity-content h4 {
+    color: #ffffff;
+}
+
 .activity-content p {
     margin: 0 0 4px 0;
     color: #6c757d;
     font-size: 0.9rem;
 }
 
+.dark-mode .activity-content p {
+    color: #ffffff;
+}
+
 .activity-content time {
     color: #6c757d;
     font-size: 0.8rem;
+}
+
+.dark-mode .activity-content time {
+    color: #ffffff;
 }
 
 /* Class Header */
@@ -476,6 +405,10 @@
     margin: 0;
     color: #212529;
     font-size: 1.5rem;
+}
+
+.dark-mode .class-meta h3 {
+    color: #ffffff;
 }
 
 .class-code {
@@ -520,7 +453,6 @@
 .assignments-grid,
 .rubrics-list {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 1rem;
 }
 
@@ -558,6 +490,11 @@
 .rubric-header h3 {
     margin: 0;
     font-size: 1.1rem;
+}
+
+.dark-mode .card-header h3,
+.dark-mode .rubric-header h3 {
+    color: #ffffff;
 }
 
 .badge-new {
@@ -609,122 +546,12 @@
     color: #ffffff;
 }
 
-/* Assignment Submission Styles */
-.submission-form {
-    margin-top: 1rem;
-    padding: 1rem;
-    border-top: 1px solid var(--border-light);
-}
-
-.dark-mode .submission-form {
-    border-color: var(--border-dark);
-}
-
-.submission-form-content {
-    margin-top: 1rem;
-}
-
-.submission-status {
-    margin-top: 1rem;
-    padding: 1rem;
-    border-radius: var(--radius-md);
-}
-
-.my-submission-info {
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: var(--radius-md);
-    margin-bottom: 1rem;
-}
-
-.dark-mode .my-submission-info {
-    background-color: var(--bg-secondary-dark);
-}
-
-.submitted-text, .submitted-file {
-    margin: 0.5rem 0;
-}
-
-.text-content {
-    background-color: white;
-    padding: 0.5rem;
-    border-radius: var(--radius-sm);
-    margin-top: 0.25rem;
-    border: 1px solid var(--border-light);
-    white-space: pre-wrap;
-}
-
-.dark-mode .text-content {
-    background-color: var(--bg-tertiary-dark);
-    border-color: var(--border-dark);
-}
-
-.submitted-file a {
-    color: var(--primary-light);
-    text-decoration: none;
-}
-
-.dark-mode .submitted-file a {
-    color: var(--primary-dark);
-}
-
-.submitted-file a:hover {
-    text-decoration: underline;
-}
-
-.grade-display {
-    background-color: #e3f2fd;
-    color: #1976d2;
-    padding: 1rem;
-    border-radius: var(--radius-md);
-}
-
-.dark-mode .grade-display {
-    background-color: #1a237e;
-    color: #90caf9;
-}
-
-.submitted-status {
-    background-color: #e8f5e8;
-    color: #2e7d32;
-    padding: 1rem;
-    border-radius: var(--radius-md);
-    text-align: center;
-}
-
-.dark-mode .submitted-status {
-    background-color: #1b5e20;
-    color: #81c784;
-}
-
-.feedback {
-    margin-top: 0.5rem;
-    padding: 0.5rem;
-    border-left: 3px solid var(--primary-light);
-    background-color: #f8f9fa;
-}
-
-.dark-mode .feedback {
-    border-color: var(--primary-dark);
-    background-color: var(--bg-secondary-dark);
-}
-
-.form-actions {
-    display: flex;
-    gap: 0.5rem;
-    margin-top: 1rem;
-}
-
 /* Responsive */
 @media (max-width: 768px) {
     .class-info {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
-    }
-    
-    .form-actions {
-        flex-direction: column;
     }
     
     .class-stats {
@@ -747,12 +574,7 @@
     }
     
     .tab-content {
-        padding: 1.5rem;
-    }
-    
-    .assignments-grid,
-    .rubrics-list {
-        grid-template-columns: 1fr;
+        padding: 1rem;
     }
 }
 </style>
@@ -772,15 +594,6 @@ function showTab(tabId) {
     // Show selected tab
     document.getElementById(tabId).classList.add('active');
     document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
-}
-
-function toggleSubmissionForm(assignmentId) {
-    const form = document.getElementById('submission-form-' + assignmentId);
-    if (form.style.display === 'none') {
-        form.style.display = 'block';
-    } else {
-        form.style.display = 'none';
-    }
 }
 </script>
 {% endblock %}

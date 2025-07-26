@@ -79,7 +79,21 @@
           "description": "",
           "rubric_id": "",
           "timestamp": "2025-07-25T18:42:31.461399",
-          "teacher_email": "Roblox@gmail.com"
+          "teacher_email": "Roblox@gmail.com",
+          "submissions": [
+            {
+              "id": "ff097b16-02db-4ea7-a0cd-0782ff6eed8e",
+              "student_email": "epicrbot20099@gmail.com",
+              "assignment_id": "77b3a162-0548-461b-9194-06e7b4f193d7",
+              "submission_text": "",
+              "filename": "epicrbot20099gmail.com_77b3a162-0548-461b-9194-06e7b4f193d7_Testassinmen.txt",
+              "timestamp": "2025-07-25T23:28:55.704622",
+              "grade": 10,
+              "feedback": "EPic, thank you for your submission. However, based on the grading criteria provided, there are significant areas that need improvement. \n\n1. **Content Quality and Completeness (40%)**: The submission lacks substantive content. The file contains only the phrase \"Helloo students,\" which does not provide any meaningful information or demonstrate completion of the assignment. This results in a very low score for content quality and completeness.\n\n2. **Understanding and Analysis (30%)**: There is no evidence of understanding or analysis in the submission. Without any substantial content, it is impossible to assess your grasp of the material or your ability to analyze it.\n\n3. **Organization and Clarity (20%)**: The submission is extremely brief and does not exhibit any organization or clarity. A single phrase does not allow for any assessment of these criteria.\n\n4. **Following Instructions (10%)**: The assignment instructions were not followed adequately. The submission does not meet the expectations outlined in the assignment details, as it lacks content and does not include any link submission.\n\nTo improve your grade, I recommend providing a comprehensive and detailed response that addresses the assignment title and description. Ensure your submission is organized, clear, and demonstrates a thorough understanding and analysis of the topic. Additionally, carefully follow all instructions provided in the assignment details.",
+              "graded_by": "AI (via Roblox@gmail.com)",
+              "graded_timestamp": "2025-07-26T00:51:00.518948"
+            }
+          ]
         }
       ]
     },
@@ -104,7 +118,21 @@
           "title": "Epic",
           "content": "text",
           "timestamp": "2025-07-25T17:42:01.292852",
-          "teacher_email": "epic99@gmail"
+          "teacher_email": "epic99@gmail",
+          "submissions": [
+            {
+              "id": "3ed8555b-7e5c-407c-a2e4-1504baee986e",
+              "student_email": "epicrbot20099@gmail.com",
+              "assignment_id": "7cb20131-92ad-45b1-9add-33c2d78eaa9f",
+              "submission_text": "",
+              "filename": "epicrbot20099gmail.com_7cb20131-92ad-45b1-9add-33c2d78eaa9f_Screenshot_2025-07-25_183235.png",
+              "timestamp": "2025-07-25T23:27:47.096103",
+              "grade": null,
+              "feedback": null,
+              "graded_by": null,
+              "graded_timestamp": null
+            }
+          ]
         }
       ]
     }

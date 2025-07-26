@@ -1,62 +1,220 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>StudyCoach</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    {% if session.get('user_type') %}
-        <a href="{{ url_for('logout') }}" style="position: absolute; top: 24px; right: 48px; background: #22314f; color: #fff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1em;">Sign Out</a>
-    {% else %}
-        <a href="{{ url_for('login') }}" style="position: absolute; top: 24px; right: 48px; background: #22314f; color: #fff; padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 1em;">Login</a>
-    {% endif %}
-    <div class="container">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
-            <img src="https://img.icons8.com/color/96/000000/microsoft.png" alt="logo" style="height: 48px;">
-            <h1 style="margin: 0;">StudyCoach</h1>
-        </div>
-        <p>An online learning tool to help students with any coursework</p>
-        <div class="actions">
-            <form action="{{ url_for('teacher_signup') }}" method="get" style="display:inline;">
-                <button type="submit">Sign up as a teacher</button>
-            </form>
-            <form action="{{ url_for('student_signup') }}" method="get" style="display:inline;">
-                <button type="submit">Sign up as a student</button>
-            </form>
-        </div>
-        <div class="main-content">
-            <div class="teachers">
-                <h2>Teachers</h2>
-                <label>Add Assignment</label>
-                <select><option>Class</option></select>
-                <div>
-                    <button>Syllabus</button>
-                    <button>Rubric</button>
-                </div>
-                <label>Add Students</label>
-                <div class="assignment-box">
-                    <b>Assignment 1</b><br>
-                    Alex Johnson<br>
-                    <span>Check your calculations</span>
-                    <span class="score">75 %</span>
-                </div>
-            </div>
-            <div class="students">
-                <h2>Students</h2>
-                <label>Assignment 1</label>
-                <span class="score">75 %</span>
-                <button>Explanations (AI) &gt;</button>
-                <p>Let's go over what you missed and prepare for the next quiz</p>
-                <div class="review-box">
-                    Let's go over what you missed and prepare for the next quiz<br>
-                    <button>Video</button>
-                    <button>Flashcards</button>
-                    <button>Practice</button>
-                    <button>ABC More</button>
-                </div>
-            </div>
+{% extends "base.html" %}
+
+{% block content %}
+<div class="hero">
+    <div class="hero-content">
+        <h1 class="hero-title">Welcome to StudyCoach</h1>
+        <p class="hero-subtitle">Empower your learning journey with AI-assisted education</p>
+        
+        <div class="hero-actions">
+            {% if not session.get('user_type') %}
+                <a href="{{ url_for('student_signup') }}" class="btn btn-primary">Get Started as Student</a>
+                <a href="{{ url_for('teacher_signup') }}" class="btn btn-secondary">Join as Teacher</a>
+            {% else %}
+                <a href="{{ url_for('ai_page') }}" class="btn btn-primary">Open AI Assistant</a>
+            {% endif %}
         </div>
     </div>
-</body>
-</html>
+</div>
+
+<section class="features">
+    <h2 class="section-title">Why Choose StudyCoach?</h2>
+    
+    <div class="grid grid-cols-3">
+        <div class="feature-card card">
+            <div class="feature-icon">🤖</div>
+            <h3>AI-Powered Learning</h3>
+            <p>Get personalized assistance and feedback from our intelligent AI tutor</p>
+        </div>
+        
+        <div class="feature-card card">
+            <div class="feature-icon">📚</div>
+            <h3>Smart Assignments</h3>
+            <p>Create and manage assignments with built-in rubrics and automated grading</p>
+        </div>
+        
+        <div class="feature-card card">
+            <div class="feature-icon">🤝</div>
+            <h3>Interactive Support</h3>
+            <p>Connect with teachers and get help when you need it most</p>
+        </div>
+    </div>
+</section>
+
+<section class="how-it-works">
+    <h2 class="section-title">How It Works</h2>
+    
+    <div class="steps grid grid-cols-4">
+        <div class="step-card card">
+            <div class="step-number">1</div>
+            <h3>Sign Up</h3>
+            <p>Create your account as a student or teacher</p>
+        </div>
+        
+        <div class="step-card card">
+            <div class="step-number">2</div>
+            <h3>Join Classes</h3>
+            <p>Enter class codes or create your own classroom</p>
+        </div>
+        
+        <div class="step-card card">
+            <div class="step-number">3</div>
+            <h3>Access Resources</h3>
+            <p>View assignments, rubrics, and learning materials</p>
+        </div>
+        
+        <div class="step-card card">
+            <div class="step-number">4</div>
+            <h3>Get Help</h3>
+            <p>Use the AI assistant for personalized support</p>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="cta-content card">
+        <h2>Ready to Transform Your Learning Experience?</h2>
+        <p>Join thousands of students and teachers already using StudyCoach</p>
+        
+        {% if not session.get('user_type') %}
+            <div class="cta-actions">
+                <a href="{{ url_for('student_signup') }}" class="btn btn-primary">Sign Up Now</a>
+                <a href="{{ url_for('login') }}" class="btn btn-secondary">Login</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Hero Section */
+.hero {
+    padding: var(--spacing-xl) 0;
+    text-align: center;
+    background: linear-gradient(to right, var(--primary-light), var(--secondary-light));
+    color: white;
+    border-radius: var(--radius-lg);
+    margin: var(--spacing-lg) 0;
+}
+
+.dark-mode .hero {
+    background: linear-gradient(to right, var(--primary-dark), var(--secondary-dark));
+}
+
+.hero-title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.9;
+    margin-bottom: var(--spacing-lg);
+}
+
+.hero-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+}
+
+/* Features Section */
+.features {
+    padding: var(--spacing-xl) 0;
+}
+
+.section-title {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.feature-card {
+    text-align: center;
+    padding: var(--spacing-xl);
+}
+
+.feature-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Steps Section */
+.how-it-works {
+    padding: var(--spacing-xl) 0;
+}
+
+.step-card {
+    text-align: center;
+    padding: var(--spacing-lg);
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    background: var(--primary-light);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--spacing-md);
+    font-weight: 600;
+}
+
+.dark-mode .step-number {
+    background: var(--primary-dark);
+}
+
+/* CTA Section */
+.cta {
+    padding: var(--spacing-xl) 0;
+}
+
+.cta-content {
+    text-align: center;
+    padding: var(--spacing-xl);
+    background: linear-gradient(to right, var(--surface-light), var(--background-light));
+}
+
+.dark-mode .cta-content {
+    background: linear-gradient(to right, var(--surface-dark), var(--background-dark));
+}
+
+.cta-actions {
+    margin-top: var(--spacing-lg);
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2rem;
+    }
+    
+    .hero-subtitle {
+        font-size: 1rem;
+    }
+    
+    .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 640px) {
+    .feature-card, .step-card {
+        padding: var(--spacing-md);
+    }
+}
+</style>
+{% endblock %}
