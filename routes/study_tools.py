@@ -110,15 +110,8 @@ def save_study_progress(data):
 @study_tools_bp.route('/study-tools')
 def study_tools_dashboard():
     """Main study tools dashboard"""
-    print(f"DEBUG: Session keys: {list(session.keys())}")
-    print(f"DEBUG: Session user_type: {session.get('user_type')}")
-    print(f"DEBUG: Session email: {session.get('email')}")
-    
     if 'user_type' not in session or 'email' not in session:
-        print("DEBUG: Authentication failed, redirecting to login")
         return redirect(url_for('login'))
-    
-    print("DEBUG: Authentication successful, proceeding to dashboard")
     
     user_email = session['email']
     flashcards_data = load_flashcards()
