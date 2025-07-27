@@ -174,6 +174,8 @@ studycoach/
 - **Multiple Content Types**: Grades text, files, and link submissions
 
 #### Classroom Management
+- **Multi-Teacher Classrooms**: Multiple teachers can create, join, and co-manage classrooms and assignments
+- **Classroom Join Links**: Teachers can copy and share direct join links for easy classroom access
 - **Student Activity Monitoring**: Real-time view of student engagement
 - **Assignment Creation**: Rich assignment builder with rubric integration
 - **Bulk Operations**: Manage multiple assignments and students efficiently
@@ -208,6 +210,8 @@ studycoach/
 ### 🔧 System Features
 
 #### Modern UI/UX
+- **Modernized Join Classroom Experience**: Join and confirmation pages redesigned for a modern, theme-aware look
+- **Copy Class Link with Feedback**: Teachers can copy class join links with instant feedback (toast notification)
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile
 - **Dark/Light Theme**: Automatic theme detection with manual override
 - **Accessibility**: WCAG-compliant design with keyboard navigation
@@ -348,23 +352,23 @@ AZURE_OPENAI_API_KEY=your-production-key
 
 ### For Teachers
 
-#### Setting Up Classrooms
+#### Setting Up & Managing Classrooms
 1. **Create Account**: Register as a teacher with school information
-2. **Classroom Creation**: Automatically created during registration
-3. **Share Join Code**: Provide students with the 8-character classroom code
-4. **Manage Students**: Monitor student activity and engagement
+2. **Classroom Creation**: Create a new classroom or join an existing one as a co-teacher
+3. **Share Join Code or Link**: Provide students or other teachers with the 8-character classroom code or use the copyable join link
+4. **Manage Students & Teachers**: Monitor student activity, add co-teachers, and manage engagement collaboratively
 
 #### Creating Assignments
-1. **Navigate to Classroom**: Select your classroom from the dashboard
+1. **Navigate to Classroom**: Select your classroom from the dashboard (as any teacher in the class)
 2. **Add Assignment**: Click "Add Assignment" button
 3. **Fill Details**:
    - Title and description
    - Assignment content/instructions
    - Optional rubric selection
-4. **Publish**: Assignment immediately becomes available to students
+4. **Publish**: Assignment immediately becomes available to students and co-teachers
 
 #### Grading and Feedback
-1. **Access Grading Center**: View all submissions in one place
+1. **Access Grading Center**: View all submissions in one place (accessible to all teachers in the classroom)
 2. **Grade Options**:
    - **Manual Grading**: Provide grade and written feedback
    - **AI Grading**: Let AI grade with rubric-based assessment
@@ -754,11 +758,12 @@ logger.info(f"Operation took {duration:.2f} seconds")
 - Add docstrings to all public functions
 - Include code examples in documentation
 - Keep API documentation current
+- Document new features (multi-teacher, join links, modern UI, robust testing)
 
 ### Testing Requirements
 - Unit tests for all business logic
 - Integration tests for API endpoints
-- Manual testing checklist for UI changes
+- Manual testing checklist for UI changes (including new classroom, join, and copy link features)
 - Performance testing for AI operations
 
 ---
@@ -767,6 +772,10 @@ logger.info(f"Operation took {duration:.2f} seconds")
 
 ### Version 2.0.0 (Current Development)
 - **New**: Modular architecture with Blueprint organization
+- **New**: Multi-teacher classroom management (teachers can create, join, and co-manage classes)
+- **New**: Copyable classroom join links for teachers (with instant feedback)
+- **New**: Modern, theme-aware join and confirmation pages (light/dark mode)
+- **New**: Robust testing and error checking for all new features
 - **New**: Comprehensive error handling and logging system
 - **New**: Data validation and sanitization utilities
 - **New**: AI service abstraction with improved context handling
@@ -775,6 +784,7 @@ logger.info(f"Operation took {duration:.2f} seconds")
 - **Improved**: Configuration management system
 - **Improved**: Database abstraction layer for easy migration
 - **Improved**: Project structure with better file organization
+- **Improved**: Documentation to reflect new features and usage
 - **Fixed**: JavaScript button issues with special characters
 - **Fixed**: Duplicate function definitions
 - **Fixed**: Session management security issues
