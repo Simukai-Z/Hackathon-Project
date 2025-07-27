@@ -11,7 +11,7 @@ An intelligent tutoring and classroom management system that connects students a
 ### Installation
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone <https://github.com/Simukai-Z/Hackathon-Project>
 cd studycoach
 
 # Run setup script
