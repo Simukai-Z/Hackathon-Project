@@ -1991,6 +1991,36 @@ document.addEventListener('keydown', function(event) {
 
 // Form validation for modal submission
 document.addEventListener('DOMContentLoaded', function() {
+    // Check if we need to auto-open an assignment modal from AI assistant link
+    const assignmentIdToOpen = sessionStorage.getItem('openAssignmentModal');
+    if (assignmentIdToOpen) {
+        console.log('Found assignment to auto-open:', assignmentIdToOpen);
+        // Clear the session storage
+        sessionStorage.removeItem('openAssignmentModal');
+        
+        // First, switch to the assignments tab
+        showTab('assignments');
+        
+        // Wait a moment for the page to fully load, then open the modal
+        setTimeout(() => {
+            const modal = document.getElementById('assignmentModal' + assignmentIdToOpen);
+            console.log('Looking for modal with ID:', 'assignmentModal' + assignmentIdToOpen);
+            if (modal) {
+                modal.style.display = 'block';
+                document.body.style.overflow = 'hidden';
+                console.log('✅ Auto-opened assignment modal:', assignmentIdToOpen);
+                
+                // Scroll to top to ensure modal is visible
+                window.scrollTo(0, 0);
+            } else {
+                console.error('❌ Assignment modal not found:', 'assignmentModal' + assignmentIdToOpen);
+                // List all available assignment modals for debugging
+                const allModals = document.querySelectorAll('[id^="assignmentModal"]');
+                console.log('Available assignment modals:', Array.from(allModals).map(m => m.id));
+            }
+        }, 1000); // Increased timeout to ensure page is fully loaded
+    }
+
     const modalForms = document.querySelectorAll('.submission-form-modal');
     modalForms.forEach(form => {
         form.addEventListener('submit', function(e) {

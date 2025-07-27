@@ -1,0 +1,35 @@
+{
+  "epicrbot20099@gmail.com": {
+    "Roblox study guide": {
+      "title": "Roblox study guide",
+      "style": "outline",
+      "complexity_level": "advanced",
+      "estimated_length": 30,
+      "sections": [
+        {
+          "title": "Key Concepts",
+          "type": "key_concepts",
+          "content": [
+            {
+              "term": "Core Concept 1 - Roblox study guide",
+              "definition": "Fundamental understanding derived from the provided content.",
+              "example": "Practical application example from the study material."
+            },
+            {
+              "term": "Important Principle - Roblox study guide",
+              "definition": "Key principle that governs the understanding of this topic.",
+              "example": "Real-world scenario demonstrating this principle."
+            }
+          ]
+        },
+        {
+          "title": "Summary",
+          "type": "summary",
+          "content": "# Study Guide: Roblox Advanced Scripting\n\n## Overview\nIn this study guide, we will delve into advanced scripting techniques in Roblox. Scripting in Roblox involves using Lua programming language to create interactive experiences within the Roblox platform. Advanced scripting allows developers to create complex gameplay mechanics, interactive systems, and immersive environments. By mastering advanced scripting techniques, developers can enhance the quality and functionality of their Roblox games...."
+        }
+      ],
+      "assignment": null,
+      "created_at": "2025-07-26T23:42:39.137406"
+    }
+  }
+}

@@ -118,6 +118,30 @@
               "graded_timestamp": "2025-07-26T06:59:51.233610+00:00"
             }
           ]
+        },
+        {
+          "id": "041bd333-6091-4876-8f49-d24e72fbf15e",
+          "title": "Ai",
+          "content": "Assignment: AI & Society Reflection\n\nObjective:\nReflect on the impact of AI in modern society by writing a short essay that analyzes both the benefits and potential risks of AI technologies.\n\nInstructions:\n- Write a 3-paragraph essay.\n- Paragraph 1: Introduction to AI and its increasing role in society.\n- Paragraph 2: Describe at least two benefits and one risk of AI with examples.\n- Paragraph 3: Your opinion on how society should handle AI advancements.\n- Length: 300\u2013500 words\n- Submit as a .txt or .docx file.\n",
+          "description": "",
+          "rubric_id": "a9798a70-fe3a-4b5e-98fb-b76593a58517",
+          "timestamp": "2025-07-26T20:42:52.167434+00:00",
+          "teacher_email": "Roblox@gmail.com",
+          "submissions": [
+            {
+              "id": "661eae7f-2674-4313-8070-1c2edae279cd",
+              "student_email": "epicrbot20099@gmail.com",
+              "assignment_id": "041bd333-6091-4876-8f49-d24e72fbf15e",
+              "submission_text": "",
+              "submission_link": "",
+              "filename": "epicrbot20099gmail.com_041bd333-6091-4876-8f49-d24e72fbf15e_example_submission.txt",
+              "timestamp": "2025-07-26T20:43:24.690991+00:00",
+              "grade": 85,
+              "feedback": "EPic, your submission on Artificial Intelligence demonstrates a good understanding of the topic and its implications in modern society. You effectively highlight both the benefits and risks associated with AI, such as improved efficiency and job displacement. Your analysis is thoughtful, particularly in suggesting proactive measures like creating guidelines and investing in education to manage AI's impact.\n\nThe content is complete, covering various aspects of AI's influence, and you provide a balanced view of its advantages and challenges. Your organization is clear, with a logical flow from introduction to conclusion, making it easy to follow your argument.\n\nHowever, to improve further, you could enhance the depth of your analysis by providing more specific examples or case studies to support your points. Additionally, while your suggestions for managing AI's impact are valuable, elaborating on potential implementation strategies could strengthen your argument.\n\nOverall, you have followed the assignment instructions well, and your submission reflects a solid understanding of the subject matter. Keep up the good work!",
+              "graded_by": "AI (via Roblox@gmail.com)",
+              "graded_timestamp": "2025-07-26T20:43:56.497547+00:00"
+            }
+          ]
         }
       ],
       "rubrics": [

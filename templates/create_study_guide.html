@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Create Flash Cards{% endblock %}
+{% block title %}Create Study Guide{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="header-section">
-        <h1>Create Flash Card Set</h1>
-        <a href="/study-tools/flashcards" class="btn btn-secondary">Back to Flash Cards</a>
+        <h1>Create Study Guide</h1>
+        <a href="/study-tools/study-guides" class="btn btn-secondary">Back to Study Guides</a>
     </div>
 
-    <form id="flashcard-form" class="flashcard-creation-form">
+    <form id="study-guide-form" class="study-guide-creation-form">
         <div class="form-section">
-            <label for="set-name">Flash Card Set Name:</label>
-            <input type="text" id="set-name" name="set_name" required placeholder="e.g., Biology Chapter 5" class="form-control">
+            <label for="guide-title">Study Guide Title:</label>
+            <input type="text" id="guide-title" name="guide_title" required placeholder="e.g., Biology Chapter 5 - Cell Structure" class="form-control">
         </div>
 
         <div class="form-section">
@@ -27,7 +27,7 @@
         <!-- Text Input Section -->
         <div id="text-input-section" class="form-section">
             <label for="content-text">Paste your study content:</label>
-            <textarea id="content-text" name="content_text" rows="10" placeholder="Paste your notes, textbook content, or study material here..." class="form-control"></textarea>
+            <textarea id="content-text" name="content_text" rows="12" placeholder="Paste your notes, textbook content, or study material here..." class="form-control"></textarea>
         </div>
 
         <!-- File Upload Section -->
@@ -50,48 +50,62 @@
         </div>
 
         <div class="form-section">
-            <label for="card-count">Number of Flash Cards to Generate:</label>
-            <select id="card-count" name="card_count" class="form-control">
-                <option value="10">10 cards</option>
-                <option value="15" selected>15 cards</option>
-                <option value="20">20 cards</option>
-                <option value="25">25 cards</option>
-                <option value="30">30 cards</option>
+            <label for="guide-style">Study Guide Style:</label>
+            <select id="guide-style" name="guide_style" class="form-control">
+                <option value="comprehensive">Comprehensive Overview</option>
+                <option value="outline" selected>Structured Outline</option>
+                <option value="summary">Key Points Summary</option>
+                <option value="qa">Question & Answer Format</option>
+                <option value="visual">Visual Learning Guide</option>
             </select>
         </div>
 
         <div class="form-section">
-            <label for="difficulty-level">Difficulty Level:</label>
-            <select id="difficulty-level" name="difficulty_level" class="form-control">
-                <option value="beginner">Beginner - Basic concepts and definitions</option>
+            <label for="complexity-level">Complexity Level:</label>
+            <select id="complexity-level" name="complexity_level" class="form-control">
+                <option value="basic">Basic - Simple explanations and definitions</option>
                 <option value="intermediate" selected>Intermediate - Detailed understanding</option>
-                <option value="advanced">Advanced - Critical thinking and analysis</option>
+                <option value="advanced">Advanced - In-depth analysis and connections</option>
             </select>
         </div>
 
         <div class="form-section">
-            <label for="card-types">Flash Card Types:</label>
+            <label for="sections">Include Sections:</label>
             <div class="checkbox-group">
                 <label class="checkbox-label">
-                    <input type="checkbox" name="card_types" value="definition" checked> Definitions
+                    <input type="checkbox" name="sections" value="overview" checked> Overview & Introduction
                 </label>
                 <label class="checkbox-label">
-                    <input type="checkbox" name="card_types" value="concept" checked> Concepts
+                    <input type="checkbox" name="sections" value="key_concepts" checked> Key Concepts
                 </label>
                 <label class="checkbox-label">
-                    <input type="checkbox" name="card_types" value="example"> Examples
+                    <input type="checkbox" name="sections" value="examples" checked> Examples & Applications
                 </label>
                 <label class="checkbox-label">
-                    <input type="checkbox" name="card_types" value="comparison"> Comparisons
+                    <input type="checkbox" name="sections" value="practice" checked> Practice Questions
                 </label>
                 <label class="checkbox-label">
-                    <input type="checkbox" name="card_types" value="application"> Applications
+                    <input type="checkbox" name="sections" value="summary"> Summary & Review
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="sections" value="resources"> Additional Resources
                 </label>
             </div>
         </div>
 
+        <div class="form-section">
+            <label for="estimated-length">Estimated Study Time:</label>
+            <select id="estimated-length" name="estimated_length" class="form-control">
+                <option value="15">15 minutes</option>
+                <option value="30" selected>30 minutes</option>
+                <option value="45">45 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="90">1.5 hours</option>
+            </select>
+        </div>
+
         <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Generate Flash Cards</button>
+            <button type="submit" class="btn btn-primary">Generate Study Guide</button>
             <button type="button" onclick="previewContent()" class="btn btn-secondary">Preview Content</button>
         </div>
     </form>
@@ -100,8 +114,8 @@
     <div id="loading-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="loading-spinner"></div>
-            <h3>Generating Flash Cards...</h3>
-            <p>AI is creating your personalized flash cards. This may take a moment.</p>
+            <h3>Creating Study Guide...</h3>
+            <p>AI is generating your personalized study guide. This may take a moment.</p>
         </div>
     </div>
 </div>
@@ -121,7 +135,7 @@
     margin: 0;
 }
 
-.flashcard-creation-form {
+.study-guide-creation-form {
     background: white;
     padding: 2rem;
     border-radius: 12px;
@@ -164,7 +178,7 @@
 
 .checkbox-group {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 0.5rem;
     margin-top: 0.5rem;
 }
@@ -235,7 +249,7 @@
 }
 
 /* Dark mode support */
-body.dark-mode .flashcard-creation-form,
+body.dark-mode .study-guide-creation-form,
 body.dark-mode .modal-content {
     background: var(--dark-card);
     border: 1px solid var(--dark-border);
@@ -371,7 +385,7 @@ document.querySelectorAll('input[name="content_source"]').forEach(radio => {
     });
 });
 
-document.getElementById('flashcard-form').addEventListener('submit', function(e) {
+document.getElementById('study-guide-form').addEventListener('submit', function(e) {
     e.preventDefault();
     
     // Show loading modal
@@ -380,15 +394,15 @@ document.getElementById('flashcard-form').addEventListener('submit', function(e)
     // Collect form data
     const formData = new FormData(this);
     
-    // Get selected card types
-    const cardTypes = [];
-    document.querySelectorAll('input[name="card_types"]:checked').forEach(cb => {
-        cardTypes.push(cb.value);
+    // Get selected sections
+    const sections = [];
+    document.querySelectorAll('input[name="sections"]:checked').forEach(cb => {
+        sections.push(cb.value);
     });
-    formData.append('card_types_json', JSON.stringify(cardTypes));
+    formData.append('sections_json', JSON.stringify(sections));
     
     // Submit form
-    fetch('/study-tools/api/create-flashcards', {
+    fetch('/study-tools/api/create-study-guide', {
         method: 'POST',
         body: formData
     })
@@ -397,8 +411,8 @@ document.getElementById('flashcard-form').addEventListener('submit', function(e)
         document.getElementById('loading-modal').style.display = 'none';
         
         if (data.success) {
-            alert('Flash cards created successfully!');
-            window.location.href = '/study-tools/flashcards';
+            alert('Study guide created successfully!');
+            window.location.href = '/study-tools/study-guides';
         } else {
             alert(`Error: ${data.error}`);
         }
@@ -406,7 +420,7 @@ document.getElementById('flashcard-form').addEventListener('submit', function(e)
     .catch(error => {
         document.getElementById('loading-modal').style.display = 'none';
         console.error('Error:', error);
-        alert('An error occurred while creating flash cards. Please try again.');
+        alert('An error occurred while creating the study guide. Please try again.');
     });
 });
 </script>

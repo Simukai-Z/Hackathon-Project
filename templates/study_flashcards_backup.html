@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+
+{% block title %}Study: {{ set_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="study-header">
+        <h1>Study Mode: {{ set_name }}</h1>
+        <div class="study-progress">
+            <div class="progress-info">
+                <span id="current-card">1</span> of <span id="total-cards">{{ flashcard_set.cards|length }}</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="study-container">
+        <div class="flashcard-study" id="study-card">
+            <div class="card-side question-side active" id="question-side">
+                <div class="card-label">Question</div>
+                <div class="card-content" id="question-content"></div>
+                <button type="button" class="reveal-btn" onclick="return showAnswer(event);">Reveal Answer</button>
+            </div>
+            
+            <div class="card-side answer-side" id="answer-side">
+                <div class="card-label">Answer</div>
+                <div class="card-content" id="answer-content"></div>
+                <div class="answer-buttons">
+                    <button type="button" class="difficulty-btn hard" onclick="markCard('hard')">😓 Hard</button>
+                    <button type="button" class="difficulty-btn medium" onclick="markCard('medium')">🤔 Medium</button>
+                    <button type="button" class="difficulty-btn easy" onclick="markCard('easy')">😊 Easy</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="study-controls">
+            <button type="button" class="nav-btn" id="prev-btn" onclick="previousCard()" disabled>← Previous</button>
+            <button type="button" class="nav-btn" id="next-btn" onclick="nextCard()" disabled>Next →</button>
+        </div>
+    </div>
+
+    <div class="study-stats">
+        <div class="stat-item">
+            <span class="stat-value" id="easy-count">0</span>
+            <span class="stat-label">Easy</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value" id="medium-count">0</span>
+            <span class="stat-label">Medium</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-value" id="hard-count">0</span>
+            <span class="stat-label">Hard</span>
+        </div>
+    </div>
+
+    <div class="study-actions">
+        <a href="/study-tools/flashcards/view/{{ set_name }}" class="btn btn-secondary">View All Cards</a>
+        <a href="/study-tools/flashcards" class="btn btn-primary">Back to Flash Cards</a>
+    </div>
+</div>
+
+<style>
+.study-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.study-header h1 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.study-progress {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--background-light);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.study-container {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+}
+
+.flashcard-study {
+    height: 400px;
+    position: relative;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+}
+
+.card-side {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 2rem;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: all 0.3s ease;
+}
+
+.card-side.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.question-side {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+}
+
+.answer-side {
+    background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+    color: white;
+}
+
+.card-label {
+    font-size: 1rem;
+    font-weight: 600;
+    opacity: 0.8;
+    margin-bottom: 1rem;
+}
+
+.card-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+    line-height: 1.4;
+    margin-bottom: 1.5rem;
+}
+
+.reveal-btn {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.3);
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.reveal-btn:hover {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.5);
+}
+
+.answer-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.difficulty-btn {
+    flex: 1;
+    max-width: 120px;
+    padding: 0.75rem 1rem;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.difficulty-btn:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.5);
+}
+
+.study-controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.nav-btn {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-block;
+    min-width: 120px;
+    text-align: center;
+}
+
+.nav-btn:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: white;
+}
+
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.study-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.study-actions {
+    text-align: center;
+}
+
+.study-actions .btn {
+    margin: 0 0.5rem;
+}
+
+/* Dark mode support */
+body.dark-mode .study-stats {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+body.dark-mode .progress-bar {
+    background: var(--dark-bg);
+}
+
+body.dark-mode .nav-btn {
+    background: var(--dark-card);
+    border-color: var(--primary-color);
+}
+
+body.dark-mode .nav-btn:hover:not(:disabled) {
+    background: var(--primary-color);
+}
+</style>
+
+<script>
+// Flash card data
+const flashcards = {{ flashcard_set.cards | tojson }};
+let currentCardIndex = 0;
+let cardStats = { easy: 0, medium: 0, hard: 0 };
+let answeredCards = new Set();
+
+// Initialize study session
+function initStudy() {
+    loadCard(currentCardIndex);
+    updateProgress();
+    updateStats();
+}
+
+function loadCard(index) {
+    const card = flashcards[index];
+    document.getElementById('question-content').textContent = card.front;
+    document.getElementById('answer-content').textContent = card.back;
+    
+    // Show question side
+    document.getElementById('question-side').classList.add('active');
+    document.getElementById('answer-side').classList.remove('active');
+    
+    updateNavButtons();
+}
+
+function showAnswer(event) {
+    // Prevent any event propagation or default behavior
+    if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        event.stopImmediatePropagation();
+    }
+    
+    const questionSide = document.getElementById('question-side');
+    const answerSide = document.getElementById('answer-side');
+    
+    // Only flip if we're currently showing the question
+    if (questionSide && questionSide.classList.contains('active')) {
+        console.log('Revealing answer for card', currentCardIndex); // Debug log
+        questionSide.classList.remove('active');
+        answerSide.classList.add('active');
+    } else {
+        console.log('Answer already shown or invalid state'); // Debug log
+    }
+    
+    // Explicitly return false to prevent any form submission or other events
+    return false;
+}
+
+function markCard(difficulty) {
+    console.log(`Marking card as ${difficulty} at index ${currentCardIndex}`); // Debug log
+    const cardId = currentCardIndex;
+    
+    // Remove previous rating for this card
+    if (answeredCards.has(cardId)) {
+        const prevRating = flashcards[cardId].userRating;
+        if (prevRating) {
+            cardStats[prevRating]--;
+        }
+    }
+    
+    // Add new rating
+    flashcards[cardId].userRating = difficulty;
+    cardStats[difficulty]++;
+    answeredCards.add(cardId);
+    
+    updateStats();
+    
+    // Auto-advance to next card
+    setTimeout(() => {
+        if (currentCardIndex < flashcards.length - 1) {
+            nextCard();
+        }
+    }, 500);
+}
+
+function nextCard() {
+    if (currentCardIndex < flashcards.length - 1) {
+        currentCardIndex++;
+        loadCard(currentCardIndex);
+        updateProgress();
+        updateNavButtons();
+    }
+}
+
+function previousCard() {
+    if (currentCardIndex > 0) {
+        currentCardIndex--;
+        loadCard(currentCardIndex);
+        updateProgress();
+        updateNavButtons();
+    }
+}
+
+function updateProgress() {
+    document.getElementById('current-card').textContent = currentCardIndex + 1;
+    const progressPercent = ((currentCardIndex + 1) / flashcards.length) * 100;
+    document.getElementById('progress-fill').style.width = progressPercent + '%';
+}
+
+function updateNavButtons() {
+    document.getElementById('prev-btn').disabled = currentCardIndex === 0;
+    document.getElementById('next-btn').disabled = currentCardIndex === flashcards.length - 1;
+}
+
+function updateStats() {
+    document.getElementById('easy-count').textContent = cardStats.easy;
+    document.getElementById('medium-count').textContent = cardStats.medium;
+    document.getElementById('hard-count').textContent = cardStats.hard;
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', function(e) {
+    // Don't handle keyboard events if user is typing in an input field
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    
+    console.log(`Key pressed: ${e.key}`); // Debug log
+    
+    switch(e.key) {
+        case ' ':
+        case 'Enter':
+            if (document.getElementById('question-side').classList.contains('active')) {
+                console.log('Keyboard shortcut: revealing answer');
+                showAnswer();
+            }
+            e.preventDefault();
+            break;
+        case 'ArrowLeft':
+            console.log('Keyboard shortcut: previous card');
+            previousCard();
+            break;
+        case 'ArrowRight':
+            console.log('Keyboard shortcut: next card');
+            nextCard();
+            break;
+        case '1':
+            if (document.getElementById('answer-side').classList.contains('active')) {
+                console.log('Keyboard shortcut: marking as hard');
+                markCard('hard');
+            }
+            break;
+        case '2':
+            if (document.getElementById('answer-side').classList.contains('active')) {
+                console.log('Keyboard shortcut: marking as medium');
+                markCard('medium');
+            }
+            break;
+        case '3':
+            if (document.getElementById('answer-side').classList.contains('active')) {
+                console.log('Keyboard shortcut: marking as easy');
+                markCard('easy');
+            }
+            break;
+    }
+});
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', initStudy);
+</script>
+{% endblock %}

@@ -54,6 +54,7 @@
             <div class="header-left">
                 <button class="btn btn-secondary btn-sm settings-toggle" onclick="toggleSettings()">⚙️ Settings</button>
                 <h2 id="ai-name">StudyCoach AI</h2>
+                <button class="btn btn-secondary btn-sm" onclick="refreshResources()" title="Refresh resources for hyperlinks">🔗 Links</button>
             </div>
             <button class="btn btn-secondary btn-sm" onclick="window.history.back()">Back</button>
         </div>
@@ -449,6 +450,98 @@
     }
 }
 
+/* Resource Link Styles */
+.resource-link {
+    color: #0066cc;
+    text-decoration: none;
+    font-weight: 500;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+    background-color: rgba(0, 102, 204, 0.1);
+    border: 1px solid transparent;
+    display: inline-block;
+    margin: 0 2px;
+}
+
+.resource-link:hover {
+    background-color: rgba(0, 102, 204, 0.2);
+    border-color: rgba(0, 102, 204, 0.3);
+    text-decoration: none;
+    transform: translateY(-1px);
+}
+
+.flashcard-link {
+    color: #e74c3c;
+    background-color: rgba(231, 76, 60, 0.1);
+}
+
+.flashcard-link:hover {
+    background-color: rgba(231, 76, 60, 0.2);
+    border-color: rgba(231, 76, 60, 0.3);
+}
+
+.study-guide-link {
+    color: #27ae60;
+    background-color: rgba(39, 174, 96, 0.1);
+}
+
+.study-guide-link:hover {
+    background-color: rgba(39, 174, 96, 0.2);
+    border-color: rgba(39, 174, 96, 0.3);
+}
+
+.assignment-link {
+    color: #9b59b6;
+    background-color: rgba(155, 89, 182, 0.1);
+}
+
+.assignment-link:hover {
+    background-color: rgba(155, 89, 182, 0.2);
+    border-color: rgba(155, 89, 182, 0.3);
+}
+
+.rubric-link {
+    color: #f39c12;
+    background-color: rgba(243, 156, 18, 0.1);
+}
+
+.rubric-link:hover {
+    background-color: rgba(243, 156, 18, 0.2);
+    border-color: rgba(243, 156, 18, 0.3);
+}
+
+/* Dark mode resource link styles */
+.dark-mode .resource-link {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .resource-link:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.dark-mode .flashcard-link {
+    color: #ff6b6b;
+    background-color: rgba(255, 107, 107, 0.1);
+}
+
+.dark-mode .study-guide-link {
+    color: #51cf66;
+    background-color: rgba(81, 207, 102, 0.1);
+}
+
+.dark-mode .assignment-link {
+    color: #cc5de8;
+    background-color: rgba(204, 93, 232, 0.1);
+}
+
+.dark-mode .rubric-link {
+    color: #ffd43b;
+    background-color: rgba(255, 212, 59, 0.1);
+}
+
 @media (max-width: 1024px) {
     .chat-container {
         grid-template-columns: 250px 1fr;
@@ -508,7 +601,28 @@
 {% endblock %}
 
 {% block extra_js %}
+<!-- Pass initial message data from template to JavaScript -->
+{% if initial_message %}
+<script type="application/json" id="initial-message-data">{{ initial_message | tojson }}</script>
+{% endif %}
+
+<!-- Pass resources data from template to JavaScript as fallback -->
+{% if resources %}
+<script type="application/json" id="resources-data">{{ resources | tojson }}</script>
+{% endif %}
+
+<!-- Pass API URLs from template to JavaScript -->
+<script type="application/json" id="api-urls-data">{
+    "chat": "{{ url_for('chat') }}",
+    "get_personality": "{{ url_for('get_personality') }}",
+    "save_personality": "{{ url_for('save_personality') }}",
+    "reset_history": "{{ url_for('reset_history') }}"
+}</script>
+
 <script>
+    // Get API URLs from template data
+    const apiUrls = JSON.parse(document.getElementById('api-urls-data').textContent);
+    
     // Configuration
     let aiName = sessionStorage.getItem('aiName') || 'StudyCoach AI';
     let aiPersonality = sessionStorage.getItem('aiPersonality') || '';
@@ -516,9 +630,14 @@
     let presetFileContent = sessionStorage.getItem('presetFileContent') || '';
     let chatHistory = JSON.parse(sessionStorage.getItem('aiChatHistory') || '[]');
 
+    // Cache for resource data
+    let resourceCache = null;
+    let resourceCacheExpiry = 0;
+    const CACHE_DURATION = 300000; // 5 minutes
+
     // Load personality from server on page load
     window.addEventListener('DOMContentLoaded', function() {
-        fetch('{{ url_for("get_personality") }}')
+        fetch(apiUrls.get_personality)
             .then(response => response.json())
             .then(data => {
                 if (data.personality) {
@@ -526,6 +645,101 @@
                     aiPersonality = data.personality;
                 }
             });
+
+        // Load fallback resources from template if available
+        const resourcesElement = document.getElementById('resources-data');
+        if (resourcesElement) {
+            try {
+                const fallbackResources = JSON.parse(resourcesElement.textContent);
+                resourceCache = fallbackResources;
+                resourceCacheExpiry = Date.now() + CACHE_DURATION;
+                console.log('✅ Loaded fallback resources from template:', resourceCache);
+                console.log('  📚 Flashcards:', resourceCache.flashcards?.length || 0);
+                console.log('  📖 Study guides:', resourceCache.study_guides?.length || 0);
+                console.log('  📝 Assignments:', resourceCache.assignments?.length || 0);
+                console.log('  📋 Rubrics:', resourceCache.rubrics?.length || 0);
+            } catch (e) {
+                console.warn('❌ Failed to parse fallback resources:', e);
+            }
+        } else {
+            console.warn('⚠️ No fallback resources found in template');
+        }
+
+        // Fetch available resources from the server
+        async function fetchResources() {
+            const now = Date.now();
+            if (resourceCache && now < resourceCacheExpiry) {
+                console.log('Using cached resources:', resourceCache);
+                return resourceCache;
+            }
+
+            try {
+                console.log('Fetching resources from API...');
+                const response = await fetch('/study-tools/api/resources');
+                if (response.ok) {
+                    resourceCache = await response.json();
+                    resourceCacheExpiry = now + CACHE_DURATION;
+                    console.log('Resources loaded from API:', resourceCache);
+                    return resourceCache;
+                } else if (response.status === 401) {
+                    console.warn('Not authenticated for resources API, using fallback if available');
+                } else {
+                    console.warn('Failed to fetch resources, status:', response.status);
+                }
+            } catch (error) {
+                console.warn('Failed to fetch resources for link processing:', error);
+            }
+            
+            // If we have cached fallback resources, use them
+            if (resourceCache) {
+                console.log('Using fallback resources:', resourceCache);
+                return resourceCache;
+            }
+            
+            return { flashcards: [], study_guides: [], assignments: [], rubrics: [] };
+        }
+
+        // Load resources for hyperlink processing - retry with exponential backoff
+        async function initializeResources() {
+            let attempts = 0;
+            const maxAttempts = 3;
+            const baseDelay = 1000;
+            
+            while (attempts < maxAttempts) {
+                const resources = await fetchResources();
+                if (resources && (resources.flashcards.length > 0 || resources.study_guides.length > 0 || resources.assignments.length > 0)) {
+                    console.log('Resources successfully loaded on attempt', attempts + 1);
+                    return;
+                }
+                
+                attempts++;
+                if (attempts < maxAttempts) {
+                    const delay = baseDelay * Math.pow(2, attempts - 1);
+                    console.log(`Retrying resource fetch in ${delay}ms (attempt ${attempts + 1}/${maxAttempts})`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
+            }
+            
+            console.log('Failed to load resources after', maxAttempts, 'attempts');
+        }
+
+        // Initialize resources loading
+        initializeResources();
+
+        // Handle initial message from game results
+        const initialMessageElement = document.getElementById('initial-message-data');
+        if (initialMessageElement) {
+            const initialMessage = JSON.parse(initialMessageElement.textContent);
+            if (initialMessage) {
+                (async () => {
+                    // Add the initial message as if the user sent it
+                    chatHistory.push({ role: 'user', content: initialMessage });
+                    await renderHistory();
+                    // Automatically send it to get AI response
+                    await sendMessage(initialMessage, '');
+                })();
+            }
+        }
 
         // Settings toggle functionality
         window.toggleSettings = function() {
@@ -544,18 +758,455 @@
             }
         }
 
-        function renderHistory() {
+        // Process AI message content to add hyperlinks
+        async function processMessageForLinks(content) {
+            if (!content || typeof content !== 'string') return content;
+            
+            console.log('Processing message for links:', content);
+            
+            // Start with original content - don't escape HTML yet
+            let processedContent = content;
+            
+            // Clean up any existing malformed HTML first
+            processedContent = cleanupMalformedHTML(processedContent);
+            console.log('After cleanup:', processedContent);
+
+            // Helper function to clean up malformed HTML
+            function cleanupMalformedHTML(text) {
+                // Remove nested links like: study guides titled 'Roblox <a href=...>study guides'
+                text = text.replace(/(<a[^>]*>)([^<]*)<a[^>]*>([^<]*)<\/a>([^<]*)<\/a>/gi, '$1$2$3$4</a>');
+                
+                // Remove multiple nested study guide links
+                text = text.replace(/study guides[^<]*<a[^>]*>study guides[^<]*<\/a>/gi, 'study guides');
+                
+                // Clean up patterns like "Roblox <a>study guides</a>" target="_blank">
+                text = text.replace(/([^<]*)<a[^>]*>([^<]*)<\/a>([^"]*"[^>]*>)/gi, '$1$2');
+                
+                // Remove incomplete/broken link tags
+                text = text.replace(/just click here to [^"]*" target="_blank">([^<]*)<\/a>/gi, '$1');
+                
+                // Remove other malformed link patterns
+                text = text.replace(/[^"]*" target="_blank">([^<]*)<\/a>/gi, '$1');
+                
+                // Remove incomplete opening tags without proper start
+                text = text.replace(/[^<]*" target="_blank">([^<]*)<\/a>/gi, '$1');
+                
+                // Clean up any remaining orphaned closing tags
+                text = text.replace(/<\/a>/gi, '');
+                
+                // Clean up duplicate nested links with same content
+                text = text.replace(/<a[^>]*>([^<]*)<a[^>]*>\1<\/a>([^<]*)<\/a>/gi, '<a href="/study-tools/study-guides" target="_blank" class="study-link">$1</a>$2');
+                
+                return text;
+            }
+
+            // Ensure resources are loaded
+            const resources = await fetchResources();
+            console.log('Resources available for processing:', resources);
+
+            // Helper function to safely replace text while avoiding HTML conflicts and greeting contexts
+            function safeTextReplace(text, searchTerm, replacement) {
+                // Skip replacement if the term appears in common greeting patterns
+                const greetingPatterns = [
+                    new RegExp(`\\b(hello|hi|hey)\\s+${escapeRegex(searchTerm)}\\b`, 'gi'),
+                    new RegExp(`\\b${escapeRegex(searchTerm)}\\s*(,|!)`, 'gi'), // "Epic!" or "Epic,"
+                    new RegExp(`\\b(good\\s+(morning|afternoon|evening))\\s+${escapeRegex(searchTerm)}\\b`, 'gi')
+                ];
+                
+                // Check if the term appears in a greeting context
+                for (const pattern of greetingPatterns) {
+                    if (pattern.test(text)) {
+                        console.log(`⚠️ Skipping replacement of "${searchTerm}" - appears in greeting context`);
+                        return text; // Don't replace if it's in a greeting
+                    }
+                }
+                
+                // Check if the search term is already part of an HTML link or tag
+                const htmlLinkPattern = new RegExp(`<a[^>]*>[^<]*${escapeRegex(searchTerm)}[^<]*</a>`, 'gi');
+                const insideTagPattern = new RegExp(`<[^>]*${escapeRegex(searchTerm)}[^>]*>`, 'gi');
+                const brokenLinkPattern = new RegExp(`${escapeRegex(searchTerm)}[^<]*</a>`, 'gi');
+                const alreadyLinkedPattern = new RegExp(`>${escapeRegex(searchTerm)}</a>`, 'gi');
+                
+                if (htmlLinkPattern.test(text) || insideTagPattern.test(text) || brokenLinkPattern.test(text) || alreadyLinkedPattern.test(text)) {
+                    console.log(`⚠️ Skipping replacement of "${searchTerm}" - already part of HTML`);
+                    return text;
+                }
+                
+                // Use a temporary placeholder to avoid conflicts
+                const placeholder = `__TEMP_LINK_${Math.random().toString(36).substr(2, 9)}__`;
+                
+                // Split text into parts: outside links vs inside links
+                const parts = text.split(/(<a[^>]*>.*?<\/a>)/gi);
+                
+                let result = '';
+                for (let i = 0; i < parts.length; i++) {
+                    const part = parts[i];
+                    
+                    // If this part is a link, don't modify it
+                    if (part.match(/^<a[^>]*>.*?<\/a>$/i)) {
+                        result += part;
+                    } else {
+                        // Only process text outside of links
+                        const regex = new RegExp(`\\b${escapeRegex(searchTerm)}\\b`, 'gi');
+                        const processedPart = part.replace(regex, (match, offset, string) => {
+                            // Additional context check: don't replace if preceded by greeting words
+                            const beforeMatch = string.substring(Math.max(0, offset - 20), offset).toLowerCase();
+                            if (beforeMatch.includes('hello') || beforeMatch.includes('hi ') || beforeMatch.includes('hey ')) {
+                                return match; // Return original text, don't replace
+                            }
+                            
+                            return placeholder;
+                        });
+                        
+                        result += processedPart;
+                    }
+                }
+                
+                // Final pass: replace placeholder with actual HTML link
+                result = result.replace(new RegExp(escapeRegex(placeholder), 'g'), replacement);
+                
+                return result;
+            }
+
+            // Process resources if available
+            if (resources) {
+                // First, process general terms BEFORE specific resources to avoid conflicts
+                const generalTerms = [
+                    { term: 'flashcards', url: '/study-tools/flashcards', className: 'study-link' },
+                    { term: 'study guides', url: '/study-tools/study-guides', className: 'study-link' }
+                ];
+
+                generalTerms.forEach(({ term, url, className }) => {
+                    // Only add general links if the term isn't already part of a link and not followed by specific content
+                    if (!processedContent.includes(`>${term}</a>`) && !processedContent.includes(`${term}:`)) {
+                        const replacement = `<a href="${url}" target="_blank" class="${className}">${term}</a>`;
+                        
+                        // Only replace standalone occurrences, not when followed by specific names
+                        const regex = new RegExp(`\\b${escapeRegex(term)}\\b(?!\\s+titled|\\s+named|\\s*:)`, 'gi');
+                        const oldContent = processedContent;
+                        processedContent = processedContent.replace(regex, replacement);
+                        
+                        if (oldContent !== processedContent) {
+                            console.log(`✅ Applied general term link for: ${term}`);
+                        }
+                    }
+                });
+
+                // Now process specific resources - these take priority over general terms
+                // Process flashcard sets
+                if (resources.flashcards && resources.flashcards.length > 0) {
+                    console.log('Processing flashcards:', resources.flashcards);
+                    resources.flashcards.forEach(flashcard => {
+                        const setName = flashcard.name || flashcard.title;
+                        if (setName) {
+                            const replacement = `<a href="/study-tools/flashcards/view/${encodeURIComponent(setName)}" class="resource-link flashcard-link" target="_blank" title="View flashcard set">${setName}</a>`;
+                            const oldContent = processedContent;
+                            processedContent = safeTextReplace(processedContent, setName, replacement);
+                            if (oldContent !== processedContent) {
+                                console.log(`✅ Applied flashcard link for: ${setName}`);
+                            }
+                        }
+                    });
+                }
+
+                // Process study guides
+                if (resources.study_guides && resources.study_guides.length > 0) {
+                    console.log('Processing study guides:', resources.study_guides);
+                    resources.study_guides.forEach(guide => {
+                        const guideTitle = guide.name || guide.title;
+                        if (guideTitle) {
+                            const replacement = `<a href="/study-tools/study-guides/view/${encodeURIComponent(guideTitle)}" class="resource-link study-guide-link" target="_blank" title="View study guide">${guideTitle}</a>`;
+                            const oldContent = processedContent;
+                            processedContent = safeTextReplace(processedContent, guideTitle, replacement);
+                            if (oldContent !== processedContent) {
+                                console.log(`✅ Applied study guide link for: ${guideTitle}`);
+                            }
+                        }
+                    });
+                }
+
+                // Process assignments - link to student dashboard with class and auto-open modal
+                if (resources.assignments && resources.assignments.length > 0) {
+                    console.log('Processing assignments:', resources.assignments);
+                    resources.assignments.forEach(assignment => {
+                        const assignmentTitle = assignment.title;
+                        const assignmentId = assignment.id;
+                        const classCode = assignment.class_code;
+                        if (assignmentTitle && assignmentId && classCode) {
+                            const replacement = `<a href="/student_main?class=${classCode}" class="resource-link assignment-link" title="View assignment: ${assignmentTitle}" onclick="console.log('Setting assignment ID to open:', '${assignmentId}'); sessionStorage.setItem('openAssignmentModal', '${assignmentId}'); return true;">${assignmentTitle}</a>`;
+                            const oldContent = processedContent;
+                            processedContent = safeTextReplace(processedContent, assignmentTitle, replacement);
+                            if (oldContent !== processedContent) {
+                                console.log(`✅ Applied assignment link for: ${assignmentTitle} (Class: ${classCode}, ID: ${assignmentId})`);
+                            }
+                        }
+                    });
+                }
+
+                // Process rubrics
+                if (resources.rubrics && resources.rubrics.length > 0) {
+                    console.log('Processing rubrics:', resources.rubrics);
+                    resources.rubrics.forEach(rubric => {
+                        const rubricTitle = rubric.title;
+                        if (rubricTitle) {
+                            const replacement = `<a href="#" class="resource-link rubric-link" onclick="viewRubric('${rubric.id}')" title="View rubric">${rubricTitle}</a>`;
+                            const oldContent = processedContent;
+                            processedContent = safeTextReplace(processedContent, rubricTitle, replacement);
+                            if (oldContent !== processedContent) {
+                                console.log(`✅ Applied rubric link for: ${rubricTitle}`);
+                            }
+                        }
+                    });
+                }
+            }
+
+            // Escape HTML entities for safety, but preserve our HTML links
+            // First, protect our links
+            const linkPlaceholders = {};
+            let linkCounter = 0;
+            
+            // Extract all links and replace with placeholders
+            processedContent = processedContent.replace(/<a[^>]*>.*?<\/a>/gi, (match) => {
+                const placeholder = `__LINK_PLACEHOLDER_${linkCounter}__`;
+                linkPlaceholders[placeholder] = match;
+                linkCounter++;
+                return placeholder;
+            });
+            
+            // Now escape HTML entities in the remaining text
+            processedContent = processedContent
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            
+            // Restore the links
+            Object.keys(linkPlaceholders).forEach(placeholder => {
+                processedContent = processedContent.replace(placeholder, linkPlaceholders[placeholder]);
+            });
+
+            // Convert line breaks to HTML
+            processedContent = processedContent.replace(/\n/g, '<br>');
+            
+            console.log('Final processed content:', processedContent);
+            return processedContent;
+        }
+
+        // Escape special regex characters
+        function escapeRegex(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Function to view rubric (placeholder - implement based on your rubric viewing system)
+        window.viewRubric = function(rubricId) {
+            alert(`Viewing rubric: ${rubricId}`);
+            // Implement actual rubric viewing logic here
+        }
+
+        // Manual refresh resources function
+        window.refreshResources = async function() {
+            console.log('Manually refreshing resources...');
+            resourceCache = null; // Clear cache
+            resourceCacheExpiry = 0;
+            const resources = await fetchResources();
+            console.log('Manual refresh completed:', resources);
+            
+            // Re-render history to apply any new links
+            await renderHistory();
+        };
+
+        // Test function for debugging broken HTML links
+        window.testBrokenLinkFix = function() {
+            console.log('🔧 Testing broken link fix...');
+            
+            // Simulate the new broken text from the user's issue
+            const brokenText = `Hey EPic! 🚀 Let's check out the study guides you have:
+
+📖 You currently have a <a href="/study-tools/study-guides" target="_blank" class="study-link">study guides titled 'Roblox <a href="/study-tools/study-guides" target="_blank" class="study-link">study guides'. It contains 1017 characters of valuable information. If you want to dive into it, just click here to view your <a href="/study-tools/study-guides" target="_blank" class="study-link">study guides: <a href="/study-tools/study-guides/view/Roblox <a href="/study-tools/study-guides" target="_blank" class="study-link">study guides" target="_blank">View Roblox <a href="/study-tools/study-guides" target="_blank" class="study-link">study guides.
+
+If you need any specific help or guidance on any topic within the guide, feel free to ask! 📚✨`;
+
+            console.log('Original broken text:', brokenText);
+            
+            // Test the cleanup function
+            const cleaned = cleanupMalformedHTML(brokenText);
+            console.log('After cleanup:', cleaned);
+            
+            // Test the full processing
+            processLinks(cleaned).then(result => {
+                console.log('After full processing:', result);
+                
+                // Create a test element to see the result
+                const testDiv = document.createElement('div');
+                testDiv.style.border = '2px solid #007bff';
+                testDiv.style.padding = '10px';
+                testDiv.style.margin = '10px';
+                testDiv.style.backgroundColor = '#f8f9fa';
+                testDiv.innerHTML = '<h4>Fixed Result:</h4>' + result;
+                document.body.appendChild(testDiv);
+                
+                console.log('✅ Test complete - check the page for the fixed result');
+            });
+        };
+
+        // Test function for debugging Roblox study guide linking
+        window.testRobloxLink = async function() {
+            console.log('🔍 Testing Roblox study guide linking...');
+            
+            // Get resources
+            const resources = await fetchResources();
+            console.log('All resources:', resources);
+            
+            if (resources && resources.study_guides) {
+                console.log('Study guides found:', resources.study_guides);
+                
+                // Look for Roblox guide specifically
+                const robloxGuide = resources.study_guides.find(guide => 
+                    (guide.name && guide.name.toLowerCase().includes('roblox')) ||
+                    (guide.title && guide.title.toLowerCase().includes('roblox'))
+                );
+                
+                if (robloxGuide) {
+                    console.log('✅ Found Roblox guide:', robloxGuide);
+                    const guideTitle = robloxGuide.name || robloxGuide.title;
+                    const encodedTitle = encodeURIComponent(guideTitle);
+                    const expectedUrl = `/study-tools/study-guides/view/${encodedTitle}`;
+                    console.log(`Expected URL: ${expectedUrl}`);
+                    
+                    // Test the hyperlink processing
+                    const testText = `Check out your ${guideTitle} for more details.`;
+                    console.log(`Test text: ${testText}`);
+                    
+                    const replacement = `<a href="${expectedUrl}" class="resource-link study-guide-link" target="_blank" title="View study guide">${guideTitle}</a>`;
+                    const result = testText.replace(new RegExp(`\\b${escapeRegex(guideTitle)}\\b`, 'gi'), replacement);
+                    console.log(`Result with link: ${result}`);
+                    
+                    // Test if we can create the link manually
+                    console.log('🔗 Testing manual link creation...');
+                    const linkElement = document.createElement('a');
+                    linkElement.href = expectedUrl;
+                    linkElement.textContent = guideTitle;
+                    linkElement.className = 'resource-link study-guide-link';
+                    linkElement.target = '_blank';
+                    console.log('Manual link element:', linkElement);
+                    console.log('Manual link href:', linkElement.href);
+                    
+                } else {
+                    console.log('❌ No Roblox study guide found in resources');
+                }
+            } else {
+                console.log('❌ No study guides in resources');
+            }
+        };
+
+        // Test function to verify study guide linking
+        window.testStudyGuideLinks = async function() {
+            console.log('🧪 Testing study guide linking...');
+            
+            // Test message with study guide name
+            const testMessage = "You should review your Epic study guide for the upcoming test.";
+            
+            // Process the message
+            const processedMessage = await processMessageForLinks(testMessage);
+            console.log('Original:', testMessage);
+            console.log('Processed:', processedMessage);
+            
+            // Check if link was created
+            if (processedMessage.includes('<a href="/study-tools/study-guides/view/Epic"')) {
+                console.log('✅ Study guide linking is working!');
+            } else {
+                console.log('❌ Study guide linking is NOT working');
+                console.log('Current resources:', await fetchResources());
+            }
+            
+            return processedMessage;
+        }
+
+        // Test function to add a sample AI response with resources mentioned
+        window.testHyperlinks = function() {
+            const testMessage = "I recommend reviewing your Basic Roblox Lua flashcards and the Epic study guide. Also, don't forget to complete the Hii assignment before the deadline. The Hallo assignment has some good practice problems too.";
+            chatHistory.push({ role: 'ai', content: testMessage });
+            sessionStorage.setItem('aiChatHistory', JSON.stringify(chatHistory));
+            renderHistory();
+        }
+
+        // Simple test to show what resources we have loaded
+        window.showResources = function() {
+            console.log('Current resource cache:', resourceCache);
+            if (resourceCache) {
+                console.log('📚 Flashcards:', resourceCache.flashcards);
+                console.log('📖 Study guides:', resourceCache.study_guides);
+                console.log('📝 Assignments:', resourceCache.assignments);
+                console.log('📋 Rubrics:', resourceCache.rubrics);
+                
+                // Test each resource type
+                console.log('\n🔗 Testing hyperlink generation:');
+                if (resourceCache.study_guides?.length > 0) {
+                    console.log(`Study guides found: ${resourceCache.study_guides.map(sg => sg.name).join(', ')}`);
+                } else {
+                    console.log('⚠️ No study guides found in cache');
+                }
+            } else {
+                console.log('❌ No resources loaded');
+            }
+        }
+
+        // Force refresh and test resources
+        window.testResourcesRefresh = async function() {
+            console.log('🔄 Force refreshing resources...');
+            resourceCache = null;
+            resourceCacheExpiry = 0;
+            
+            const resources = await fetchResources();
+            console.log('Refreshed resources:', resources);
+            
+            // Test study guide linking
+            if (resources.study_guides?.length > 0) {
+                await testStudyGuideLinks();
+            } else {
+                console.log('❌ No study guides found after refresh');
+            }
+            
+            return resources;
+        }
+
+        async function renderHistory() {
             const historyDiv = document.getElementById('chat-history');
             historyDiv.innerHTML = '';
-            chatHistory.forEach(msg => {
+            
+            for (const msg of chatHistory) {
                 const div = document.createElement('div');
                 div.className = 'chat-message ' + msg.role;
-                div.innerText = (msg.role === 'user' ? 'You: ' : aiName + ': ') + msg.content;
+                
+                // Create message content
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message-content';
+                
+                const senderDiv = document.createElement('div');
+                senderDiv.className = 'message-sender';
+                senderDiv.textContent = msg.role === 'user' ? 'You' : aiName;
+                
+                const textDiv = document.createElement('div');
+                textDiv.className = 'message-text';
+                
+                // Process AI messages for automatic hyperlinks
+                if (msg.role === 'ai') {
+                    textDiv.innerHTML = await processMessageForLinks(msg.content);
+                } else {
+                    textDiv.textContent = msg.content;
+                }
+                
+                messageDiv.appendChild(senderDiv);
+                messageDiv.appendChild(textDiv);
+                div.appendChild(messageDiv);
                 historyDiv.appendChild(div);
-            });
+            }
             historyDiv.scrollTop = historyDiv.scrollHeight;
         }
-        renderHistory();
+        (async () => {
+            await renderHistory();
+        })();
 
         document.getElementById('chat-form').onsubmit = async function(e) {
             e.preventDefault();
@@ -579,14 +1230,14 @@
             fileInput.value = '';
         };
 
-        async function sendMessage(prompt, fileContent) {
+        async function sendMessage(prompt, fileContent = '') {
             const displayContent = fileContent ? prompt + "\n[Attached File Content]:\n" + fileContent : prompt;
             chatHistory.push({ role: 'user', content: displayContent });
-            renderHistory();
+            await renderHistory();
             
             let personality = document.getElementById('ai-personality').value;
             // Call backend
-            const res = await fetch('{{ url_for("chat") }}', {
+            const res = await fetch(apiUrls.chat, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ prompt, personality, class_code: '', fileContent })
@@ -594,7 +1245,7 @@
             const data = await res.json();
             chatHistory.push({ role: 'ai', content: data.response });
             sessionStorage.setItem('aiChatHistory', JSON.stringify(chatHistory));
-            renderHistory();
+            await renderHistory();
         }
 
         function clearFile() {
@@ -605,7 +1256,7 @@
         // Save personality to backend when textarea changes
         document.getElementById('ai-personality').addEventListener('input', function(e) {
             const val = e.target.value;
-            fetch('{{ url_for("save_personality") }}', {
+            fetch(apiUrls.save_personality, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ personality: val })
@@ -620,7 +1271,7 @@
                 reader.onload = function(evt) {
                     document.getElementById('ai-personality').value = evt.target.result;
                     // Save to backend
-                    fetch('{{ url_for("save_personality") }}', {
+                    fetch(apiUrls.save_personality, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ personality: evt.target.result })
@@ -653,7 +1304,7 @@
                 sessionStorage.setItem('presetFileContent', presetFileContent);
             }
             // Save personality to backend
-            fetch('{{ url_for("save_personality") }}', {
+            fetch(apiUrls.save_personality, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ personality: aiPersonality })
@@ -662,16 +1313,16 @@
 
         window.confirmResetHistory = function() {
             if (confirm('Are you sure you want to delete your entire chat history? This action cannot be undone.')) {
-                fetch('{{ url_for("reset_history") }}', {
+                fetch(apiUrls.reset_history, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' }
                 })
                 .then(response => response.json())
-                .then(data => {
+                .then(async data => {
                     if (data.success) {
                         chatHistory = [];
                         sessionStorage.removeItem('aiChatHistory');
-                        renderHistory();
+                        await renderHistory();
                     }
                 });
             }
@@ -681,100 +1332,3 @@
     });
 </script>
 {% endblock %}
-            }
-            // Call backend
-            const res = await fetch('{{ url_for("chat") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt, personality, class_code, fileContent })
-            });
-            const data = await res.json();
-            chatHistory.push({ role: 'ai', content: data.response });
-            sessionStorage.setItem('aiChatHistory', JSON.stringify(chatHistory));
-            renderHistory();
-        }
-
-        function clearFile() {
-            document.getElementById('chat-file').value = '';
-        }
-
-        // Handle personality .txt file upload
-        // Save personality to backend when textarea changes
-        document.getElementById('ai-personality').addEventListener('input', function(e) {
-            const val = e.target.value;
-            fetch('{{ url_for("save_personality") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ personality: val })
-            });
-        });
-
-        // Handle personality .txt file upload and save
-        document.getElementById('personality-file').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file && file.type === 'text/plain') {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    document.getElementById('ai-personality').value = evt.target.result;
-                    // Save to backend
-                    fetch('{{ url_for("save_personality") }}', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ personality: evt.target.result })
-                    });
-                };
-                reader.readAsText(file);
-            }
-        });
-
-        let presetFileContent = '';
-
-        document.getElementById('preset-file').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file && file.type === 'text/plain') {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    presetFileContent = evt.target.result;
-                };
-                reader.readAsText(file);
-            }
-        });
-
-        function applySettings() {
-            aiName = document.getElementById('ai-name-input').value || 'StudyCoach AI';
-            aiPersonality = document.getElementById('ai-personality').value;
-            presetMessage = document.getElementById('preset-message').value;
-            document.getElementById('ai-name').innerText = aiName;
-            sessionStorage.setItem('aiName', aiName);
-            sessionStorage.setItem('aiPersonality', aiPersonality);
-            sessionStorage.setItem('presetMessage', presetMessage);
-            if (presetFileContent) {
-                sessionStorage.setItem('presetFileContent', presetFileContent);
-            }
-            // Save personality to backend
-            fetch('{{ url_for("save_personality") }}', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ personality: aiPersonality })
-            });
-        }
-
-        function confirmResetHistory() {
-            if (confirm('Are you sure you want to delete your entire chat history? This action cannot be undone.')) {
-                fetch('{{ url_for("reset_history") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        chatHistory = [];
-                        sessionStorage.removeItem('aiChatHistory');
-                        renderHistory();
-                    }
-                });
-            }
-        }
-    </script>
-</body>
-</html>

@@ -21,6 +21,13 @@ class AIService:
     def generate_flashcards(self, content, subject="General", num_cards=10, difficulty="Medium"):
         """Generate flash cards from content using AI"""
         try:
+            # Validate inputs
+            if not content or len(content.strip()) < 10:
+                return {
+                    "success": False,
+                    "error": "Content is too short or empty for flash card generation"
+                }
+            
             prompt = f"""
             Create {num_cards} flash cards from the following content for the subject "{subject}" with {difficulty} difficulty level.
             
@@ -36,22 +43,41 @@ class AIService:
             Make sure the questions test understanding, not just memorization.
             Vary the question types (definition, application, analysis, etc.).
             
-            Return only the JSON array, no other text.
+            Example format:
+            [
+                {{
+                    "question": "What is the main purpose of X?",
+                    "answer": "X is used for...",
+                    "difficulty": "Medium",
+                    "category": "{subject}"
+                }}
+            ]
+            
+            Return only the JSON array, no markdown formatting or additional text.
             """
             
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
-                    {"role": "system", "content": "You are an expert educational content creator who specializes in creating effective study materials."},
+                    {"role": "system", "content": "You are an expert educational content creator who specializes in creating effective study materials. Always respond with valid JSON format only."},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=2000,
                 temperature=0.7
             )
             
+            ai_response = response.choices[0].message.content
+            
+            # Add debug logging
+            print(f"AI Service - Raw response length: {len(ai_response) if ai_response else 0}")
+            if ai_response:
+                print(f"AI Service - Response preview: {ai_response[:100]}...")
+            else:
+                print("AI Service - Empty response received")
+            
             return {
                 "success": True,
-                "flashcards": response.choices[0].message.content
+                "flashcards": ai_response or "[]"  # Ensure we never return None
             }
             
         except Exception as e:
@@ -63,45 +89,88 @@ class AIService:
     def generate_study_guide(self, content, subject="General", style="comprehensive", include_questions=True):
         """Generate a study guide from content using AI"""
         try:
+            # Validate inputs
+            if not content or len(content.strip()) < 10:
+                return {
+                    "success": False,
+                    "error": "Content is too short or empty for study guide generation"
+                }
+            
             style_instructions = {
-                "comprehensive": "Create a detailed, comprehensive study guide that covers all major topics and concepts thoroughly.",
+                "comprehensive": "Create a detailed, comprehensive study guide that covers all major topics and concepts thoroughly with extensive explanations.",
                 "concise": "Create a concise study guide that focuses on the most important points and key takeaways.",
                 "detailed": "Create a detailed study guide with in-depth explanations and examples for each concept.",
                 "exam-prep": "Create an exam-focused study guide with key points, formulas, and likely test questions."
             }
             
-            questions_instruction = "Include practice questions at the end of each major section." if include_questions else "Do not include practice questions."
+            questions_instruction = "Include 3-5 practice questions at the end of each major section." if include_questions else "Do not include practice questions."
             
             prompt = f"""
-            Create a {style} study guide from the following content for the subject "{subject}".
+            Create a comprehensive study guide from the following content for the subject "{subject}".
             
-            Content:
+            Content to analyze:
             {content}
             
-            Instructions:
-            - {style_instructions.get(style, style_instructions["comprehensive"])}
-            - Use clear headings and subheadings
-            - Include bullet points and numbered lists where appropriate
-            - Highlight key terms and concepts
-            - {questions_instruction}
-            - Format using markdown-style headers and formatting
+            Create a detailed study guide with the following structure:
             
-            Make the study guide well-organized, easy to read, and effective for learning.
+            # Study Guide: {subject}
+            
+            ## Overview
+            - Provide a brief summary of the main topics
+            
+            ## Key Concepts and Topics
+            - Break down the content into 5-8 major sections
+            - For each section, provide:
+              * Clear heading
+              * Detailed explanation (2-3 paragraphs minimum)
+              * Key terms and definitions
+              * Important examples or applications
+              * Connection to other concepts
+            
+            ## Important Details
+            - List specific facts, formulas, or procedures
+            - Include any technical information
+            - Highlight critical points to remember
+            
+            ## Summary and Review
+            - Summarize the most important takeaways
+            - List key points for quick review
+            
+            {"## Practice Questions" if include_questions else ""}
+            {questions_instruction if include_questions else ""}
+            
+            Requirements:
+            - {style_instructions.get(style, style_instructions["comprehensive"])}
+            - Use clear markdown formatting with headers (##, ###)
+            - Include bullet points and numbered lists
+            - Make it at least 800-1200 words
+            - Extract specific information from the provided content
+            - Don't use generic placeholders - use actual content from the material
+            - Be thorough and educational
+            
+            Focus on creating substantial, useful study material that a student can actually learn from.
             """
             
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
-                    {"role": "system", "content": "You are an expert educational content creator who specializes in creating comprehensive study materials."},
+                    {"role": "system", "content": "You are an expert educational content creator who specializes in creating comprehensive, detailed study materials. Create substantial, useful content that students can actually learn from."},
                     {"role": "user", "content": prompt}
                 ],
-                max_tokens=3000,
-                temperature=0.6
+                max_tokens=4000,  # Increased for longer content
+                temperature=0.5   # Lower temperature for more focused content
             )
+            
+            ai_response = response.choices[0].message.content
+            
+            # Add debug logging
+            print(f"Study Guide - Raw response length: {len(ai_response) if ai_response else 0}")
+            if ai_response:
+                print(f"Study Guide - Response preview: {ai_response[:200]}...")
             
             return {
                 "success": True,
-                "study_guide": response.choices[0].message.content
+                "study_guide": ai_response or "# Study Guide\n\nNo content generated."
             }
             
         except Exception as e:
@@ -185,6 +254,114 @@ class AIService:
             return {
                 "success": True,
                 "analysis": response.choices[0].message.content
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def create_flashcards_from_chat(self, topic, details="", num_cards=10, difficulty="Medium"):
+        """Create flashcards directly from chat conversation"""
+        try:
+            prompt = f"""
+            Create {num_cards} educational flashcards about: {topic}
+            
+            Additional details: {details}
+            Difficulty level: {difficulty}
+            
+            Guidelines:
+            - Create questions that test understanding, not just memorization
+            - Include a mix of definition, application, and analysis questions
+            - Make answers comprehensive but concise
+            - Ensure questions are clear and unambiguous
+            
+            Return ONLY a valid JSON array with this exact format:
+            [
+                {{
+                    "question": "Clear, specific question",
+                    "answer": "Comprehensive but concise answer",
+                    "difficulty": "{difficulty}",
+                    "category": "{topic}"
+                }}
+            ]
+            
+            No markdown formatting, no additional text, just the JSON array.
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": "You are an expert educational content creator. You always respond with valid JSON format only, no markdown or additional text."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=2000,
+                temperature=0.7
+            )
+            
+            ai_response = response.choices[0].message.content
+            
+            # Clean the response to ensure valid JSON
+            ai_response = ai_response.strip()
+            if ai_response.startswith('```json'):
+                ai_response = ai_response.replace('```json', '').replace('```', '').strip()
+            elif ai_response.startswith('```'):
+                ai_response = ai_response.replace('```', '').strip()
+            
+            return {
+                "success": True,
+                "flashcards": ai_response
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def create_study_guide_from_chat(self, topic, details="", style="comprehensive"):
+        """Create a study guide directly from chat conversation"""
+        try:
+            style_descriptions = {
+                "comprehensive": "detailed and thorough with extensive explanations",
+                "concise": "brief and to-the-point with key concepts only", 
+                "outline": "structured outline format with main points and sub-points",
+                "visual": "includes diagrams, charts, and visual elements where helpful"
+            }
+            
+            style_instruction = style_descriptions.get(style, "comprehensive and well-organized")
+            
+            prompt = f"""
+            Create a {style_instruction} study guide about: {topic}
+            
+            Additional details: {details}
+            
+            Structure the study guide with:
+            1. Clear headings and subheadings
+            2. Key concepts and definitions
+            3. Important facts and details
+            4. Examples where helpful
+            5. Summary points
+            6. Practice questions (3-5 questions)
+            
+            Make it engaging and educational for students to review and study from.
+            Use markdown formatting for better readability.
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": "You are an expert educational content creator who creates comprehensive, well-structured study guides that help students learn effectively."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=3000,
+                temperature=0.7
+            )
+            
+            return {
+                "success": True,
+                "content": response.choices[0].message.content
             }
             
         except Exception as e:

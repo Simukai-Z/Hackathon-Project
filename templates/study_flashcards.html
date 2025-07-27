@@ -1,0 +1,1340 @@
+{% extends 'base.html' %}
+
+{% block title %}Study: {{ set_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='ai-popup.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="study-header">
+        <h1>Study Mode: {{ set_name }}</h1>
+        <div class="study-progress">
+            <div class="progress-info">
+                <span id="current-card">1</span> of <span id="total-cards">{{ flashcard_set.cards|length }}</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="study-container">
+        <div class="flashcard-container">
+            <!-- Question Side -->
+            <div class="flashcard question-side" id="question-card">
+                <div class="card-header">Question</div>
+                <div class="card-content" id="question-text"></div>
+                <button type="button" class="reveal-button" id="reveal-btn">Reveal Answer</button>
+            </div>
+            
+            <!-- Answer Side -->
+            <div class="flashcard answer-side hidden" id="answer-card">
+                <div class="card-header">Answer</div>
+                <div class="card-content" id="answer-text"></div>
+                <div class="difficulty-buttons">
+                    <button type="button" class="difficulty-btn hard-btn" data-difficulty="hard">😓 Hard</button>
+                    <button type="button" class="difficulty-btn medium-btn" data-difficulty="medium">🤔 Medium</button>
+                    <button type="button" class="difficulty-btn easy-btn" data-difficulty="easy">😊 Easy</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Study Mode Toggle -->
+        <div class="study-mode-toggle">
+            <button type="button" class="mode-button" id="study-mode-btn">🎮 Game Mode</button>
+            <button type="button" class="mode-button active" id="review-mode-btn">📚 Review Mode</button>
+        </div>
+
+        <!-- Navigation Controls -->
+        <div class="navigation-controls">
+            <button type="button" class="nav-button prev-button" id="prev-btn" disabled>← Previous</button>
+            <button type="button" class="nav-button next-button" id="next-btn">Next →</button>
+        </div>
+    </div>
+
+    <!-- Game Mode Container -->
+    <div class="game-container hidden" id="game-container">
+        <div class="game-header">
+            <div class="game-info">
+                <div class="timer" id="timer">⏱️ 30s</div>
+                <div class="score" id="score">Score: 0</div>
+                <div class="lives" id="lives">❤️❤️❤️</div>
+            </div>
+        </div>
+        
+        <div class="game-card">
+            <div class="game-question">
+                <h3>Question <span id="game-card-number">1</span> of <span id="game-total-cards">{{ flashcard_set.cards|length }}</span></h3>
+                <div class="question-text" id="game-question-text"></div>
+            </div>
+            
+            <div class="answer-input-container">
+                <input type="text" id="answer-input" class="answer-input" placeholder="Type your answer here..." disabled>
+                <button type="button" id="submit-answer-btn" class="submit-button" disabled>Submit Answer</button>
+            </div>
+            
+            <div class="answer-feedback" id="answer-feedback"></div>
+        </div>
+        
+        <div class="game-actions">
+            <button type="button" id="start-game-btn" class="game-control-btn start-btn">🎮 Start Game</button>
+            <button type="button" id="pause-game-btn" class="game-control-btn pause-btn hidden">⏸️ Pause</button>
+            <button type="button" id="quit-game-btn" class="game-control-btn quit-btn hidden">❌ Quit Game</button>
+        </div>
+    </div>
+
+    <!-- Study Statistics -->
+    <div class="study-stats">
+        <div class="stat-box">
+            <div class="stat-number" id="easy-count">0</div>
+            <div class="stat-label">Easy</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" id="medium-count">0</div>
+            <div class="stat-label">Medium</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" id="hard-count">0</div>
+            <div class="stat-label">Hard</div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="study-actions">
+        <a href="/study-tools/flashcards/view/{{ set_name }}" class="btn btn-secondary">View All Cards</a>
+        <a href="/study-tools/flashcards" class="btn btn-primary">Back to Flash Cards</a>
+    </div>
+</div>
+
+<!-- AI Game Results Popup -->
+<div class="ai-popup-overlay" id="ai-popup-overlay">
+    <div class="ai-popup" id="ai-popup">
+        <button class="ai-popup-close" onclick="closeAIPopup()">×</button>
+        <div class="ai-popup-header">
+            <div class="ai-avatar">🤖</div>
+            <div class="ai-info">
+                <h3>StudyCoach AI</h3>
+                <p>Your Personal Study Assistant</p>
+            </div>
+        </div>
+        <div class="ai-popup-body" id="ai-popup-body">
+            <!-- AI message will be inserted here -->
+        </div>
+        <div class="game-stats" id="ai-game-stats" style="display: none;">
+            <div class="stat-item">
+                <span class="stat-value" id="ai-final-score">0</span>
+                <span class="stat-label">Score</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="ai-final-accuracy">0%</span>
+                <span class="stat-label">Accuracy</span>
+            </div>
+        </div>
+        <div class="ai-popup-actions">
+            <button class="ai-action-btn" onclick="closeAIPopup()">Continue Studying</button>
+            <button class="ai-action-btn primary" onclick="goToAIAssistant()">Chat with AI</button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Main Container */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Header Styles */
+.study-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.study-header h1 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.study-progress {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.progress-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #e0e0e0;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+/* Study Container */
+.study-container {
+    max-width: 600px;
+    margin: 0 auto 2rem;
+}
+
+.flashcard-container {
+    position: relative;
+    height: 400px;
+    margin-bottom: 2rem;
+}
+
+/* Flashcard Styles */
+.flashcard {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 2rem;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+}
+
+.flashcard.hidden {
+    opacity: 0;
+    transform: translateX(50px) scale(0.95);
+    pointer-events: none;
+}
+
+.question-side {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.answer-side {
+    background: linear-gradient(135deg, #764ba2, #667eea);
+    color: white;
+}
+
+.card-header {
+    font-size: 1.1rem;
+    font-weight: 600;
+    opacity: 0.9;
+    margin-bottom: 1.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.card-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+    padding: 1rem;
+}
+
+/* Buttons */
+.reveal-button {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    border: 2px solid rgba(255,255,255,0.4);
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.reveal-button:hover {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.6);
+    transform: translateY(-2px);
+}
+
+.difficulty-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.difficulty-btn {
+    flex: 1;
+    max-width: 140px;
+    padding: 1rem;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.difficulty-btn:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.6);
+    transform: translateY(-2px);
+}
+
+.hard-btn:hover { background: rgba(255,100,100,0.3); }
+.medium-btn:hover { background: rgba(255,200,100,0.3); }
+.easy-btn:hover { background: rgba(100,255,100,0.3); }
+
+/* Navigation Controls */
+.navigation-controls {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Study Mode Toggle */
+.study-mode-toggle {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.mode-button {
+    padding: 0.8rem 1.5rem;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.mode-button.active,
+.mode-button:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Game Mode Styles */
+.game-container {
+    max-width: 700px;
+    margin: 0 auto 2rem;
+    padding: 2rem;
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    color: white;
+}
+
+.game-header {
+    margin-bottom: 2rem;
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.2);
+    padding: 1rem;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.timer, .score, .lives {
+    font-size: 1.2rem;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.timer.warning {
+    color: #ff6b6b;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.game-card {
+    background: white;
+    color: #333;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.game-question h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.question-text {
+    font-size: 1.3rem;
+    line-height: 1.5;
+    margin-bottom: 2rem;
+    text-align: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.answer-input-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.answer-input {
+    flex: 1;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    transition: border-color 0.2s ease;
+}
+
+.answer-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+.answer-input:disabled {
+    background: #f5f5f5;
+    cursor: not-allowed;
+}
+
+.submit-button {
+    padding: 1rem 2rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.submit-button:hover:not(:disabled) {
+    background: var(--accent-color);
+    transform: translateY(-2px);
+}
+
+.submit-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.answer-feedback {
+    min-height: 60px;
+    padding: 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.answer-feedback.correct {
+    background: #d4edda;
+    color: #155724;
+    border: 2px solid #c3e6cb;
+    animation: correctAnswer 0.5s ease;
+}
+
+.answer-feedback.incorrect {
+    background: #f8d7da;
+    color: #721c24;
+    border: 2px solid #f5c6cb;
+    animation: incorrectAnswer 0.5s ease;
+}
+
+@keyframes correctAnswer {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes incorrectAnswer {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+.game-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.game-control-btn {
+    padding: 1rem 2rem;
+    border: 2px solid rgba(255,255,255,0.3);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    backdrop-filter: blur(10px);
+}
+
+.game-control-btn:hover {
+    background: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-2px);
+}
+
+.start-btn:hover { background: rgba(76, 175, 80, 0.8); }
+.pause-btn:hover { background: rgba(255, 193, 7, 0.8); }
+.quit-btn:hover { background: rgba(244, 67, 54, 0.8); }
+
+/* Hidden class */
+.hidden {
+    display: none !important;
+}
+
+.nav-button {
+    padding: 1rem 2rem;
+    border: 2px solid var(--primary-color);
+    background: white;
+    color: var(--primary-color);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 140px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.nav-button:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.nav-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Study Statistics */
+.study-stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.stat-box {
+    text-align: center;
+    min-width: 80px;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: #666;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Action Buttons */
+.study-actions {
+    text-align: center;
+}
+
+.study-actions .btn {
+    margin: 0 0.5rem;
+    padding: 1rem 2rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Dark Mode Support */
+body.dark-mode .study-stats {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+body.dark-mode .progress-bar {
+    background: var(--dark-bg);
+}
+
+body.dark-mode .nav-button {
+    background: var(--dark-card);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+body.dark-mode .nav-button:hover:not(:disabled) {
+    background: var(--primary-color);
+    color: white;
+}
+
+body.dark-mode .stat-label {
+    color: #aaa;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    
+    .flashcard {
+        padding: 1.5rem;
+    }
+    
+    .card-content {
+        font-size: 1.2rem;
+    }
+    
+    .navigation-controls {
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .nav-button {
+        min-width: 120px;
+        padding: 0.8rem 1.5rem;
+    }
+    
+    .study-stats {
+        gap: 1rem;
+        padding: 1.5rem;
+    }
+    
+    .difficulty-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .difficulty-btn {
+        max-width: none;
+    }
+    
+    .study-mode-toggle {
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .mode-button {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+    }
+    
+    .game-container {
+        padding: 1rem;
+        margin: 0 auto 1rem;
+    }
+    
+    .game-info {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+    
+    .timer, .score, .lives {
+        font-size: 1rem;
+    }
+    
+    .game-card {
+        padding: 1.5rem;
+    }
+    
+    .question-text {
+        font-size: 1.1rem;
+    }
+    
+    .answer-input-container {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .game-actions {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .game-control-btn {
+        padding: 0.8rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+</style>
+
+<!-- Pass data from template to JavaScript -->
+<script type="application/json" id="flashcard-data">{{ flashcard_set.cards | tojson }}</script>
+
+<script>
+// Initialize variables
+let flashcards = JSON.parse(document.getElementById('flashcard-data').textContent);
+let currentIndex = 0;
+let statistics = { easy: 0, medium: 0, hard: 0 };
+let answeredCards = new Set();
+let isShowingAnswer = false;
+
+// Game mode variables
+let gameMode = false;
+let gameActive = false;
+let gameScore = 0;
+let gameLives = 3;
+let gameTimer = 30;
+let gameTimerInterval = null;
+let gameCurrentCardIndex = 0;
+let gameResults = [];
+
+// DOM elements
+const questionCard = document.getElementById('question-card');
+const answerCard = document.getElementById('answer-card');
+const questionText = document.getElementById('question-text');
+const answerText = document.getElementById('answer-text');
+const revealBtn = document.getElementById('reveal-btn');
+const prevBtn = document.getElementById('prev-btn');
+const nextBtn = document.getElementById('next-btn');
+const currentCardSpan = document.getElementById('current-card');
+const totalCardsSpan = document.getElementById('total-cards');
+const progressFill = document.getElementById('progress-fill');
+
+// Game mode elements
+const studyContainer = document.querySelector('.study-container');
+const gameContainer = document.getElementById('game-container');
+const studyModeBtn = document.getElementById('study-mode-btn');
+const reviewModeBtn = document.getElementById('review-mode-btn');
+const timerDisplay = document.getElementById('timer');
+const scoreDisplay = document.getElementById('score');
+const livesDisplay = document.getElementById('lives');
+const gameQuestionText = document.getElementById('game-question-text');
+const gameCardNumber = document.getElementById('game-card-number');
+const gameTotalCards = document.getElementById('game-total-cards');
+const answerInput = document.getElementById('answer-input');
+const submitAnswerBtn = document.getElementById('submit-answer-btn');
+const answerFeedback = document.getElementById('answer-feedback');
+const startGameBtn = document.getElementById('start-game-btn');
+const pauseGameBtn = document.getElementById('pause-game-btn');
+const quitGameBtn = document.getElementById('quit-game-btn');
+
+// Initialize the study session
+function initializeStudy() {
+    console.log('Initializing study session with', flashcards.length, 'cards');
+    
+    if (flashcards.length === 0) {
+        alert('No flashcards available for study!');
+        return;
+    }
+    
+    loadCurrentCard();
+    updateProgress();
+    updateStatistics();
+    setupEventListeners();
+    initGameMode();
+}
+
+// Initialize game mode
+function initGameMode() {
+    gameTotalCards.textContent = flashcards.length;
+    resetGame();
+}
+
+// Setup all event listeners
+function setupEventListeners() {
+    // Reveal button
+    revealBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        showAnswer();
+    });
+    
+    // Navigation buttons
+    prevBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        goToPreviousCard();
+    });
+    
+    nextBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        goToNextCard();
+    });
+    
+    // Difficulty buttons
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const difficulty = this.getAttribute('data-difficulty');
+            markCardDifficulty(difficulty);
+        });
+    });
+    
+    // Mode toggle buttons
+    studyModeBtn.addEventListener('click', () => switchToGameMode());
+    reviewModeBtn.addEventListener('click', () => switchToReviewMode());
+    
+    // Game control buttons
+    startGameBtn.addEventListener('click', startGame);
+    pauseGameBtn.addEventListener('click', pauseGame);
+    quitGameBtn.addEventListener('click', quitGame);
+    
+    // Answer submission
+    submitAnswerBtn.addEventListener('click', submitAnswer);
+    answerInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !submitAnswerBtn.disabled) {
+            submitAnswer();
+        }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', handleKeyboard);
+}
+
+// Mode switching functions
+function switchToGameMode() {
+    gameMode = true;
+    studyContainer.classList.add('hidden');
+    gameContainer.classList.remove('hidden');
+    studyModeBtn.classList.add('active');
+    reviewModeBtn.classList.remove('active');
+    resetGame();
+}
+
+function switchToReviewMode() {
+    gameMode = false;
+    if (gameActive) {
+        quitGame();
+    }
+    studyContainer.classList.remove('hidden');
+    gameContainer.classList.add('hidden');
+    studyModeBtn.classList.remove('active');
+    reviewModeBtn.classList.add('active');
+}
+
+// Game functions
+function resetGame() {
+    gameActive = false;
+    gameScore = 0;
+    gameLives = 3;
+    gameTimer = 30;
+    gameCurrentCardIndex = 0;
+    gameResults = [];
+    
+    updateGameDisplay();
+    answerInput.disabled = true;
+    submitAnswerBtn.disabled = true;
+    answerInput.value = '';
+    answerFeedback.textContent = '';
+    answerFeedback.className = 'answer-feedback';
+    
+    startGameBtn.classList.remove('hidden');
+    pauseGameBtn.classList.add('hidden');
+    quitGameBtn.classList.add('hidden');
+    
+    if (gameTimerInterval) {
+        clearInterval(gameTimerInterval);
+        gameTimerInterval = null;
+    }
+}
+
+function startGame() {
+    gameActive = true;
+    gameScore = 0;
+    gameLives = 3;
+    gameCurrentCardIndex = 0;
+    gameResults = [];
+    
+    // Shuffle flashcards for game mode
+    const shuffledCards = [...flashcards].sort(() => Math.random() - 0.5);
+    flashcards = shuffledCards;
+    
+    loadGameCard();
+    startTimer();
+    
+    answerInput.disabled = false;
+    submitAnswerBtn.disabled = false;
+    answerInput.focus();
+    
+    startGameBtn.classList.add('hidden');
+    pauseGameBtn.classList.remove('hidden');
+    quitGameBtn.classList.remove('hidden');
+    
+    updateGameDisplay();
+}
+
+function pauseGame() {
+    gameActive = false;
+    if (gameTimerInterval) {
+        clearInterval(gameTimerInterval);
+        gameTimerInterval = null;
+    }
+    
+    answerInput.disabled = true;
+    submitAnswerBtn.disabled = true;
+    
+    startGameBtn.classList.remove('hidden');
+    pauseGameBtn.classList.add('hidden');
+    startGameBtn.textContent = '▶️ Resume Game';
+}
+
+function quitGame() {
+    if (gameActive && gameResults.length > 0) {
+        endGame();
+    } else {
+        resetGame();
+    }
+}
+
+function loadGameCard() {
+    if (gameCurrentCardIndex >= flashcards.length) {
+        endGame();
+        return;
+    }
+    
+    const card = flashcards[gameCurrentCardIndex];
+    gameQuestionText.textContent = card.front;
+    gameCardNumber.textContent = gameCurrentCardIndex + 1;
+    
+    answerInput.value = '';
+    answerFeedback.textContent = '';
+    answerFeedback.className = 'answer-feedback';
+    
+    gameTimer = 30;
+    updateGameDisplay();
+}
+
+function startTimer() {
+    if (gameTimerInterval) {
+        clearInterval(gameTimerInterval);
+    }
+    
+    gameTimerInterval = setInterval(() => {
+        if (!gameActive) return;
+        
+        gameTimer--;
+        updateGameDisplay();
+        
+        if (gameTimer <= 10) {
+            timerDisplay.classList.add('warning');
+        } else {
+            timerDisplay.classList.remove('warning');
+        }
+        
+        if (gameTimer <= 0) {
+            handleTimeUp();
+        }
+    }, 1000);
+}
+
+function handleTimeUp() {
+    const card = flashcards[gameCurrentCardIndex];
+    gameResults.push({
+        question: card.front,
+        correct_answer: card.back,
+        user_answer: answerInput.value.trim(),
+        is_correct: false,
+        time_taken: 30,
+        reason: 'Time up'
+    });
+    
+    gameLives--;
+    showAnswerFeedback(false, 'Time up! The correct answer was: ' + card.back);
+    
+    setTimeout(() => {
+        if (gameLives <= 0) {
+            endGame();
+        } else {
+            nextGameCard();
+        }
+    }, 3000);
+}
+
+function submitAnswer() {
+    if (!gameActive || answerInput.disabled) return;
+    
+    const userAnswer = answerInput.value.trim();
+    if (!userAnswer) return;
+    
+    const card = flashcards[gameCurrentCardIndex];
+    const timeTaken = 30 - gameTimer;
+    
+    // Stop timer
+    if (gameTimerInterval) {
+        clearInterval(gameTimerInterval);
+        gameTimerInterval = null;
+    }
+    
+    // Check answer with AI
+    checkAnswerWithAI(userAnswer, card.back, timeTaken);
+}
+
+async function checkAnswerWithAI(userAnswer, correctAnswer, timeTaken) {
+    answerInput.disabled = true;
+    submitAnswerBtn.disabled = true;
+    
+    try {
+        const response = await fetch('/study-tools/api/check-answer', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_answer: userAnswer,
+                correct_answer: correctAnswer,
+                question: flashcards[gameCurrentCardIndex].front
+            })
+        });
+        
+        const result = await response.json();
+        const isCorrect = result.is_correct;
+        
+        const card = flashcards[gameCurrentCardIndex];
+        gameResults.push({
+            question: card.front,
+            correct_answer: correctAnswer,
+            user_answer: userAnswer,
+            is_correct: isCorrect,
+            time_taken: timeTaken,
+            ai_feedback: result.feedback
+        });
+        
+        if (isCorrect) {
+            gameScore += Math.max(10, 20 - timeTaken); // Higher score for faster answers
+            showAnswerFeedback(true, result.feedback || 'Correct! Well done!');
+        } else {
+            gameLives--;
+            showAnswerFeedback(false, result.feedback || `Incorrect. The correct answer was: ${correctAnswer}`);
+        }
+        
+        setTimeout(() => {
+            if (gameLives <= 0) {
+                endGame();
+            } else {
+                nextGameCard();
+            }
+        }, 3000);
+        
+    } catch (error) {
+        console.error('Error checking answer:', error);
+        // Fallback to simple string comparison
+        const isCorrect = userAnswer.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+        
+        const card = flashcards[gameCurrentCardIndex];
+        gameResults.push({
+            question: card.front,
+            correct_answer: correctAnswer,
+            user_answer: userAnswer,
+            is_correct: isCorrect,
+            time_taken: timeTaken,
+            ai_feedback: isCorrect ? 'Correct!' : 'Incorrect.'
+        });
+        
+        if (isCorrect) {
+            gameScore += Math.max(10, 20 - timeTaken);
+            showAnswerFeedback(true, 'Correct! Well done!');
+        } else {
+            gameLives--;
+            showAnswerFeedback(false, `Incorrect. The correct answer was: ${correctAnswer}`);
+        }
+        
+        setTimeout(() => {
+            if (gameLives <= 0) {
+                endGame();
+            } else {
+                nextGameCard();
+            }
+        }, 3000);
+    }
+    
+    updateGameDisplay();
+}
+
+function showAnswerFeedback(isCorrect, message) {
+    answerFeedback.textContent = message;
+    answerFeedback.className = `answer-feedback ${isCorrect ? 'correct' : 'incorrect'}`;
+}
+
+function nextGameCard() {
+    gameCurrentCardIndex++;
+    if (gameCurrentCardIndex >= flashcards.length) {
+        endGame();
+    } else {
+        loadGameCard();
+        startTimer();
+        answerInput.disabled = false;
+        submitAnswerBtn.disabled = false;
+        answerInput.focus();
+    }
+}
+
+function updateGameDisplay() {
+    timerDisplay.textContent = `⏱️ ${gameTimer}s`;
+    scoreDisplay.textContent = `Score: ${gameScore}`;
+    livesDisplay.textContent = '❤️'.repeat(gameLives) + '🖤'.repeat(3 - gameLives);
+}
+
+async function endGame() {
+    gameActive = false;
+    if (gameTimerInterval) {
+        clearInterval(gameTimerInterval);
+        gameTimerInterval = null;
+    }
+    
+    // Calculate final stats
+    const totalQuestions = gameResults.length;
+    const correctAnswers = gameResults.filter(r => r.is_correct).length;
+    const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions * 100).toFixed(1) : 0;
+    const isWin = accuracy >= 70; // 70% or higher is a win
+    
+    // Log game results to AI memory
+    try {
+        await fetch('/study-tools/api/log-game-results', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                flashcard_set_name: '{{ set_name }}',
+                total_score: gameScore,
+                total_questions: totalQuestions,
+                correct_answers: correctAnswers,
+                accuracy: accuracy,
+                is_win: isWin,
+                game_results: gameResults
+            })
+        });
+    } catch (error) {
+        console.error('Error logging game results:', error);
+    }
+    
+    // Show AI assistant congratulations/advice using custom popup
+    const message = isWin 
+        ? `🎉 Congratulations! You completed the {{ set_name }} study game with ${accuracy}% accuracy and scored ${gameScore} points! Great job mastering the material!`
+        : `Good effort on the {{ set_name }} study game! You scored ${gameScore} points with ${accuracy}% accuracy. Keep practicing - you're getting better! Consider reviewing the cards you missed.`;
+    
+    // Create game result object for AI popup
+    const gameResult = {
+        set_name: '{{ set_name }}',
+        score: gameScore,
+        accuracy: accuracy,
+        is_win: isWin,
+        message: message,
+        total_questions: totalQuestions,
+        lives_remaining: lives
+    };
+    
+    // Show AI popup instead of basic alert
+    if (window.aiPopup) {
+        aiPopup.setCurrentGameResult(gameResult);
+        aiPopup.show(gameResult);
+    } else {
+        // Fallback for if AI popup fails to load
+        const aiUrl = `/ai?game_results=${encodeURIComponent(JSON.stringify(gameResult))}`;
+        if (confirm(`Game Over! ${message}\n\nWould you like to chat with your AI Assistant about your results?`)) {
+            window.location.href = aiUrl;
+        } else {
+            resetGame();
+        }
+    }
+}
+
+// Load the current card
+function loadCurrentCard() {
+    console.log('Loading card', currentIndex + 1, 'of', flashcards.length);
+    
+    const card = flashcards[currentIndex];
+    questionText.textContent = card.front;
+    answerText.textContent = card.back;
+    
+    // Show question, hide answer
+    showQuestion();
+    
+    // Update navigation buttons
+    updateNavigationButtons();
+}
+
+// Show the question side
+function showQuestion() {
+    isShowingAnswer = false;
+    questionCard.classList.remove('hidden');
+    answerCard.classList.add('hidden');
+    console.log('Showing question for card', currentIndex);
+}
+
+// Show the answer side
+function showAnswer() {
+    if (isShowingAnswer) return; // Already showing answer
+    
+    console.log('Revealing answer for card', currentIndex);
+    isShowingAnswer = true;
+    questionCard.classList.add('hidden');
+    answerCard.classList.remove('hidden');
+}
+
+// Mark card with difficulty and advance
+function markCardDifficulty(difficulty) {
+    console.log('Marking card', currentIndex, 'as', difficulty);
+    
+    const cardId = currentIndex;
+    
+    // Remove previous rating if exists
+    if (answeredCards.has(cardId)) {
+        const previousRating = flashcards[cardId].userRating;
+        if (previousRating && statistics[previousRating] > 0) {
+            statistics[previousRating]--;
+        }
+    }
+    
+    // Add new rating
+    flashcards[cardId].userRating = difficulty;
+    statistics[difficulty]++;
+    answeredCards.add(cardId);
+    
+    updateStatistics();
+    
+    // Auto-advance after a short delay
+    setTimeout(() => {
+        if (currentIndex < flashcards.length - 1) {
+            goToNextCard();
+        }
+    }, 800);
+}
+
+// Navigation functions
+function goToNextCard() {
+    if (currentIndex < flashcards.length - 1) {
+        currentIndex++;
+        loadCurrentCard();
+        updateProgress();
+    }
+}
+
+function goToPreviousCard() {
+    if (currentIndex > 0) {
+        currentIndex--;
+        loadCurrentCard();
+        updateProgress();
+    }
+}
+
+// Update progress indicator
+function updateProgress() {
+    currentCardSpan.textContent = currentIndex + 1;
+    const progressPercent = ((currentIndex + 1) / flashcards.length) * 100;
+    progressFill.style.width = progressPercent + '%';
+}
+
+// Update navigation button states
+function updateNavigationButtons() {
+    prevBtn.disabled = (currentIndex === 0);
+    nextBtn.disabled = (currentIndex === flashcards.length - 1);
+}
+
+// Update statistics display
+function updateStatistics() {
+    document.getElementById('easy-count').textContent = statistics.easy;
+    document.getElementById('medium-count').textContent = statistics.medium;
+    document.getElementById('hard-count').textContent = statistics.hard;
+}
+
+// Handle keyboard shortcuts
+function handleKeyboard(e) {
+    // Ignore if user is typing in an input field
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+    }
+    
+    switch(e.key) {
+        case ' ':
+        case 'Enter':
+            if (!isShowingAnswer) {
+                showAnswer();
+                e.preventDefault();
+            }
+            break;
+        case 'ArrowLeft':
+            goToPreviousCard();
+            e.preventDefault();
+            break;
+        case 'ArrowRight':
+            goToNextCard();
+            e.preventDefault();
+            break;
+        case '1':
+            if (isShowingAnswer) {
+                markCardDifficulty('hard');
+                e.preventDefault();
+            }
+            break;
+        case '2':
+            if (isShowingAnswer) {
+                markCardDifficulty('medium');
+                e.preventDefault();
+            }
+            break;
+        case '3':
+            if (isShowingAnswer) {
+                markCardDifficulty('easy');
+                e.preventDefault();
+            }
+            break;
+    }
+}
+
+// Start the study session when page loads
+document.addEventListener('DOMContentLoaded', initializeStudy);
+</script>
+
+<script src="{{ url_for('static', filename='ai-popup.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,518 @@
+{% extends 'base.html' %}
+
+{% block title %}Study Guide: {{ study_guide.title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="study-guide-header">
+        <div class="guide-meta">
+            <h1>{{ study_guide.title }}</h1>
+            <div class="guide-info">
+                <span class="creation-date">Created: {{ study_guide.created_at }}</span>
+                {% if study_guide.assignment %}
+                <span class="assignment-tag">Based on: {{ study_guide.assignment }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="guide-actions">
+            <button class="btn btn-secondary" onclick="toggleTOC()">
+                <i class="fas fa-list"></i> Table of Contents
+            </button>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Guide
+            </button>
+        </div>
+    </div>
+
+    <div class="study-guide-layout">
+        <aside class="table-of-contents" id="toc-panel">
+            <h3>Contents</h3>
+            <ul class="toc-list" id="toc-list">
+                <!-- Generated dynamically -->
+            </ul>
+        </aside>
+
+        <main class="study-guide-content">
+            <div class="content-sections">
+                {% for section in study_guide.sections %}
+                <section class="guide-section" id="section-{{ loop.index }}">
+                    <h2 class="section-title">{{ section.title }}</h2>
+                    <div class="section-content">
+                        {% if section.type == 'key_concepts' %}
+                            <div class="key-concepts">
+                                {% for concept in section.content %}
+                                <div class="concept-item">
+                                    <h4 class="concept-title">{{ concept.term }}</h4>
+                                    <p class="concept-definition">{{ concept.definition }}</p>
+                                    {% if concept.example %}
+                                    <div class="concept-example">
+                                        <strong>Example:</strong> {{ concept.example }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% elif section.type == 'summary' %}
+                            <div class="summary-content">
+                                <p>{{ section.content }}</p>
+                            </div>
+                        {% elif section.type == 'questions' %}
+                            <div class="practice-questions">
+                                {% for question in section.content %}
+                                <div class="question-item">
+                                    <h4 class="question-text">{{ question.question }}</h4>
+                                    <div class="question-answer" style="display: none;">
+                                        <strong>Answer:</strong> {{ question.answer }}
+                                    </div>
+                                    <button class="reveal-answer-btn" onclick="toggleAnswer(this)">
+                                        Show Answer
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% elif section.type == 'outline' %}
+                            <div class="outline-content">
+                                {% for item in section.content %}
+                                    {% if item.level == 1 %}
+                                    <h3>{{ item.text }}</h3>
+                                    {% elif item.level == 2 %}
+                                    <h4>{{ item.text }}</h4>
+                                    {% else %}
+                                    <p class="outline-item">{{ item.text }}</p>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="generic-content">
+                                <p>{{ section.content }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </section>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+
+    <div class="study-guide-footer">
+        <div class="navigation-buttons">
+            <a href="/study-tools/study-guides" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Study Guides
+            </a>
+            <button class="btn btn-primary" onclick="generateFlashcards()">
+                <i class="fas fa-clone"></i> Generate Flash Cards
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.study-guide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.guide-meta h1 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.guide-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.assignment-tag {
+    background: var(--accent-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.guide-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.study-guide-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.table-of-contents {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+}
+
+.table-of-contents h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.toc-list {
+    list-style: none;
+    padding: 0;
+}
+
+.toc-list li {
+    margin-bottom: 0.5rem;
+}
+
+.toc-list a {
+    color: var(--text-color);
+    text-decoration: none;
+    display: block;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.toc-list a:hover {
+    background: var(--background-light);
+    color: var(--primary-color);
+}
+
+.toc-list a.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.study-guide-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.guide-section {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.guide-section:last-child {
+    border-bottom: none;
+}
+
+.section-title {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--background-light);
+}
+
+.key-concepts {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.concept-item {
+    background: var(--background-light);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-color);
+}
+
+.concept-title {
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.concept-definition {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.concept-example {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    font-style: italic;
+    border: 1px solid var(--border-color);
+}
+
+.summary-content {
+    line-height: 1.7;
+    font-size: 1.05rem;
+}
+
+.practice-questions {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.question-item {
+    background: var(--background-light);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.question-text {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.question-answer {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+    border-left: 4px solid var(--accent-color);
+}
+
+.reveal-answer-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s ease;
+}
+
+.reveal-answer-btn:hover {
+    background: var(--primary-dark);
+}
+
+.outline-content h3,
+.outline-content h4 {
+    color: var(--primary-color);
+    margin: 1rem 0 0.5rem;
+}
+
+.outline-item {
+    margin-left: 1rem;
+    line-height: 1.6;
+}
+
+.study-guide-footer {
+    margin-top: 2rem;
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.navigation-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .study-guide-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .study-guide-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .table-of-contents {
+        position: static;
+        max-height: none;
+        display: none;
+    }
+    
+    .table-of-contents.mobile-show {
+        display: block;
+    }
+}
+
+/* Print styles */
+@media print {
+    .guide-actions,
+    .table-of-contents,
+    .study-guide-footer {
+        display: none;
+    }
+    
+    .study-guide-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .guide-section {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
+/* Dark mode support */
+body.dark-mode .table-of-contents,
+body.dark-mode .study-guide-content {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+body.dark-mode .concept-item,
+body.dark-mode .question-item {
+    background: var(--dark-bg);
+}
+
+body.dark-mode .concept-example,
+body.dark-mode .question-answer {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+}
+
+body.dark-mode .toc-list a:hover {
+    background: var(--dark-bg);
+}
+</style>
+
+<script>
+// Generate table of contents
+function generateTOC() {
+    const sections = document.querySelectorAll('.guide-section');
+    const tocList = document.getElementById('toc-list');
+    
+    sections.forEach((section, index) => {
+        const title = section.querySelector('.section-title').textContent;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `#section-${index + 1}`;
+        a.textContent = title;
+        a.addEventListener('click', (e) => {
+            e.preventDefault();
+            section.scrollIntoView({ behavior: 'smooth' });
+            updateActiveTOC(a);
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+    });
+}
+
+// Update active TOC item
+function updateActiveTOC(activeLink) {
+    document.querySelectorAll('.toc-list a').forEach(link => {
+        link.classList.remove('active');
+    });
+    activeLink.classList.add('active');
+}
+
+// Toggle table of contents on mobile
+function toggleTOC() {
+    const toc = document.getElementById('toc-panel');
+    toc.classList.toggle('mobile-show');
+}
+
+// Toggle answer visibility
+function toggleAnswer(button) {
+    const questionItem = button.closest('.question-item');
+    const answer = questionItem.querySelector('.question-answer');
+    
+    if (answer.style.display === 'none') {
+        answer.style.display = 'block';
+        button.textContent = 'Hide Answer';
+    } else {
+        answer.style.display = 'none';
+        button.textContent = 'Show Answer';
+    }
+}
+
+// Generate flash cards from study guide
+function generateFlashcards() {
+    const studyGuide = {{ study_guide | tojson }};
+    const flashcards = [];
+    
+    // Extract concepts for flash cards
+    studyGuide.sections.forEach(section => {
+        if (section.type === 'key_concepts') {
+            section.content.forEach(concept => {
+                flashcards.push({
+                    front: concept.term,
+                    back: concept.definition + (concept.example ? '\n\nExample: ' + concept.example : '')
+                });
+            });
+        } else if (section.type === 'questions') {
+            section.content.forEach(question => {
+                flashcards.push({
+                    front: question.question,
+                    back: question.answer
+                });
+            });
+        }
+    });
+    
+    if (flashcards.length > 0) {
+        // Create flash card set from study guide
+        const setName = studyGuide.title + ' - Flash Cards';
+        const setData = {
+            name: setName,
+            cards: flashcards,
+            created_at: new Date().toISOString(),
+            assignment: studyGuide.assignment || null
+        };
+        
+        // Send to server
+        fetch('/study-tools/api/flashcards', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(setData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Created ${flashcards.length} flash cards from this study guide!`);
+                window.open(`/study-tools/flashcards/view/${encodeURIComponent(setName)}`, '_blank');
+            } else {
+                alert('Error creating flash cards: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating flash cards');
+        });
+    } else {
+        alert('No suitable content found for flash cards in this study guide.');
+    }
+}
+
+// Intersection Observer for TOC highlighting
+function setupScrollSpy() {
+    const sections = document.querySelectorAll('.guide-section');
+    const tocLinks = document.querySelectorAll('.toc-list a');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const index = Array.from(sections).indexOf(entry.target);
+                if (index !== -1 && tocLinks[index]) {
+                    updateActiveTOC(tocLinks[index]);
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    sections.forEach(section => observer.observe(section));
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    generateTOC();
+    setupScrollSpy();
+});
+</script>
+{% endblock %}

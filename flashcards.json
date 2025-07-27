@@ -1,0 +1,131 @@
+{
+  "epicrbot20099@gmail.com": {
+    "Basic Roblox Lua": {
+      "cards": [
+        {
+          "id": "5cc7d736-f3ed-43cb-af88-37e7d8127d32",
+          "front": "Explain the concept of metatables in Roblox Lua.",
+          "back": "Metatables in Roblox Lua are used to give tables special behaviors and properties. They allow for operator overloading and customizing how tables behave.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238588"
+        },
+        {
+          "id": "f0676f87-aa9d-4b79-8572-f9fabba9fb4d",
+          "front": "How does inheritance work in Roblox Lua?",
+          "back": "Inheritance in Roblox Lua is achieved through metatables. Objects can inherit properties and methods from other objects by setting metatables.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238608"
+        },
+        {
+          "id": "0ebe6a1a-50bb-4e74-b3af-e4b0830394f2",
+          "front": "What are closures in Roblox Lua?",
+          "back": "Closures are functions that capture variables from their surrounding lexical scope. They are commonly used for callbacks and event handling.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238616"
+        },
+        {
+          "id": "f57e4bfd-34ee-4fd8-a3d5-104f4b538a5b",
+          "front": "Explain the concept of coroutines in Roblox Lua.",
+          "back": "Coroutines in Roblox Lua are a way to achieve multitasking and concurrency. They allow for asynchronous execution of code.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238622"
+        },
+        {
+          "id": "32783767-ac2c-437a-84d1-7f4b34a145c5",
+          "front": "How can you implement a singleton pattern in Roblox Lua?",
+          "back": "To implement a singleton pattern in Roblox Lua, you can create a module that returns a single instance of an object, ensuring there is only one instance throughout the game's execution.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238628"
+        },
+        {
+          "id": "269e0ce0-82c5-44b0-a40a-bc1fe6150a12",
+          "front": "What is the purpose of the 'require' function in Roblox Lua?",
+          "back": "The 'require' function is used to include external modules in Roblox Lua scripts. It helps organize code into reusable parts.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238634"
+        },
+        {
+          "id": "59ece844-cfa9-4e85-9592-e08cf1d1aae6",
+          "front": "How does Roblox Lua handle memory management?",
+          "back": "Roblox Lua uses automatic memory management through garbage collection. It automatically deallocates memory for objects that are no longer in use.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238640"
+        },
+        {
+          "id": "5da49cdb-bd10-4efc-9f38-cb517704faf7",
+          "front": "Explain the difference between '==' and '~=' operators in Roblox Lua.",
+          "back": "'==' is the equality operator in Roblox Lua, checking if two values are equal. '~=' is the inequality operator, checking if two values are not equal.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238645"
+        },
+        {
+          "id": "0384f0ed-729e-47af-88de-0a513772f739",
+          "front": "How can you create a custom data structure in Roblox Lua?",
+          "back": "To create a custom data structure in Roblox Lua, you can use tables with metatables to define specific behaviors and operations for the structure.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238651"
+        },
+        {
+          "id": "20d415a9-43bf-4a8a-816b-a899fc7813cd",
+          "front": "Explain the concept of weak tables in Roblox Lua.",
+          "back": "Weak tables in Roblox Lua are tables that do not prevent their keys or values from being garbage collected. They are useful for managing memory efficiently.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238657"
+        },
+        {
+          "id": "a4b17dcf-f70b-46c4-a9d2-912077b8a2d1",
+          "front": "How can you implement a custom event system in Roblox Lua?",
+          "back": "To implement a custom event system in Roblox Lua, you can use a combination of tables, functions, and callbacks to create a flexible and efficient event handling mechanism.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238663"
+        },
+        {
+          "id": "993ed200-3318-4d90-85c1-d90f30bac9b5",
+          "front": "What are the advantages of using modules in Roblox Lua programming?",
+          "back": "Modules in Roblox Lua help organize code into reusable units, encapsulate functionality, and promote code reusability and maintainability.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238668"
+        },
+        {
+          "id": "2ddd758c-c329-47da-93ac-3087e2427e64",
+          "front": "Explain the concept of memoization in Roblox Lua.",
+          "back": "Memoization is a technique in Roblox Lua used to cache the results of expensive function calls to improve performance by avoiding unnecessary recalculations.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238674"
+        },
+        {
+          "id": "09aa7296-799a-4fe1-a0f2-16291a9ff952",
+          "front": "How does Roblox Lua handle error handling and exceptions?",
+          "back": "Roblox Lua uses pcall and xpcall functions for error handling and exceptions. pcall is used to protect calls to functions that may fail, while xpcall provides more control over error handling.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238679"
+        },
+        {
+          "id": "27a1b906-b891-443f-9de8-3e88997fe081",
+          "front": "What is the difference between 'pairs' and 'ipairs' functions in Roblox Lua?",
+          "back": "'pairs' function in Roblox Lua iterates over all key-value pairs in a table, while 'ipairs' function specifically iterates over integer keys and their corresponding values.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238685"
+        }
+      ],
+      "created_at": "2025-07-26T21:05:12.238859",
+      "difficulty": "advanced",
+      "total_cards": 15
+    }
+  }
+}

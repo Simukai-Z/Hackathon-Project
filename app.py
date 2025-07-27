@@ -4,6 +4,7 @@ import re
 import dotenv
 import datetime
 import hashlib
+import uuid
 from uuid import uuid4
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.utils import secure_filename
@@ -408,10 +409,101 @@ def save_personality():
 # --- AI Assistant Page ---
 @app.route('/ai')
 def ai_page():
+    # Require authentication to access AI assistant
+    if 'email' not in session:
+        return redirect(url_for('login'))
+    
     # Track student activity if they're logged in as a student
     if 'user_type' in session and session['user_type'] == 'student':
         update_student_activity(session['email'])
-    return render_template('ai_assistant.html')
+    
+    # Check if game results are passed in the URL
+    game_results = request.args.get('game_results')
+    initial_message = None
+    
+    if game_results:
+        try:
+            import urllib.parse
+            results_data = json.loads(urllib.parse.unquote(game_results))
+            initial_message = results_data.get('message', '')
+        except:
+            pass
+    
+    # Pre-load resources for hyperlink processing as fallback
+    user_email = session['email']
+    resources = {
+        'flashcards': [],
+        'study_guides': [],
+        'assignments': [],
+        'rubrics': []
+    }
+    
+    try:
+        # Load flashcard sets
+        try:
+            with open('flashcards.json', 'r') as f:
+                flashcards_data = json.load(f)
+                if user_email in flashcards_data:
+                    for set_name in flashcards_data[user_email]:
+                        resources['flashcards'].append({
+                            'name': set_name,
+                            'title': set_name
+                        })
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+        
+        # Load study guides
+        try:
+            with open('study_guides.json', 'r') as f:
+                guides_data = json.load(f)
+                if user_email in guides_data:
+                    for guide_title in guides_data[user_email]:
+                        resources['study_guides'].append({
+                            'name': guide_title,
+                            'title': guide_title
+                        })
+        except (FileNotFoundError, json.JSONDecodeError):
+            pass
+        
+        # Load assignments and rubrics from classrooms
+        try:
+            classrooms_data = load_classrooms()
+            user_classrooms = []
+            
+            # Find classrooms where user is enrolled
+            for classroom in classrooms_data.get('classrooms', []):
+                if user_email in classroom.get('students', []):
+                    user_classrooms.append((classroom.get('code'), classroom))
+            
+            # Extract assignments and rubrics
+            for class_code, classroom in user_classrooms:
+                # Add assignments
+                for assignment in classroom.get('assignments', []):
+                    resources['assignments'].append({
+                        'id': assignment.get('id'),
+                        'title': assignment.get('title'),
+                        'class_code': class_code
+                    })
+                
+                # Add rubrics
+                for rubric in classroom.get('rubrics', []):
+                    resources['rubrics'].append({
+                        'id': rubric.get('id'),
+                        'title': rubric.get('title'),
+                        'class_code': class_code
+                    })
+        except Exception as e:
+            print(f"Error loading classroom resources: {e}")
+    except Exception as e:
+        print(f"Error loading resources for AI page: {e}")
+    
+    print(f"DEBUG: Resources loaded for user {user_email}:")
+    print(f"  Flashcards: {len(resources['flashcards'])}")
+    print(f"  Study guides: {len(resources['study_guides'])}")
+    print(f"  Assignments: {len(resources['assignments'])}")
+    print(f"  Rubrics: {len(resources['rubrics'])}")
+    
+    return render_template('ai_assistant.html', initial_message=initial_message, resources=resources)
 
 # --- AI Chat Endpoint ---
 @app.route('/chat', methods=['POST'])
@@ -644,6 +736,143 @@ Available Grading Rubrics By Class:
 
 {submissions_context}"""
 
+    # Load study tools data (flashcards, study guides, and game results)
+    study_tools_context = ""
+    if user_type == 'student' and email:
+        try:
+            # Load user's flashcard sets from flashcards.json
+            flashcard_sets = []
+            try:
+                with open('flashcards.json', 'r') as f:
+                    flashcards_data = json.load(f)
+                    if email in flashcards_data:
+                        for set_name, set_data in flashcards_data[email].items():
+                            flashcard_sets.append({
+                                'name': set_name,
+                                'cards_count': len(set_data.get('cards', [])),
+                                'created_date': set_data.get('created_date', ''),
+                                'subject': set_data.get('subject', 'General')
+                            })
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                print(f"Error loading flashcards from flashcards.json: {e}")
+            
+            # Also check data directory for any additional flashcard sets (legacy support)
+            flashcard_sets_dir = os.path.join('data', 'flashcard_sets')
+            if os.path.exists(flashcard_sets_dir):
+                for filename in os.listdir(flashcard_sets_dir):
+                    if filename.endswith('.json'):
+                        try:
+                            with open(os.path.join(flashcard_sets_dir, filename), 'r') as f:
+                                flashcard_data = json.load(f)
+                                if flashcard_data.get('created_by') == email:
+                                    flashcard_sets.append({
+                                        'name': flashcard_data.get('name', 'Untitled'),
+                                        'cards_count': len(flashcard_data.get('cards', [])),
+                                        'created_date': flashcard_data.get('created_date', ''),
+                                        'subject': flashcard_data.get('subject', 'General')
+                                    })
+                        except:
+                            continue
+            
+            # Load user's study guides from study_guides.json
+            study_guides = []
+            try:
+                with open('study_guides.json', 'r') as f:
+                    study_guides_data = json.load(f)
+                    if email in study_guides_data:
+                        for guide_name, guide_data in study_guides_data[email].items():
+                            study_guides.append({
+                                'name': guide_name,
+                                'title': guide_data.get('title', guide_name),
+                                'content_length': len(str(guide_data.get('sections', []))),
+                                'created_date': guide_data.get('created_date', ''),
+                                'subject': guide_data.get('subject', 'General'),
+                                'complexity_level': guide_data.get('complexity_level', 'intermediate')
+                            })
+            except (FileNotFoundError, json.JSONDecodeError) as e:
+                print(f"Error loading study guides from study_guides.json: {e}")
+            
+            # Also check data directory for any additional study guides (legacy support)
+            study_guides_dir = os.path.join('data', 'study_guides')
+            if os.path.exists(study_guides_dir):
+                for filename in os.listdir(study_guides_dir):
+                    if filename.endswith('.json'):
+                        try:
+                            with open(os.path.join(study_guides_dir, filename), 'r') as f:
+                                guide_data = json.load(f)
+                                if guide_data.get('created_by') == email:
+                                    study_guides.append({
+                                        'name': guide_data.get('name', 'Untitled'),
+                                        'content_length': len(guide_data.get('content', '')),
+                                        'created_date': guide_data.get('created_date', ''),
+                                        'subject': guide_data.get('subject', 'General')
+                                    })
+                        except:
+                            continue
+            
+            # Load user's game results
+            user_results_file = os.path.join('data', 'user_game_results', f"{email.replace('@', '_').replace('.', '_')}.json")
+            game_results = []
+            if os.path.exists(user_results_file):
+                try:
+                    with open(user_results_file, 'r') as f:
+                        game_results = json.load(f)
+                        # Keep only the last 10 results for context
+                        game_results = game_results[-10:]
+                except:
+                    pass
+            
+            # Build study tools context
+            flashcard_context = []
+            for fc in flashcard_sets:
+                fc_text = f"📚 '{fc['name']}' ({fc['subject']}) - {fc['cards_count']} cards"
+                flashcard_context.append(fc_text)
+            
+            study_guide_context = []
+            for sg in study_guides:
+                sg_text = f"📖 '{sg['name']}' ({sg['subject']}) - {sg['content_length']} characters"
+                study_guide_context.append(sg_text)
+            
+            game_results_context = []
+            for gr in game_results[-5:]:  # Last 5 games
+                accuracy = gr.get('accuracy', 0)
+                game_text = f"🎮 {gr.get('flashcard_set_name', 'Unknown Set')} - Score: {gr.get('total_score', 0)}, Accuracy: {accuracy}% ({'Win' if gr.get('is_win', False) else 'Loss'})"
+                game_results_context.append(game_text)
+            
+            study_tools_parts = []
+            
+            if flashcard_context:
+                study_tools_parts.append(f"FLASHCARD SETS:\n" + '\n'.join(flashcard_context))
+            
+            if study_guide_context:
+                study_tools_parts.append(f"STUDY GUIDES:\n" + '\n'.join(study_guide_context))
+            
+            if game_results_context:
+                study_tools_parts.append(f"RECENT STUDY GAME RESULTS:\n" + '\n'.join(game_results_context))
+            
+            if study_tools_parts:
+                study_tools_context = f"""
+STUDENT'S STUDY TOOLS:
+{'='*25}
+{chr(10).join(study_tools_parts)}
+
+STUDY TOOLS INSTRUCTIONS:
+- When discussing study materials, reference the student's existing flashcards and study guides by name
+- Provide clickable links to their study materials: 
+  * Flashcards: <a href="/study-tools/flashcards/view/[SET_NAME]" target="_blank">View [SET_NAME] Flashcards</a>
+  * Study Mode: <a href="/study-tools/flashcards/study/[SET_NAME]" target="_blank">Study [SET_NAME] (Game Mode Available)</a>
+  * Study Guides: <a href="/study-tools/study-guides/view/[GUIDE_NAME]" target="_blank">View [GUIDE_NAME] Study Guide</a>
+- Reference their game performance to encourage improvement or celebrate success
+- Suggest creating new study materials when appropriate: <a href="/study-tools/create-flashcards" target="_blank">Create New Flashcards</a> or <a href="/study-tools/create-study-guide" target="_blank">Create Study Guide</a>
+- If they performed poorly in recent games, offer encouragement and study tips
+- If they performed well, congratulate them and suggest advancing to more challenging material
+- Always use HTML links in your responses so students can easily access their study materials
+"""
+            
+        except Exception as e:
+            print(f"Error loading study tools context: {e}")
+            study_tools_context = ""
+
     system_prompt = f"""{ai_personality}
 
 You are assisting in a classroom environment. Here's your context and instructions:
@@ -655,6 +884,8 @@ Email: {email}
 
 CURRENT CONTEXT:
 {context}
+
+{study_tools_context}
 
 CORE INSTRUCTIONS:
 1. Always address the user by their name ({user_name}) and acknowledge their role as a {user_role}
@@ -697,6 +928,10 @@ INTERACTION GUIDELINES:
 - Use specific examples from submission history when appropriate to make advice more relevant and actionable
 
 IMPORTANT: NEVER ask students to upload assignments they've already submitted. If a student asks about an assignment they've submitted, their submission content and teacher feedback will be automatically provided to you in the conversation. Use this information directly to provide feedback and analysis.
+
+{performance_context}
+
+{submissions_context}
 
 Remember: Each class may have different requirements and rubrics, so always ensure you're using the correct context. 
 Use the submission history data to provide more personalized, relevant guidance that connects to the user's actual academic experience."""
@@ -805,19 +1040,252 @@ Submitted on: {submission.get('timestamp', 'Unknown date')}
     # Get AI response with enhanced prompt
     messages_enhanced = messages[:-1] + [{"role": "user", "content": enhanced_prompt}]
     
-    response = openai_client.chat.completions.create(
-        model=MODEL_NAME,
-        messages=messages_enhanced,
-        max_tokens=500,
-        temperature=0.6
-    )
-    ai_reply = response.choices[0].message.content
+    # Check if user is requesting to create study materials
+    user_prompt_lower = user_prompt.lower()
+    study_creation_requests = {
+        'flashcards': ['create flashcard', 'make flashcard', 'generate flashcard', 'flashcard for', 'flashcard about'],
+        'study_guide': ['create study guide', 'make study guide', 'generate study guide', 'study guide for', 'study guide about']
+    }
+    
+    # Detect study materials creation requests
+    creation_type = None
+    for material_type, keywords in study_creation_requests.items():
+        if any(keyword in user_prompt_lower for keyword in keywords):
+            creation_type = material_type
+            break
+    
+    # Handle study materials creation
+    if creation_type and user_type == 'student' and email:
+        try:
+            from services.ai_service import AIService
+            ai_service = AIService()
+            
+            # Extract topic and details from user prompt
+            topic_extractors = ['about', 'for', 'on', 'regarding', 'covering']
+            topic = "General Topic"
+            details = user_prompt
+            
+            # Try to extract a more specific topic
+            for extractor in topic_extractors:
+                if extractor in user_prompt_lower:
+                    parts = user_prompt_lower.split(extractor, 1)
+                    if len(parts) > 1:
+                        topic = parts[1].strip()[:50]  # Limit topic length
+                        break
+            
+            if creation_type == 'flashcards':
+                # Create flashcards
+                result = ai_service.create_flashcards_from_chat(topic, details, num_cards=10)
+                
+                if result['success']:
+                    # Save the flashcards
+                    try:
+                        flashcards_data = json.loads(result['flashcards'])
+                        
+                        # Create flashcard set
+                        flashcard_set = {
+                            'id': str(uuid.uuid4()),
+                            'name': f"AI Generated: {topic}",
+                            'description': f"Created from chat request: {user_prompt[:100]}...",
+                            'created_date': datetime.now().strftime('%Y-%m-%d'),
+                            'flashcards': flashcards_data
+                        }
+                        
+                        # Save to user's directory
+                        user_dir = f"study_tools/flashcards/{email.replace('@', '_').replace('.', '_')}"
+                        os.makedirs(user_dir, exist_ok=True)
+                        
+                        filename = f"{flashcard_set['name'].replace(' ', '_').replace(':', '')}.json"
+                        filepath = f"{user_dir}/{filename}"
+                        
+                        with open(filepath, 'w') as f:
+                            json.dump(flashcard_set, f, indent=2)
+                        
+                        ai_reply = f"""I've successfully created a flashcard set for you about "{topic}"! 🎯
+
+**Flashcard Set Created**: {flashcard_set['name']}
+**Number of Cards**: {len(flashcards_data)}
+
+You can access your new flashcards here:
+- <a href="/study-tools/flashcards/view/{flashcard_set['name']}" target="_blank">📚 View Flashcards</a>
+- <a href="/study-tools/flashcards/study/{flashcard_set['name']}" target="_blank">🎮 Study Mode (with Game)</a>
+
+The flashcards cover key concepts and include questions that test understanding, not just memorization. Ready to start studying?"""
+                        
+                    except json.JSONDecodeError:
+                        ai_reply = "I created some flashcards for you, but there was an issue saving them. Let me help you create them manually through the <a href='/study-tools/create-flashcards' target='_blank'>flashcard creation page</a>."
+                else:
+                    ai_reply = f"I'd be happy to help you create flashcards about {topic}! Let me guide you to the <a href='/study-tools/create-flashcards' target='_blank'>flashcard creation page</a> where you can provide more details and I'll generate them for you."
+            
+            elif creation_type == 'study_guide':
+                # Create study guide
+                result = ai_service.create_study_guide_from_chat(topic, details)
+                
+                if result['success']:
+                    # Save the study guide
+                    study_guide = {
+                        'id': str(uuid.uuid4()),
+                        'title': f"AI Generated: {topic}",
+                        'content': result['content'],
+                        'created_date': datetime.now().strftime('%Y-%m-%d'),
+                        'description': f"Created from chat request: {user_prompt[:100]}..."
+                    }
+                    
+                    # Save to user's directory
+                    user_dir = f"study_tools/study_guides/{email.replace('@', '_').replace('.', '_')}"
+                    os.makedirs(user_dir, exist_ok=True)
+                    
+                    filename = f"{study_guide['title'].replace(' ', '_').replace(':', '')}.json"
+                    filepath = f"{user_dir}/{filename}"
+                    
+                    with open(filepath, 'w') as f:
+                        json.dump(study_guide, f, indent=2)
+                    
+                    ai_reply = f"""I've created a comprehensive study guide for you about "{topic}"! 📖
+
+**Study Guide Created**: {study_guide['title']}
+
+You can access your new study guide here:
+- <a href="/study-tools/study-guides/view/{study_guide['title']}" target="_blank">📄 View Study Guide</a>
+
+The study guide includes key concepts, definitions, examples, and practice questions to help you master the material. Ready to dive in?"""
+                    
+                else:
+                    ai_reply = f"I'd be happy to help you create a study guide about {topic}! Let me guide you to the <a href='/study-tools/create-study-guide' target='_blank'>study guide creation page</a> where you can provide more details and I'll generate it for you."
+            
+        except Exception as e:
+            print(f"Error creating study materials: {e}")
+            ai_reply = f"I'd love to help you create study materials! Please visit the <a href='/study-tools/study-tools' target='_blank'>Study Tools</a> section where you can create flashcards and study guides with my assistance."
+    
+    else:
+        # Normal AI response generation
+        response = openai_client.chat.completions.create(
+            model=MODEL_NAME,
+            messages=messages_enhanced,
+            max_tokens=500,
+            temperature=0.6
+        )
+        ai_reply = response.choices[0].message.content
     
     # Add original user message and AI reply to history (not the enhanced prompt)
     session[history_key].append({"role": "assistant", "content": ai_reply})
     session.modified = True
 
-    return jsonify({'response': ai_reply})
+    # Enhance AI response with clickable links
+    enhanced_ai_reply = enhance_response_with_links(ai_reply, user_type, email)
+
+    return jsonify({'response': enhanced_ai_reply})
+
+def enhance_response_with_links(ai_response, user_type, email):
+    """Enhance AI response with clickable links to study materials and assignments"""
+    if user_type != 'student' or not email:
+        return ai_response
+    
+    enhanced_response = ai_response
+    
+    try:
+        # Get user's study materials for link generation
+        flashcard_sets = []
+        study_guides = []
+        
+        # Load flashcard sets
+        user_flashcards_dir = f"study_tools/flashcards/{email.replace('@', '_').replace('.', '_')}"
+        if os.path.exists(user_flashcards_dir):
+            for filename in os.listdir(user_flashcards_dir):
+                if filename.endswith('.json'):
+                    try:
+                        with open(os.path.join(user_flashcards_dir, filename), 'r') as f:
+                            flashcard_data = json.load(f)
+                            flashcard_sets.append({
+                                'name': flashcard_data.get('name', filename.replace('.json', '')),
+                                'filename': filename.replace('.json', '')
+                            })
+                    except:
+                        continue
+        
+        # Load study guides
+        user_guides_dir = f"study_tools/study_guides/{email.replace('@', '_').replace('.', '_')}"
+        if os.path.exists(user_guides_dir):
+            for filename in os.listdir(user_guides_dir):
+                if filename.endswith('.json'):
+                    try:
+                        with open(os.path.join(user_guides_dir, filename), 'r') as f:
+                            guide_data = json.load(f)
+                            study_guides.append({
+                                'name': guide_data.get('title', filename.replace('.json', '')),
+                                'filename': filename.replace('.json', '')
+                            })
+                    except:
+                        continue
+        
+        # Create clickable links for mentioned study materials
+        import re
+        
+        # Find mentions of flashcard sets and create links
+        for flashcard in flashcard_sets:
+            name = flashcard['name']
+            patterns = [
+                name,
+                name.lower(),
+                name.replace(' ', ''),
+                name.replace(' ', '_'),
+                flashcard['filename']
+            ]
+            
+            for pattern in patterns:
+                if pattern and len(pattern) > 3:  # Avoid short matches
+                    # Create a case-insensitive regex pattern
+                    regex_pattern = re.escape(pattern)
+                    regex = re.compile(regex_pattern, re.IGNORECASE)
+                    
+                    # Replace first occurrence with clickable link
+                    def replace_func(match):
+                        matched_text = match.group(0)
+                        return f'<a href="/study-tools/flashcards/view/{name}" target="_blank" class="study-link">📚 {matched_text}</a>'
+                    
+                    enhanced_response = regex.sub(replace_func, enhanced_response, count=1)
+        
+        # Find mentions of study guides and create links
+        for guide in study_guides:
+            name = guide['name']
+            patterns = [
+                name,
+                name.lower(),
+                name.replace(' ', ''),
+                name.replace(' ', '_'),
+                guide['filename']
+            ]
+            
+            for pattern in patterns:
+                if pattern and len(pattern) > 3:  # Avoid short matches
+                    # Create a case-insensitive regex pattern
+                    regex_pattern = re.escape(pattern)
+                    regex = re.compile(regex_pattern, re.IGNORECASE)
+                    
+                    # Replace first occurrence with clickable link
+                    def replace_func(match):
+                        matched_text = match.group(0)
+                        return f'<a href="/study-tools/study-guides/view/{name}" target="_blank" class="study-link">📖 {matched_text}</a>'
+                    
+                    enhanced_response = regex.sub(replace_func, enhanced_response, count=1)
+        
+        # Add general study tools links for common phrases
+        common_phrases = {
+            r'\bflashcards?\b': '<a href="/study-tools/flashcards" target="_blank" class="study-link">flashcards</a>',
+            r'\bstudy guides?\b': '<a href="/study-tools/study-guides" target="_blank" class="study-link">study guides</a>',
+            r'\bcreate flashcards?\b': '<a href="/study-tools/create-flashcards" target="_blank" class="study-link">create flashcards</a>',
+            r'\bcreate study guide\b': '<a href="/study-tools/create-study-guide" target="_blank" class="study-link">create study guide</a>',
+            r'\bstudy tools?\b': '<a href="/study-tools/study-tools" target="_blank" class="study-link">study tools</a>'
+        }
+        
+        for pattern, replacement in common_phrases.items():
+            enhanced_response = re.sub(pattern, replacement, enhanced_response, flags=re.IGNORECASE)
+    
+    except Exception as e:
+        print(f"Error enhancing response with links: {e}")
+        return ai_response
+    
+    return enhanced_response
 
 @app.route('/')
 def home():

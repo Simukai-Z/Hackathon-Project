@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ set_name }} - Flash Cards{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h1>{{ set_name }}</h1>
+        <div class="header-actions">
+            <a href="/study-tools/flashcards/study/{{ set_name }}" class="btn btn-primary">Study Mode</a>
+            <a href="/study-tools/flashcards" class="btn btn-secondary">Back to Flash Cards</a>
+        </div>
+    </div>
+
+    <div class="flashcard-info">
+        <div class="info-card">
+            <h3>Flash Card Set Info</h3>
+            <p><strong>Total Cards:</strong> {{ flashcard_set.cards|length }}</p>
+            <p><strong>Difficulty:</strong> {{ flashcard_set.difficulty|title }}</p>
+            <p><strong>Created:</strong> {{ flashcard_set.created_at }}</p>
+        </div>
+    </div>
+
+    <div class="flashcards-grid">
+        {% for card in flashcard_set.cards %}
+        <div class="flashcard-preview" onclick="flipCard(this)">
+            <div class="flashcard-inner">
+                <div class="flashcard-front active">
+                    <div class="card-label">Question {{ loop.index }}</div>
+                    <div class="card-content">{{ card.front }}</div>
+                    <div class="flip-hint">Click to reveal answer</div>
+                </div>
+                <div class="flashcard-back">
+                    <div class="card-label">Answer {{ loop.index }}</div>
+                    <div class="card-content">{{ card.back }}</div>
+                    <div class="flip-hint">Click to see question</div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.header-section h1 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+.flashcard-info {
+    margin-bottom: 2rem;
+}
+
+.info-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.info-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.info-card p {
+    margin: 0.5rem 0;
+    color: var(--text-color);
+}
+
+.flashcards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.flashcard-preview {
+    height: 200px;
+    perspective: 1000px;
+    cursor: pointer;
+}
+
+.flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+}
+
+.flashcard-preview.flipped .flashcard-inner {
+    transform: rotateY(180deg);
+}
+
+.flashcard-front,
+.flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: 12px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.flashcard-front {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: white;
+}
+
+.flashcard-back {
+    background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+    color: white;
+    transform: rotateY(180deg);
+}
+
+.card-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0.8;
+    margin-bottom: 1rem;
+}
+
+.card-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 1.1rem;
+    line-height: 1.4;
+}
+
+.flip-hint {
+    font-size: 0.8rem;
+    opacity: 0.7;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+/* Dark mode support */
+body.dark-mode .info-card {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .header-section {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: stretch;
+    }
+    
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .flashcards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+function flipCard(card) {
+    card.classList.toggle('flipped');
+    
+    // Add a subtle animation effect
+    card.style.transform = 'scale(0.95)';
+    setTimeout(() => {
+        card.style.transform = 'scale(1)';
+    }, 150);
+}
+
+// Add keyboard navigation
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Space' || e.key === 'Enter') {
+        const visibleCards = document.querySelectorAll('.flashcard-preview');
+        const currentCard = document.querySelector('.flashcard-preview:hover') || visibleCards[0];
+        if (currentCard) {
+            flipCard(currentCard);
+            e.preventDefault();
+        }
+    }
+});
+</script>
+{% endblock %}
