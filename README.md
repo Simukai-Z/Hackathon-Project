@@ -71,6 +71,8 @@ studycoach/
 ├── templates/         # Jinja2 HTML templates
 ├── static/           # CSS, JS, and assets
 ├── scripts/          # Development and deployment scripts
+├── debug/            # Debug utilities and fix scripts
+├── tests/            # Unit and integration tests
 └── docs/             # Documentation and guides
 ```
 

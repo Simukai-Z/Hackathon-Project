@@ -62,6 +62,19 @@ studycoach/
 │   ├── style.css      # Additional styles
 │   ├── modern.js      # Frontend JavaScript utilities
 │   └── study_coach_logo.png # Application logo
+├── scripts/            # Development and deployment scripts
+│   ├── setup.sh       # Initial project setup
+│   └── start_dev.sh   # Development server startup
+├── debug/              # Debug utilities and fix scripts
+│   ├── README.md      # Debug tools documentation
+│   ├── fix_*.py       # Various system fix scripts
+│   ├── test_*.py      # Test utilities and scripts
+│   └── debug_*.py     # Debug and diagnostic tools
+├── tests/              # Unit and integration tests
+│   └── ...            # Test files organized by feature
+├── docs/               # Documentation and guides
+│   ├── DOCUMENTATION.md # This comprehensive guide
+│   └── ...            # Additional documentation files
 └── uploads/           # File upload storage
 ```
 
@@ -547,6 +560,37 @@ class TestAPI(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 ```
 
+### Debug Tools and Utilities
+
+The project includes a comprehensive set of debug tools located in the `debug/` directory:
+
+#### Fix Scripts
+- **System Repairs**: Use `comprehensive_fix.py` for major issues, `simple_fix.py` for quick fixes
+- **Component Fixes**: Specific scripts for grades, guides, UI elements, and syntax issues
+- **Automated Fixes**: `auto_fix_syntax.py` for automatic code corrections
+
+#### Test Utilities
+- **AI Testing**: Scripts for testing AI responses, popup functionality, and integration
+- **Frontend Testing**: HTML validation, JavaScript testing, and UI component tests
+- **System Testing**: Route logic, web integration, and feature validation
+
+#### Usage Guidelines
+```bash
+# Run from project root
+cd /path/to/studycoach
+
+# Example: Fix grading issues
+python debug/fix_grades.py
+
+# Example: Test AI responses
+python debug/test_ai_response_fix.py
+
+# Example: Comprehensive system check
+python debug/comprehensive_fix.py
+```
+
+**Important**: Always backup your data before running fix scripts. Debug tools are for development use only.
+
 ### Database Migration
 
 The current JSON-based storage can be easily migrated to a proper database:
@@ -642,6 +686,26 @@ class Classroom(db.Model):
 
 ### Debugging Tools
 
+### Debugging Tools
+
+#### Debug Utilities
+The `debug/` directory contains comprehensive debugging tools:
+
+```bash
+# System diagnostics
+python debug/debug_roblox.py          # User-specific debugging
+python debug/clean_debug.py           # Clean debug logs
+
+# System fixes
+python debug/comprehensive_fix.py     # Full system repair
+python debug/fix_grades.py            # Fix grading issues
+python debug/fix_invalid_grades.py    # Clean invalid grade data
+
+# Testing utilities
+python debug/test_ai_direct.py        # Test AI integration
+python debug/test_route_logic.py      # Validate route handlers
+```
+
 #### Logging
 ```python
 import logging
@@ -707,8 +771,10 @@ logger.info(f"Operation took {duration:.2f} seconds")
 - **New**: Data validation and sanitization utilities
 - **New**: AI service abstraction with improved context handling
 - **New**: Google Docs integration utilities
+- **New**: Organized debug tools directory with comprehensive utilities
 - **Improved**: Configuration management system
 - **Improved**: Database abstraction layer for easy migration
+- **Improved**: Project structure with better file organization
 - **Fixed**: JavaScript button issues with special characters
 - **Fixed**: Duplicate function definitions
 - **Fixed**: Session management security issues
@@ -722,5 +788,6 @@ logger.info(f"Operation took {duration:.2f} seconds")
 
 ---
 
-*Last Updated: July 26, 2025*
+*Last Updated: July 27, 2025*
 *Version: 2.0.0-dev*
+*Project Structure Reorganized: July 27, 2025*
