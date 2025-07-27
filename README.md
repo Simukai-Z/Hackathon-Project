@@ -25,11 +25,12 @@ nano .env
 ./scripts/start_dev.sh
 ```
 
+
 ## 📖 Documentation
 
-- **[Complete Documentation](DOCUMENTATION.md)** - Comprehensive guide covering all features
+- **[Complete Documentation](docs/DOCUMENTATION.md)** - Comprehensive guide covering all features
 - **[API Documentation](docs/)** - API endpoints and integration guide
-- **[Development Guide](DOCUMENTATION.md#development-guide)** - Contributing and development setup
+- **[Development Guide](docs/DOCUMENTATION.md#development-guide)** - Contributing and development setup
 
 ## ✨ Key Features
 
