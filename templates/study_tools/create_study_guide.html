@@ -1,0 +1,816 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Create Study Guide - StudyCoach{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+/* Create Study Guide Styles */
+.create-header {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.create-header h1 {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.create-header p {
+    margin: var(--spacing-sm) 0 0 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+/* Form Sections */
+.form-section {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+}
+
+.dark-mode .form-section {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.section-title {
+    color: var(--text-primary-light);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.dark-mode .section-title {
+    color: var(--text-primary-dark);
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary-light);
+    margin-bottom: var(--spacing-xs);
+}
+
+.dark-mode .form-group label {
+    color: var(--text-primary-dark);
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--background-light);
+    color: var(--text-primary-light);
+    font-size: 1rem;
+    transition: all var(--transition-fast);
+}
+
+.dark-mode .form-control {
+    border-color: var(--border-dark);
+    background: var(--background-dark);
+    color: var(--text-primary-dark);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #11998e;
+    box-shadow: 0 0 0 2px rgba(17, 153, 142, 0.2);
+}
+
+.form-control.large {
+    min-height: 200px;
+    resize: vertical;
+}
+
+.form-help {
+    font-size: 0.875rem;
+    color: var(--text-secondary-light);
+    margin-top: var(--spacing-xs);
+}
+
+.dark-mode .form-help {
+    color: var(--text-secondary-dark);
+}
+
+/* AI Generation Section */
+.ai-section {
+    background: linear-gradient(135deg, rgba(17, 153, 142, 0.1), rgba(56, 239, 125, 0.1));
+    border: 1px solid rgba(17, 153, 142, 0.3);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+}
+
+.ai-section h3 {
+    color: #11998e;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.ai-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: var(--spacing-md);
+}
+
+.ai-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Preview Section */
+.preview-section {
+    background: var(--background-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    min-height: 400px;
+}
+
+.dark-mode .preview-section {
+    background: var(--background-dark);
+    border-color: var(--border-dark);
+}
+
+.preview-content {
+    max-height: 600px;
+    overflow-y: auto;
+    padding: var(--spacing-md);
+    background: var(--background-primary-light);
+    border-radius: var(--radius-md);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+}
+
+.dark-mode .preview-content {
+    background: var(--background-primary-dark);
+}
+
+.preview-content h1, .preview-content h2, .preview-content h3, 
+.preview-content h4, .preview-content h5, .preview-content h6 {
+    color: var(--text-primary-light);
+    margin-top: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.dark-mode .preview-content h1, .dark-mode .preview-content h2, 
+.dark-mode .preview-content h3, .dark-mode .preview-content h4, 
+.dark-mode .preview-content h5, .dark-mode .preview-content h6 {
+    color: var(--text-primary-dark);
+}
+
+.preview-content h1 {
+    border-bottom: 2px solid #11998e;
+    padding-bottom: var(--spacing-sm);
+}
+
+.preview-content h2 {
+    color: #11998e;
+}
+
+.preview-content ul, .preview-content ol {
+    padding-left: var(--spacing-lg);
+}
+
+.preview-content li {
+    margin-bottom: var(--spacing-xs);
+}
+
+.preview-content strong {
+    color: #11998e;
+}
+
+.preview-content code {
+    background: var(--background-light);
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    font-family: 'Courier New', monospace;
+}
+
+.dark-mode .preview-content code {
+    background: var(--background-dark);
+}
+
+.preview-placeholder {
+    text-align: center;
+    color: var(--text-secondary-light);
+    padding: var(--spacing-xl);
+}
+
+.dark-mode .preview-placeholder {
+    color: var(--text-secondary-dark);
+}
+
+.preview-placeholder i {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+/* Buttons */
+.btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: #11998e;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0e8074;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--background-light);
+    color: var(--text-primary-light);
+    border: 1px solid var(--border-light);
+}
+
+.dark-mode .btn-secondary {
+    background: var(--background-dark);
+    color: var(--text-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.btn-secondary:hover {
+    background: var(--background-primary-light);
+}
+
+.dark-mode .btn-secondary:hover {
+    background: var(--background-primary-dark);
+}
+
+.btn-success {
+    background: #38ef7d;
+    color: #166534;
+}
+
+.btn-success:hover {
+    background: #2dd86f;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid #11998e;
+    color: #11998e;
+}
+
+.btn-outline:hover {
+    background: #11998e;
+    color: white;
+}
+
+.btn-loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-loading .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-light);
+    margin-top: var(--spacing-lg);
+}
+
+.dark-mode .form-actions {
+    border-top-color: var(--border-dark);
+}
+
+.action-group {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* File Upload Area */
+.upload-area {
+    border: 2px dashed var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    text-align: center;
+    background: var(--background-light);
+    transition: all var(--transition-fast);
+    cursor: pointer;
+}
+
+.dark-mode .upload-area {
+    border-color: var(--border-dark);
+    background: var(--background-dark);
+}
+
+.upload-area:hover {
+    border-color: #11998e;
+    background: rgba(17, 153, 142, 0.05);
+}
+
+.upload-area.dragover {
+    border-color: #11998e;
+    background: rgba(17, 153, 142, 0.1);
+}
+
+.upload-icon {
+    font-size: 3rem;
+    color: #11998e;
+    margin-bottom: var(--spacing-md);
+}
+
+.upload-text {
+    color: var(--text-primary-light);
+    font-weight: 500;
+    margin-bottom: var(--spacing-sm);
+}
+
+.dark-mode .upload-text {
+    color: var(--text-primary-dark);
+}
+
+.upload-hint {
+    color: var(--text-secondary-light);
+    font-size: 0.875rem;
+}
+
+.dark-mode .upload-hint {
+    color: var(--text-secondary-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .create-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .ai-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .ai-options {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .action-group {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Create Header -->
+    <div class="create-header">
+        <h1>
+            <i class="fas fa-book-open"></i>
+            Create Study Guide
+        </h1>
+        <p>Generate comprehensive study guides with AI assistance from your class materials</p>
+    </div>
+
+    <!-- Basic Information -->
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-info-circle"></i>
+            Study Guide Information
+        </h3>
+        
+        <div class="form-group">
+            <label for="guideTitle">Title *</label>
+            <input type="text" id="guideTitle" class="form-control" placeholder="Enter a title for your study guide" required>
+            <div class="form-help">Give your study guide a clear, descriptive title</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="guideDescription">Description</label>
+            <textarea id="guideDescription" class="form-control" rows="3" placeholder="Describe what this study guide covers"></textarea>
+            <div class="form-help">Optional: Briefly describe the content and purpose of this guide</div>
+        </div>
+        
+        <div class="form-group">
+            <label for="guideSubject">Subject</label>
+            <select id="guideSubject" class="form-control">
+                <option value="General">General</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Science">Science</option>
+                <option value="History">History</option>
+                <option value="Literature">Literature</option>
+                <option value="Languages">Languages</option>
+                <option value="Geography">Geography</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Psychology">Psychology</option>
+                <option value="Art">Art</option>
+                <option value="Music">Music</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="guideTopic">Specific Topic (Optional)</label>
+            <input type="text" id="guideTopic" class="form-control" placeholder="e.g., World War II, Photosynthesis, Calculus Derivatives">
+            <div class="form-help">Specify a particular topic within the subject for more focused content</div>
+        </div>
+    </div>
+
+    <!-- Content Input -->
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-file-text"></i>
+            Study Material
+        </h3>
+        
+        <!-- File Upload Option -->
+        <div class="form-group">
+            <label>Upload Files (Optional)</label>
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <div class="upload-text">Click to upload files or drag and drop</div>
+                <div class="upload-hint">Supported: PDF, DOC, DOCX, TXT (Max 16MB)</div>
+            </div>
+            <input type="file" id="fileInput" style="display: none" multiple accept=".pdf,.doc,.docx,.txt" onchange="handleFileUpload(event)">
+            <div id="uploadedFiles" style="margin-top: var(--spacing-sm);"></div>
+        </div>
+        
+        <!-- Text Input -->
+        <div class="form-group">
+            <label for="studyContent">Study Material *</label>
+            <textarea id="studyContent" class="form-control large" 
+                     placeholder="Paste your notes, textbook content, lecture materials, or any study content here. The AI will analyze it and create a comprehensive study guide."></textarea>
+            <div class="form-help">Paste your class notes, textbook chapters, or any study material you want to create a guide from</div>
+        </div>
+    </div>
+
+    <!-- AI Generation Options -->
+    <div class="ai-section">
+        <h3>
+            <i class="fas fa-robot"></i>
+            AI Study Guide Generation
+        </h3>
+        
+        <div class="ai-options">
+            <div class="form-group">
+                <label for="guideStyle">Study Guide Style</label>
+                <select id="guideStyle" class="form-control">
+                    <option value="comprehensive">Comprehensive Overview</option>
+                    <option value="concise">Concise Summary</option>
+                    <option value="detailed">Detailed Analysis</option>
+                    <option value="exam-prep">Exam Preparation Focus</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="includeQuestions">Include Practice Questions</label>
+                <select id="includeQuestions" class="form-control">
+                    <option value="yes">Yes, include sample questions</option>
+                    <option value="no">No, content only</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="ai-controls">
+            <div class="form-help">
+                AI will analyze your content and create a structured study guide with key concepts, definitions, and important information.
+            </div>
+            <button type="button" class="btn btn-primary" onclick="generateStudyGuide()">
+                <i class="fas fa-magic"></i>
+                Generate Study Guide
+            </button>
+        </div>
+    </div>
+
+    <!-- Preview Section -->
+    <div class="form-section">
+        <h3 class="section-title">
+            <i class="fas fa-eye"></i>
+            Preview
+        </h3>
+        
+        <div class="preview-section">
+            <div id="studyGuidePreview" class="preview-content">
+                <div class="preview-placeholder">
+                    <i class="fas fa-file-alt"></i>
+                    <h4>Study Guide Preview</h4>
+                    <p>Your AI-generated study guide will appear here. Add your study material and click "Generate Study Guide" to begin.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal Notes -->
+    <div class="form-section" id="notesSection" style="display: none;">
+        <h3 class="section-title">
+            <i class="fas fa-sticky-note"></i>
+            Personal Notes
+        </h3>
+        
+        <div class="form-group">
+            <label for="personalNotes">Add Your Own Notes</label>
+            <textarea id="personalNotes" class="form-control large" 
+                     placeholder="Add your own notes, highlights, or additional information to supplement the AI-generated content..."></textarea>
+            <div class="form-help">These notes will be saved with your study guide and can be edited anytime</div>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <div class="action-group">
+            <a href="{{ url_for('study_tools.study_tools_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Cancel
+            </a>
+        </div>
+        
+        <div class="action-group">
+            <button type="button" class="btn btn-outline" onclick="previewStudyGuide()">
+                <i class="fas fa-eye"></i>
+                Preview
+            </button>
+            <button type="button" class="btn btn-success" onclick="saveStudyGuide()" disabled id="saveBtn">
+                <i class="fas fa-save"></i>
+                Save Study Guide
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let generatedContent = '';
+let uploadedFiles = [];
+
+// File upload handling
+function handleFileUpload(event) {
+    const files = Array.from(event.target.files);
+    const fileList = document.getElementById('uploadedFiles');
+    
+    files.forEach(file => {
+        if (file.size > 16 * 1024 * 1024) { // 16MB limit
+            alert(`File ${file.name} is too large. Maximum size is 16MB.`);
+            return;
+        }
+        
+        uploadedFiles.push(file);
+        
+        const fileItem = document.createElement('div');
+        fileItem.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 8px; background: var(--background-light); border-radius: 4px; margin-bottom: 4px;';
+        fileItem.innerHTML = `
+            <span><i class="fas fa-file"></i> ${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
+            <button onclick="removeFile('${file.name}')" style="background: #ef4444; color: white; border: none; border-radius: 4px; padding: 4px 8px; cursor: pointer;">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        fileList.appendChild(fileItem);
+    });
+}
+
+function removeFile(fileName) {
+    uploadedFiles = uploadedFiles.filter(file => file.name !== fileName);
+    const fileList = document.getElementById('uploadedFiles');
+    Array.from(fileList.children).forEach(child => {
+        if (child.textContent.includes(fileName)) {
+            child.remove();
+        }
+    });
+}
+
+// Drag and drop functionality
+const uploadArea = document.querySelector('.upload-area');
+
+uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+});
+
+uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+});
+
+uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    
+    const files = Array.from(e.dataTransfer.files);
+    const fileInput = document.getElementById('fileInput');
+    fileInput.files = e.dataTransfer.files;
+    handleFileUpload({ target: fileInput });
+});
+
+// Generate study guide
+async function generateStudyGuide() {
+    const content = document.getElementById('studyContent').value.trim();
+    const subject = document.getElementById('guideSubject').value;
+    const topic = document.getElementById('guideTopic').value.trim();
+    const style = document.getElementById('guideStyle').value;
+    const includeQuestions = document.getElementById('includeQuestions').value;
+    
+    if (!content && uploadedFiles.length === 0) {
+        alert('Please enter study material or upload files.');
+        return;
+    }
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="spinner"></span> Generating...';
+    button.classList.add('btn-loading');
+    button.disabled = true;
+    
+    try {
+        // Prepare content (in a real implementation, you'd also process uploaded files)
+        let fullContent = content;
+        if (uploadedFiles.length > 0) {
+            fullContent += '\n\n[Note: ' + uploadedFiles.length + ' file(s) uploaded but not processed in this demo]';
+        }
+        
+        const response = await fetch('/study-tools/study-guides/generate-ai', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: fullContent,
+                subject: subject,
+                topic: topic,
+                style: style,
+                include_questions: includeQuestions === 'yes'
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            generatedContent = data.study_guide;
+            displayStudyGuide();
+            
+            // Show notes section and enable save button
+            document.getElementById('notesSection').style.display = 'block';
+            document.getElementById('saveBtn').disabled = false;
+            
+            // Scroll to preview
+            document.getElementById('studyGuidePreview').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert(data.message || 'Failed to generate study guide. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error generating study guide:', error);
+        alert('An error occurred while generating the study guide. Please try again.');
+    } finally {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+    }
+}
+
+function displayStudyGuide() {
+    const preview = document.getElementById('studyGuidePreview');
+    
+    // Convert markdown-like formatting to HTML
+    let htmlContent = generatedContent
+        .replace(/# (.*)/g, '<h1>$1</h1>')
+        .replace(/## (.*)/g, '<h2>$1</h2>')
+        .replace(/### (.*)/g, '<h3>$1</h3>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*(.*?)\*/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code>$1</code>')
+        .replace(/\n- (.*)/g, '\n<li>$1</li>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^/, '<p>')
+        .replace(/$/, '</p>')
+        .replace(/<p><h/g, '<h')
+        .replace(/<\/h([1-6])><\/p>/g, '</h$1>')
+        .replace(/<p><li>/g, '<ul><li>')
+        .replace(/<\/li><\/p>/g, '</li></ul>');
+    
+    preview.innerHTML = htmlContent;
+}
+
+function previewStudyGuide() {
+    if (!generatedContent) {
+        alert('Please generate a study guide first.');
+        return;
+    }
+    
+    document.getElementById('studyGuidePreview').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Save study guide
+async function saveStudyGuide() {
+    const title = document.getElementById('guideTitle').value.trim();
+    const description = document.getElementById('guideDescription').value.trim();
+    const subject = document.getElementById('guideSubject').value;
+    const notes = document.getElementById('personalNotes').value.trim();
+    
+    if (!title) {
+        alert('Please enter a title for your study guide.');
+        document.getElementById('guideTitle').focus();
+        return;
+    }
+    
+    if (!generatedContent) {
+        alert('Please generate a study guide first.');
+        return;
+    }
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="spinner"></span> Saving...';
+    button.classList.add('btn-loading');
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/study-tools/study-guides/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: title,
+                description: description,
+                subject: subject,
+                content: generatedContent,
+                notes: notes
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Study guide saved successfully!');
+            window.location.href = '/study-tools/study-guides/' + data.guide_id;
+        } else {
+            alert(data.message || 'Failed to save study guide. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error saving study guide:', error);
+        alert('An error occurred while saving. Please try again.');
+    } finally {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Create Study Guide loaded');
+});
+</script>
+{% endblock %}

@@ -79,6 +79,77 @@
           "description": "",
           "rubric_id": "",
           "timestamp": "2025-07-25T18:42:31.461399",
+          "teacher_email": "Roblox@gmail.com",
+          "submissions": [
+            {
+              "id": "ff097b16-02db-4ea7-a0cd-0782ff6eed8e",
+              "student_email": "epicrbot20099@gmail.com",
+              "assignment_id": "77b3a162-0548-461b-9194-06e7b4f193d7",
+              "submission_text": "",
+              "filename": "epicrbot20099gmail.com_77b3a162-0548-461b-9194-06e7b4f193d7_Testassinmen.txt",
+              "timestamp": "2025-07-25T23:28:55.704622",
+              "grade": 50,
+              "feedback": "EPic, your submission lacks the necessary content and detail required for a comprehensive evaluation. The assignment appears incomplete, as it only contains a brief greeting without any substantial information or analysis related to the assignment title or description. To improve, ensure that your work addresses the assignment topic thoroughly and demonstrates a clear understanding of the subject matter. Additionally, organizing your thoughts clearly and following the assignment instructions will help enhance the quality of your submissions in the future.",
+              "graded_by": "AI (via Roblox@gmail.com)",
+              "graded_timestamp": "2025-07-26T04:06:19.095433"
+            }
+          ]
+        },
+        {
+          "id": "d4d29f81-1236-427f-9b27-1b1821a78e1b",
+          "title": "TestAssignment",
+          "content": "Assignment: AI & Society ReflectionObjective:Reflect on the impact of AI in modern society by writing a short essay that analyzes both the benefits and potential risks of AI technologies.Instructions:- Write a 3-paragraph essay.- Paragraph 1: Introduction to AI and its increasing role in society.- Paragraph 2: Describe at least two benefits and one risk of AI with examples.- Paragraph 3: Your opinion on how society should handle AI advancements.- Length: 300\u2013500 words- Submit as a .txt or .docx file.",
+          "description": "",
+          "rubric_id": "a9798a70-fe3a-4b5e-98fb-b76593a58517",
+          "timestamp": "2025-07-26T03:53:20.586560",
+          "teacher_email": "Roblox@gmail.com",
+          "submissions": [
+            {
+              "id": "3bc7a9c5-58b0-4a0c-a3bd-9d30d83a8c12",
+              "student_email": "epicrbot20099@gmail.com",
+              "assignment_id": "d4d29f81-1236-427f-9b27-1b1821a78e1b",
+              "submission_text": "Test submission for unsubmit functionality",
+              "submission_link": "",
+              "filename": null,
+              "timestamp": "2025-07-26T04:19:23.961405",
+              "grade": 50,
+              "feedback": "EPic, your submission appears to be a placeholder or a test rather than a complete assignment. It lacks content quality and completeness, as there is no substantive information or analysis provided. The understanding and analysis of the topic cannot be assessed due to the absence of content. The organization and clarity are also not applicable here, as there is no structured information to evaluate. Additionally, it seems that the assignment instructions were not followed, as the submission does not align with the expected content for an assignment titled \"TestAssignment.\" To improve, please ensure that your future submissions include detailed and relevant content that demonstrates your understanding and analysis of the topic.",
+              "graded_by": "AI (via Roblox@gmail.com)",
+              "graded_timestamp": "2025-07-26T06:59:51.233610+00:00"
+            }
+          ]
+        },
+        {
+          "id": "041bd333-6091-4876-8f49-d24e72fbf15e",
+          "title": "Ai",
+          "content": "Assignment: AI & Society Reflection\n\nObjective:\nReflect on the impact of AI in modern society by writing a short essay that analyzes both the benefits and potential risks of AI technologies.\n\nInstructions:\n- Write a 3-paragraph essay.\n- Paragraph 1: Introduction to AI and its increasing role in society.\n- Paragraph 2: Describe at least two benefits and one risk of AI with examples.\n- Paragraph 3: Your opinion on how society should handle AI advancements.\n- Length: 300\u2013500 words\n- Submit as a .txt or .docx file.\n",
+          "description": "",
+          "rubric_id": "a9798a70-fe3a-4b5e-98fb-b76593a58517",
+          "timestamp": "2025-07-26T20:42:52.167434+00:00",
+          "teacher_email": "Roblox@gmail.com",
+          "submissions": [
+            {
+              "id": "661eae7f-2674-4313-8070-1c2edae279cd",
+              "student_email": "epicrbot20099@gmail.com",
+              "assignment_id": "041bd333-6091-4876-8f49-d24e72fbf15e",
+              "submission_text": "",
+              "submission_link": "",
+              "filename": "epicrbot20099gmail.com_041bd333-6091-4876-8f49-d24e72fbf15e_example_submission.txt",
+              "timestamp": "2025-07-26T20:43:24.690991+00:00",
+              "grade": 85,
+              "feedback": "EPic, your submission on Artificial Intelligence demonstrates a good understanding of the topic and its implications in modern society. You effectively highlight both the benefits and risks associated with AI, such as improved efficiency and job displacement. Your analysis is thoughtful, particularly in suggesting proactive measures like creating guidelines and investing in education to manage AI's impact.\n\nThe content is complete, covering various aspects of AI's influence, and you provide a balanced view of its advantages and challenges. Your organization is clear, with a logical flow from introduction to conclusion, making it easy to follow your argument.\n\nHowever, to improve further, you could enhance the depth of your analysis by providing more specific examples or case studies to support your points. Additionally, while your suggestions for managing AI's impact are valuable, elaborating on potential implementation strategies could strengthen your argument.\n\nOverall, you have followed the assignment instructions well, and your submission reflects a solid understanding of the subject matter. Keep up the good work!",
+              "graded_by": "AI (via Roblox@gmail.com)",
+              "graded_timestamp": "2025-07-26T20:43:56.497547+00:00"
+            }
+          ]
+        }
+      ],
+      "rubrics": [
+        {
+          "id": "a9798a70-fe3a-4b5e-98fb-b76593a58517",
+          "title": "TestRubric",
+          "content": "Grading Rubric: AI & Society Reflection\n\n1. Content Understanding (30 points)\n- Demonstrates understanding of AI's role in society (10)\n- Clearly explains at least two benefits (10)\n- Identifies and explains one potential risk (10)\n\n2. Organization & Structure (25 points)\n- Clear introduction, body, and conclusion (10)\n- Logical flow of ideas (10)\n- Proper paragraphing (5)\n\n3. Support & Examples (25 points)\n- Provides relevant examples for points made (15)\n- Evidence is well-integrated (10)\n\n4. Grammar & Mechanics (10 points)\n- Correct spelling, grammar, punctuation\n\n5. Personal Insight & Opinion (10 points)\n- Thoughtful personal reflection or stance on AI in society\n\nTotal: 100 points\n",
+          "timestamp": "2025-07-26T03:53:54.744549",
           "teacher_email": "Roblox@gmail.com"
         }
       ]
@@ -104,7 +175,21 @@
           "title": "Epic",
           "content": "text",
           "timestamp": "2025-07-25T17:42:01.292852",
-          "teacher_email": "epic99@gmail"
+          "teacher_email": "epic99@gmail",
+          "submissions": [
+            {
+              "id": "3ed8555b-7e5c-407c-a2e4-1504baee986e",
+              "student_email": "epicrbot20099@gmail.com",
+              "assignment_id": "7cb20131-92ad-45b1-9add-33c2d78eaa9f",
+              "submission_text": "",
+              "filename": "epicrbot20099gmail.com_7cb20131-92ad-45b1-9add-33c2d78eaa9f_Screenshot_2025-07-25_183235.png",
+              "timestamp": "2025-07-25T23:27:47.096103",
+              "grade": null,
+              "feedback": null,
+              "graded_by": null,
+              "graded_timestamp": null
+            }
+          ]
         }
       ]
     }

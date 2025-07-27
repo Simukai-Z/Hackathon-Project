@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Hyperlinks</title>
+</head>
+<body>
+    <h1>Test Hyperlink Processing</h1>
+    <div id="test-content"></div>
+    
+    <script>
+        // Mock resource data based on actual data
+        const mockResources = {
+            flashcards: [
+                { name: "Basic Roblox Lua", title: "Basic Roblox Lua" }
+            ],
+            study_guides: [
+                { name: "Epic", title: "Epic" }
+            ],
+            assignments: [
+                { id: "6138bbd3-a14d-45ac-8c35-070c53b350ce", title: "Hii", class_code: "d2e9cbc7" },
+                { id: "5c90e59c-4328-4ebf-ae99-a8be94f2cedd", title: "Hallo", class_code: "d2e9cbc7" }
+            ],
+            rubrics: []
+        };
+
+        // Escape special regex characters
+        function escapeRegex(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        // Process message for links (simplified version)
+        function processMessageForLinks(content) {
+            if (!content || typeof content !== 'string') return content;
+            
+            console.log('Processing message for links:', content);
+            
+            // Start with escaped HTML content
+            let processedContent = content
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+
+            // Process flashcard sets
+            if (mockResources.flashcards && mockResources.flashcards.length > 0) {
+                console.log('Processing flashcards:', mockResources.flashcards);
+                mockResources.flashcards.forEach(flashcard => {
+                    const setName = flashcard.name || flashcard.title;
+                    if (setName) {
+                        const regex = new RegExp(`\\b${escapeRegex(setName)}\\b`, 'gi');
+                        const replacement = `<a href="/study-tools/flashcards/view/${encodeURIComponent(setName)}" style="color: #e74c3c; background-color: rgba(231, 76, 60, 0.1); padding: 2px 6px; border-radius: 4px; text-decoration: none; font-weight: 500;" target="_blank" title="View flashcard set">${setName}</a>`;
+                        const oldContent = processedContent;
+                        processedContent = processedContent.replace(regex, replacement);
+                        if (oldContent !== processedContent) {
+                            console.log(`Applied flashcard link for: ${setName}`);
+                        }
+                    }
+                });
+            }
+
+            // Process study guides
+            if (mockResources.study_guides && mockResources.study_guides.length > 0) {
+                console.log('Processing study guides:', mockResources.study_guides);
+                mockResources.study_guides.forEach(guide => {
+                    const guideTitle = guide.name || guide.title;
+                    if (guideTitle) {
+                        const regex = new RegExp(`\\b${escapeRegex(guideTitle)}\\b`, 'gi');
+                        const replacement = `<a href="/study-tools/study-guides/view/${encodeURIComponent(guideTitle)}" style="color: #27ae60; background-color: rgba(39, 174, 96, 0.1); padding: 2px 6px; border-radius: 4px; text-decoration: none; font-weight: 500;" target="_blank" title="View study guide">${guideTitle}</a>`;
+                        const oldContent = processedContent;
+                        processedContent = processedContent.replace(regex, replacement);
+                        if (oldContent !== processedContent) {
+                            console.log(`Applied study guide link for: ${guideTitle}`);
+                        }
+                    }
+                });
+            }
+
+            // Process assignments
+            if (mockResources.assignments && mockResources.assignments.length > 0) {
+                console.log('Processing assignments:', mockResources.assignments);
+                mockResources.assignments.forEach(assignment => {
+                    const assignmentTitle = assignment.title;
+                    if (assignmentTitle) {
+                        const regex = new RegExp(`\\b${escapeRegex(assignmentTitle)}\\b`, 'gi');
+                        const replacement = `<a href="/teacher/edit_assignment/${assignment.class_code}/${assignment.id}" style="color: #9b59b6; background-color: rgba(155, 89, 182, 0.1); padding: 2px 6px; border-radius: 4px; text-decoration: none; font-weight: 500;" target="_blank" title="View assignment">${assignmentTitle}</a>`;
+                        const oldContent = processedContent;
+                        processedContent = processedContent.replace(regex, replacement);
+                        if (oldContent !== processedContent) {
+                            console.log(`Applied assignment link for: ${assignmentTitle}`);
+                        }
+                    }
+                });
+            }
+
+            // Convert line breaks to HTML
+            processedContent = processedContent.replace(/\n/g, '<br>');
+            
+            console.log('Final processed content:', processedContent);
+            return processedContent;
+        }
+
+        // Test messages
+        const testMessages = [
+            "You should review your Basic Roblox Lua flashcards before the exam.",
+            "The Epic study guide covers all the important concepts.",
+            "Don't forget to complete the Hii assignment by tomorrow.",
+            "Check out the Hallo assignment for practice problems.",
+            "Your Basic Roblox Lua skills and Epic knowledge will help with the Hii assignment."
+        ];
+
+        // Display test results
+        const contentDiv = document.getElementById('test-content');
+        testMessages.forEach((message, index) => {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.marginBottom = '20px';
+            messageDiv.style.padding = '10px';
+            messageDiv.style.border = '1px solid #ccc';
+            messageDiv.style.borderRadius = '5px';
+            
+            const originalDiv = document.createElement('div');
+            originalDiv.innerHTML = `<strong>Original:</strong> ${message}`;
+            
+            const processedDiv = document.createElement('div');
+            processedDiv.innerHTML = `<strong>Processed:</strong> ${processMessageForLinks(message)}`;
+            
+            messageDiv.appendChild(originalDiv);
+            messageDiv.appendChild(processedDiv);
+            contentDiv.appendChild(messageDiv);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,599 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Student Dashboard - StudyCoach{% endblock %}
+
+{% block sidebar_content %}
+<div class="schools-nav">
+    {% if schools %}
+        {% for school, classrooms in schools.items() %}
+            <div class="school-group">
+                <div class="school-name">{{ school }}</div>
+                <div class="class-list">
+                    {% for c in classrooms %}
+                        <a href="?class={{ c.code }}" 
+                           class="nav-item {% if request.args.get('class') == c.code %}active{% endif %}">
+                            <span class="nav-icon">📚</span>
+                            {{ c.class_name }}
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+    
+    <div class="join-classroom">
+        <form method="post" class="join-form">
+            <div class="form-group">
+                <label for="join_code" class="form-label">Join a New Class</label>
+                <div class="join-input-group">
+                    <input type="text" id="join_code" name="join_code" class="form-control" placeholder="Enter class code" required>
+                    <button type="submit" class="btn btn-primary btn-sm">Join</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block dashboard_title %}
+{% if class_obj %}
+    {{ class_obj.class_name }}
+    {% if class_obj.teacher_name %}
+        <span class="teacher-name">Teacher: {{ class_obj.teacher_name }}</span>
+    {% endif %}
+{% else %}
+    Welcome, {{ student.name }}
+{% endif %}
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="dashboard-wrapper">
+    {% if class_obj %}
+        <!-- Class Overview -->
+        <div class="class-header card">
+            <div class="class-info">
+                <div class="class-meta">
+                    <h3>{{ class_obj.school or "(No School)" }}</h3>
+                    <p class="class-code">Class Code: {{ class_obj.code }}</p>
+                </div>
+                <div class="class-stats">
+                    <div class="stat">
+                        <span class="stat-value">{{ class_obj.assignments|length }}</span>
+                        <span class="stat-label">Assignments</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">{{ class_obj.rubrics|length }}</span>
+                        <span class="stat-label">Rubrics</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Content Tabs -->
+    <div class="content-tabs">
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="showTab('stream')">Stream</button>
+            <button class="tab-btn" onclick="showTab('assignments')">Assignments</button>
+            <button class="tab-btn" onclick="showTab('rubrics')">Rubrics</button>
+        </div>
+
+        <!-- Stream Tab -->
+        <div id="stream" class="tab-content active">
+            <div class="activity-feed">
+                {% set recent_items = [] %}
+                {% for assignment in class_obj.assignments %}
+                    {% if assignment.is_new %}
+                        {% set _ = recent_items.append({
+                            'type': 'assignment',
+                            'data': assignment,
+                            'timestamp': assignment.timestamp
+                        }) %}
+                    {% endif %}
+                {% endfor %}
+                {% for rubric in class_obj.rubrics %}
+                    {% if rubric.is_new %}
+                        {% set _ = recent_items.append({
+                            'type': 'rubric',
+                            'data': rubric,
+                            'timestamp': rubric.timestamp
+                        }) %}
+                    {% endif %}
+                {% endfor %}
+                
+                {% set sorted_items = recent_items|sort(attribute='timestamp', reverse=true) %}
+                {% for item in sorted_items %}
+                    <div class="activity-item card">
+                        {% if item.type == 'assignment' %}
+                            <div class="activity-icon assignment-icon">📝</div>
+                            <div class="activity-content">
+                                <h4>New Assignment: {{ item.data.title }}</h4>
+                                <p>{{ item.data.description or item.data.content }}</p>
+                                <time>{{ item.data.timestamp|datetime }}</time>
+                            </div>
+                        {% else %}
+                            <div class="activity-icon rubric-icon">📋</div>
+                            <div class="activity-content">
+                                <h4>New Rubric: {{ item.data.title }}</h4>
+                                <p>{{ item.data.content }}</p>
+                                <time>{{ item.data.timestamp|datetime }}</time>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <div class="empty-state card">
+                        <p>No recent activity in this class</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Assignments Tab -->
+        <div id="assignments" class="tab-content">
+            <div class="assignments-grid">
+                {% for assignment in class_obj.assignments %}
+                    <div class="assignment-card card">
+                        <div class="card-header">
+                            <h3>{{ assignment.title }}</h3>
+                            {% if assignment.is_new %}
+                                <span class="badge badge-new">New</span>
+                            {% endif %}
+                        </div>
+                        <div class="card-body">
+                            <div class="assignment-description">
+                                <h4><i class="fas fa-info-circle"></i> Assignment Description:</h4>
+                                <div class="description-content">
+                                    {{ assignment.description or assignment.content or "No description provided" }}
+                                </div>
+                            </div>
+                            
+                            {% if assignment.rubric_id %}
+                                {% set rubric = class_obj.rubrics|selectattr("id", "equalto", assignment.rubric_id)|first %}
+                                {% if rubric %}
+                                    <div class="rubric-badge">
+                                        📋 Using rubric: {{ rubric.title }}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                        <div class="card-footer">
+                            <a href="{{ url_for('ai_page') }}" class="btn btn-primary btn-sm">Get Help</a>
+                            <time>{{ assignment.timestamp|datetime }}</time>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty-state card">
+                        <p>No assignments yet</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Rubrics Tab -->
+        <div id="rubrics" class="tab-content">
+            <div class="rubrics-list">
+                {% for rubric in class_obj.rubrics %}
+                    <div class="rubric-item card">
+                        <div class="rubric-header">
+                            <h3>{{ rubric.title }}</h3>
+                            {% if rubric.is_new %}
+                                <span class="badge badge-new">New</span>
+                            {% endif %}
+                        </div>
+                        <div class="rubric-content">
+                            {{ rubric.content }}
+                        </div>
+                        <div class="rubric-footer">
+                            <time>{{ rubric.timestamp|datetime }}</time>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty-state card">
+                        <p>No rubrics available</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="welcome-card card">
+        <h2>Welcome to StudyCoach!</h2>
+        <p>Join a class to see your assignments and get help from our AI tutor.</p>
+        
+        {% if schools %}
+            <div class="quick-access">
+                <h3>Your Classes</h3>
+                <div class="class-grid">
+                    {% for school, classrooms in schools.items() %}
+                        {% for c in classrooms %}
+                            <a href="?class={{ c.code }}" class="class-link-card card">
+                                <h4>{{ c.class_name }}</h4>
+                                <p>{{ school }}</p>
+                            </a>
+                        {% endfor %}
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="join-prompt">
+            <h3>Join a New Class</h3>
+            <form method="post" class="join-form">
+                <div class="form-group">
+                    <input type="text" name="join_code" class="form-control" placeholder="Enter class code" required>
+                    <button type="submit" class="btn btn-primary">Join Class</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Content Tabs */
+.content-tabs {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-top: 2rem;
+}
+
+.dark-mode .content-tabs {
+    background: #1a1a1a;
+    border: 1px solid #404040;
+}
+
+.tab-buttons {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.dark-mode .tab-buttons {
+    background: #2d2d2d;
+    border-bottom-color: #404040;
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 16px 24px;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 3px solid transparent;
+}
+
+.dark-mode .tab-btn {
+    color: #ffffff;
+}
+
+.tab-btn:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.dark-mode .tab-btn:hover {
+    background: #404040;
+    color: #ffffff;
+}
+
+.tab-btn.active {
+    color: #6c3fc7;
+    background: white;
+    border-bottom-color: #6c3fc7;
+}
+
+.dark-mode .tab-btn.active {
+    color: #6c3fc7;
+    background: #1a1a1a;
+    border-bottom-color: #6c3fc7;
+}
+
+.tab-content {
+    padding: 32px;
+    display: none;
+}
+
+.dark-mode .tab-content {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Activity Feed */
+.activity-feed {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #e9ecef;
+    transition: background-color 0.2s;
+    margin-bottom: 0;
+}
+
+.activity-item:hover {
+    background-color: #f8f9fa;
+}
+
+.dark-mode .activity-item {
+    border-bottom-color: #404040;
+    color: #ffffff;
+}
+
+.dark-mode .activity-item:hover {
+    background-color: #2d2d2d;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    font-size: 18px;
+}
+
+.assignment-icon {
+    background-color: #007bff;
+    color: white;
+}
+
+.rubric-icon {
+    background-color: #28a745;
+    color: white;
+}
+
+.activity-content h4 {
+    margin: 0 0 8px 0;
+    font-size: 1.1rem;
+    color: #212529;
+}
+
+.dark-mode .activity-content h4 {
+    color: #ffffff;
+}
+
+.activity-content p {
+    margin: 0 0 4px 0;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.dark-mode .activity-content p {
+    color: #ffffff;
+}
+
+.activity-content time {
+    color: #6c757d;
+    font-size: 0.8rem;
+}
+
+.dark-mode .activity-content time {
+    color: #ffffff;
+}
+
+/* Class Header */
+.class-header {
+    margin-bottom: 2rem;
+}
+
+.class-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.class-meta h3 {
+    margin: 0;
+    color: #212529;
+    font-size: 1.5rem;
+}
+
+.dark-mode .class-meta h3 {
+    color: #ffffff;
+}
+
+.class-code {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 6px 12px;
+    font-family: monospace;
+    font-size: 0.875rem;
+    color: #495057;
+    margin-top: 8px;
+}
+
+.dark-mode .class-code {
+    background: #2d2d2d;
+    border-color: #404040;
+    color: #ffffff;
+}
+
+.class-stats {
+    display: flex;
+    gap: 2rem;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #6c3fc7;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* Assignment and Rubric Cards */
+.assignments-grid,
+.rubrics-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.assignment-card,
+.rubric-item {
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dark-mode .assignment-card,
+.dark-mode .rubric-item {
+    border-color: #404040;
+    background-color: #1a1a1a;
+}
+
+.card-header,
+.rubric-header {
+    background: #f8f9fa;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dark-mode .card-header,
+.dark-mode .rubric-header {
+    background: #2d2d2d;
+    border-bottom-color: #404040;
+    color: #ffffff;
+}
+
+.card-header h3,
+.rubric-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.dark-mode .card-header h3,
+.dark-mode .rubric-header h3 {
+    color: #ffffff;
+}
+
+.badge-new {
+    background: #6c3fc7;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.card-body,
+.rubric-content {
+    padding: 1rem;
+}
+
+.dark-mode .card-body,
+.dark-mode .rubric-content {
+    background-color: #1a1a1a;
+    color: #ffffff;
+}
+
+.card-footer,
+.rubric-footer {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dark-mode .card-footer,
+.dark-mode .rubric-footer {
+    background: #2d2d2d;
+    border-top-color: #404040;
+    color: #ffffff;
+}
+
+.rubric-badge {
+    background: #e9ecef;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.dark-mode .rubric-badge {
+    background: #404040;
+    color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .class-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .class-stats {
+        display: none;
+    }
+    
+    .tab-buttons {
+        flex-direction: column;
+    }
+    
+    .tab-btn {
+        text-align: left;
+        border-bottom: 1px solid #e9ecef;
+        border-right: none;
+    }
+    
+    .tab-btn.active {
+        border-bottom-color: #e9ecef;
+        border-left: 3px solid #6c3fc7;
+    }
+    
+    .tab-content {
+        padding: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showTab(tabId) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabId).classList.add('active');
+    document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+}
+</script>
+{% endblock %}

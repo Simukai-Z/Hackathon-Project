@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Update Grade Button</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .error { color: red; }
+        .success { color: green; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Debug Update Grade Button</h1>
+    
+    <div class="test-section">
+        <h3>Current Problem:</h3>
+        <p>The "Update Grade" button does nothing when clicked on</p>
+        
+        <h3>Test Button (simulating real data):</h3>
+        <button class="btn btn-warning" onclick="testShowGradingModal()">
+            <i class="fas fa-edit"></i> Update Grade (Debug Test)
+        </button>
+        
+        <h3>Results:</h3>
+        <div id="debugResults">
+            <p>Click the button above to test...</p>
+        </div>
+    </div>
+
+    <script>
+        // Debug version of showGradingModal with logging
+        function testShowGradingModal() {
+            console.log("Button clicked!");
+            
+            // Test data from the actual submission
+            const classroomId = 'd2e9cbc7';
+            const assignmentId = '77b3a162-0548-461b-9194-06e7b4f193d7';
+            const studentEmail = 'epicrbot20099@gmail.com';
+            const studentName = 'Epic Student';
+            const assignmentTitle = 'EYAHHH IT WORKED!!';
+            const currentGrade = '70';
+            const currentFeedback = `EPic, thank you for your resubmission of the assignment "EYAHHH IT WORKED!!". Your enthusiasm and determination to improve your work are commendable and essential qualities for success. However, there are still several areas that need attention to further enhance your assignment.
+
+Strengths:
+- Your persistent enthusiasm and dedication to improving your assignment are noteworthy.
+- You've demonstrated a willingness to revise and resubmit your work, which is an important part of the learning process.
+
+Areas for Improvement:
+1. **Structured Format**: While there is some improvement, your submission still lacks a clear structure. Aim to organize your assignment with a well-defined introduction, body, and conclusion. This will help in presenting your ideas more coherently.
+
+2. **Content Completeness**: Please ensure that all required components of the assignment are present in the attached file. A complete submission will allow you to fully express your understanding of the topic.
+
+3. **File Naming and Management**: The file name is still not reflective of the content and does not include your name. Proper naming conventions are important for organization and evaluation purposes.
+
+Specific Suggestions for Improvement:
+1. **Clarify Assignment Objectives**: Double-check the assignment instructions to ensure that all objectives are covered in your work. This will guide your content development and ensure alignment with the assignment's goals.
+
+2. **Develop a Drafting Process**: Start with an outline and progress through multiple drafts. This will help you refine your ideas and improve clarity and depth in your writing.
+
+3. **Seek Peer Review**: Share your work with classmates or mentors for feedback. They can provide valuable perspectives and suggest improvements you might have missed.
+
+Encouraging Words: Keep up the great work, EPic! Your enthusiasm is a powerful asset in your learning journey. With continued focus on organization and detail, you'll be able to express your ideas more clearly. Each revision is a step toward mastery, so don't hesitate to seek help and embrace feedback. You're making progress, and with perseverance, you'll achieve the results you're aiming for. Keep pushing forward!`;
+            
+            let debugInfo = '<h4>Debug Information:</h4>';
+            debugInfo += '<pre>';
+            debugInfo += 'Classroom ID: ' + classroomId + '\\n';
+            debugInfo += 'Assignment ID: ' + assignmentId + '\\n';
+            debugInfo += 'Student Email: ' + studentEmail + '\\n';
+            debugInfo += 'Student Name: ' + studentName + '\\n';
+            debugInfo += 'Assignment Title: ' + assignmentTitle + '\\n';
+            debugInfo += 'Current Grade: ' + currentGrade + '\\n';
+            debugInfo += 'Feedback Length: ' + currentFeedback.length + ' characters\\n';
+            debugInfo += '</pre>';
+            
+            // Check for problematic characters
+            const problematicChars = /['"\\\\\\n\\r]/g;
+            const feedbackMatches = currentFeedback.match(problematicChars);
+            
+            if (feedbackMatches) {
+                debugInfo += '<p class="error">⚠️ Found problematic characters in feedback: ' + JSON.stringify(feedbackMatches) + '</p>';
+                debugInfo += '<p>These characters might break the JavaScript onclick attribute.</p>';
+            } else {
+                debugInfo += '<p class="success">✅ No obvious problematic characters found in feedback.</p>';
+            }
+            
+            // Test JavaScript execution
+            try {
+                // Simulate the function call
+                console.log('Calling showGradingModal with parameters...');
+                console.log('Parameters:', {
+                    classroomId,
+                    assignmentId, 
+                    studentEmail,
+                    studentName,
+                    assignmentTitle,
+                    currentGrade,
+                    feedbackLength: currentFeedback.length
+                });
+                
+                debugInfo += '<p class="success">✅ JavaScript execution successful!</p>';
+                debugInfo += '<p>If this works but the real button doesn\'t, the issue is likely with:</p>';
+                debugInfo += '<ul>';
+                debugInfo += '<li>Special characters in the onclick attribute</li>';
+                debugInfo += '<li>Missing or broken showGradingModal function</li>';
+                debugInfo += '<li>Missing modal HTML elements</li>';
+                debugInfo += '</ul>';
+                
+            } catch (error) {
+                debugInfo += '<p class="error">❌ JavaScript Error: ' + error.message + '</p>';
+            }
+            
+            document.getElementById('debugResults').innerHTML = debugInfo;
+        }
+        
+        // Also test if console errors occur
+        window.onerror = function(msg, url, line, col, error) {
+            console.error('JavaScript Error:', msg, 'at', url + ':' + line + ':' + col);
+            document.getElementById('debugResults').innerHTML += '<p class="error">JavaScript Error: ' + msg + '</p>';
+        };
+    </script>
+</body>
+</html>

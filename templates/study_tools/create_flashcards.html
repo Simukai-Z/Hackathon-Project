@@ -1,0 +1,922 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Create Flash Cards - StudyCoach{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+/* Flash Cards Creation Styles */
+.create-header {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.create-header h1 {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.create-header p {
+    margin: var(--spacing-sm) 0 0 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+/* Creation Methods */
+.creation-methods {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.method-card {
+    background: var(--background-primary-light);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    text-align: center;
+    transition: all var(--transition-normal);
+    cursor: pointer;
+}
+
+.dark-mode .method-card {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.method-card.active {
+    border-color: #4facfe;
+    background: rgba(79, 172, 254, 0.1);
+}
+
+.method-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.method-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.method-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary-light);
+    margin-bottom: var(--spacing-sm);
+}
+
+.dark-mode .method-title {
+    color: var(--text-primary-dark);
+}
+
+.method-description {
+    color: var(--text-secondary-light);
+    line-height: 1.5;
+}
+
+.dark-mode .method-description {
+    color: var(--text-secondary-dark);
+}
+
+/* Form Sections */
+.form-section {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+    display: none;
+}
+
+.dark-mode .form-section {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.form-section.active {
+    display: block;
+    animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-group label {
+    display: block;
+    font-weight: 600;
+    color: var(--text-primary-light);
+    margin-bottom: var(--spacing-xs);
+}
+
+.dark-mode .form-group label {
+    color: var(--text-primary-dark);
+}
+
+.form-control {
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--background-light);
+    color: var(--text-primary-light);
+    font-size: 1rem;
+    transition: all var(--transition-fast);
+}
+
+.dark-mode .form-control {
+    border-color: var(--border-dark);
+    background: var(--background-dark);
+    color: var(--text-primary-dark);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.2);
+}
+
+.form-control.large {
+    min-height: 150px;
+    resize: vertical;
+}
+
+/* Flash Card Preview */
+.card-preview {
+    background: var(--background-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+    min-height: 200px;
+}
+
+.dark-mode .card-preview {
+    background: var(--background-dark);
+    border-color: var(--border-dark);
+}
+
+.flashcard {
+    perspective: 1000px;
+    width: 100%;
+    height: 200px;
+    margin-bottom: var(--spacing-md);
+}
+
+.flashcard-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    text-align: center;
+    transition: transform 0.6s;
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+
+.flashcard.flipped .flashcard-inner {
+    transform: rotateY(180deg);
+}
+
+.flashcard-front, .flashcard-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    font-size: 1.1rem;
+    font-weight: 500;
+}
+
+.flashcard-front {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.flashcard-back {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+    transform: rotateY(180deg);
+}
+
+/* AI Generation Section */
+.ai-section {
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.1), rgba(0, 242, 254, 0.1));
+    border: 1px solid rgba(79, 172, 254, 0.3);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+}
+
+.ai-section h3 {
+    color: #4facfe;
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.ai-controls {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--spacing-md);
+    align-items: end;
+}
+
+/* Manual Creation Section */
+.manual-cards {
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: var(--spacing-sm);
+}
+
+.card-item {
+    background: var(--background-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    position: relative;
+}
+
+.dark-mode .card-item {
+    background: var(--background-dark);
+    border-color: var(--border-dark);
+}
+
+.card-item .remove-btn {
+    position: absolute;
+    top: var(--spacing-sm);
+    right: var(--spacing-sm);
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: all var(--transition-fast);
+}
+
+.card-item .remove-btn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+.card-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+/* Buttons */
+.btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: #4facfe;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2196f3;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--background-light);
+    color: var(--text-primary-light);
+    border: 1px solid var(--border-light);
+}
+
+.dark-mode .btn-secondary {
+    background: var(--background-dark);
+    color: var(--text-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.btn-secondary:hover {
+    background: var(--background-primary-light);
+}
+
+.dark-mode .btn-secondary:hover {
+    background: var(--background-primary-dark);
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 2px solid #4facfe;
+    color: #4facfe;
+}
+
+.btn-outline:hover {
+    background: #4facfe;
+    color: white;
+}
+
+.btn-loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.btn-loading .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Form Actions */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--border-light);
+    margin-top: var(--spacing-lg);
+}
+
+.dark-mode .form-actions {
+    border-top-color: var(--border-dark);
+}
+
+.action-group {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .create-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .creation-methods {
+        grid-template-columns: 1fr;
+    }
+    
+    .ai-controls {
+        grid-template-columns: 1fr;
+    }
+    
+    .card-inputs {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .action-group {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Create Header -->
+    <div class="create-header">
+        <h1>
+            <i class="fas fa-clone"></i>
+            Create Flash Cards
+        </h1>
+        <p>Build your own flash card sets or use AI to generate them from your study materials</p>
+    </div>
+
+    <!-- Creation Methods -->
+    <div class="creation-methods">
+        <div class="method-card active" data-method="ai" onclick="selectMethod('ai')">
+            <div class="method-icon">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="method-title">AI Generation</div>
+            <div class="method-description">
+                Upload your notes or paste content, and let AI create flash cards automatically
+            </div>
+        </div>
+        
+        <div class="method-card" data-method="manual" onclick="selectMethod('manual')">
+            <div class="method-icon">
+                <i class="fas fa-edit"></i>
+            </div>
+            <div class="method-title">Manual Creation</div>
+            <div class="method-description">
+                Create flash cards one by one with full control over questions and answers
+            </div>
+        </div>
+    </div>
+
+    <!-- Basic Information -->
+    <div class="form-section active" id="basicInfo">
+        <h3>Flash Card Set Information</h3>
+        
+        <div class="form-group">
+            <label for="setTitle">Set Title *</label>
+            <input type="text" id="setTitle" class="form-control" placeholder="Enter a title for your flash card set" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="setDescription">Description</label>
+            <textarea id="setDescription" class="form-control" rows="3" placeholder="Describe what this flash card set covers"></textarea>
+        </div>
+        
+        <div class="form-group">
+            <label for="setSubject">Subject</label>
+            <select id="setSubject" class="form-control">
+                <option value="General">General</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Science">Science</option>
+                <option value="History">History</option>
+                <option value="Literature">Literature</option>
+                <option value="Languages">Languages</option>
+                <option value="Geography">Geography</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Psychology">Psychology</option>
+                <option value="Art">Art</option>
+                <option value="Music">Music</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- AI Generation Section -->
+    <div class="form-section active" id="aiGeneration">
+        <div class="ai-section">
+            <h3>
+                <i class="fas fa-magic"></i>
+                AI Flash Card Generation
+            </h3>
+            
+            <div class="form-group">
+                <label for="aiContent">Study Material</label>
+                <textarea id="aiContent" class="form-control large" 
+                         placeholder="Paste your notes, textbook content, or any study material here. The AI will analyze it and create flash cards automatically."></textarea>
+            </div>
+            
+            <div class="ai-controls">
+                <div class="form-group">
+                    <label for="cardCount">Number of Cards</label>
+                    <select id="cardCount" class="form-control">
+                        <option value="5">5 cards</option>
+                        <option value="10" selected>10 cards</option>
+                        <option value="15">15 cards</option>
+                        <option value="20">20 cards</option>
+                    </select>
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="generateAIFlashcards()">
+                    <i class="fas fa-magic"></i>
+                    Generate Cards
+                </button>
+            </div>
+        </div>
+        
+        <div id="aiResults" style="display: none;">
+            <h4>Generated Flash Cards</h4>
+            <p class="text-muted">Review the AI-generated cards below. You can edit or remove any cards before saving.</p>
+            <div id="aiCardsContainer"></div>
+        </div>
+    </div>
+
+    <!-- Manual Creation Section -->
+    <div class="form-section" id="manualCreation">
+        <h3>Manual Flash Card Creation</h3>
+        
+        <div class="manual-cards" id="manualCardsContainer">
+            <!-- Cards will be added here dynamically -->
+        </div>
+        
+        <button type="button" class="btn btn-outline" onclick="addNewCard()">
+            <i class="fas fa-plus"></i>
+            Add New Card
+        </button>
+    </div>
+
+    <!-- Flash Card Preview -->
+    <div class="form-section active" id="previewSection">
+        <h3>Preview</h3>
+        <div class="card-preview">
+            <div id="flashcardPreview">
+                <p class="text-muted text-center">Cards will appear here as you create them</p>
+            </div>
+            <div class="text-center" id="previewControls" style="display: none;">
+                <button type="button" class="btn btn-secondary" onclick="prevCard()">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <span id="cardCounter">1 / 1</span>
+                <button type="button" class="btn btn-secondary" onclick="nextCard()">
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <div class="action-group">
+            <a href="{{ url_for('study_tools.study_tools_dashboard') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Cancel
+            </a>
+        </div>
+        
+        <div class="action-group">
+            <button type="button" class="btn btn-primary" onclick="previewFlashcards()">
+                <i class="fas fa-eye"></i>
+                Preview
+            </button>
+            <button type="button" class="btn btn-success" onclick="saveFlashcardSet()">
+                <i class="fas fa-save"></i>
+                Save Flash Card Set
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Flash card creation functionality
+let currentMethod = 'ai';
+let flashcards = [];
+let currentPreviewIndex = 0;
+
+// Method selection
+function selectMethod(method) {
+    currentMethod = method;
+    
+    // Update method cards
+    document.querySelectorAll('.method-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    document.querySelector(`[data-method="${method}"]`).classList.add('active');
+    
+    // Show/hide sections
+    if (method === 'ai') {
+        document.getElementById('aiGeneration').classList.add('active');
+        document.getElementById('manualCreation').classList.remove('active');
+    } else {
+        document.getElementById('aiGeneration').classList.remove('active');
+        document.getElementById('manualCreation').classList.add('active');
+        
+        // Add initial card for manual creation
+        if (document.querySelectorAll('.card-item').length === 0) {
+            addNewCard();
+        }
+    }
+}
+
+// AI Flash Card Generation
+async function generateAIFlashcards() {
+    const content = document.getElementById('aiContent').value.trim();
+    const subject = document.getElementById('setSubject').value;
+    const cardCount = document.getElementById('cardCount').value;
+    
+    if (!content) {
+        alert('Please enter some study material for AI to analyze.');
+        return;
+    }
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="spinner"></span> Generating...';
+    button.classList.add('btn-loading');
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/study-tools/flashcards/generate-ai', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                content: content,
+                subject: subject,
+                card_count: parseInt(cardCount)
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            flashcards = data.flashcards;
+            displayAIResults();
+            updatePreview();
+            
+            // Show results section
+            document.getElementById('aiResults').style.display = 'block';
+            document.getElementById('aiResults').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert(data.message || 'Failed to generate flash cards. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error generating flash cards:', error);
+        alert('An error occurred while generating flash cards. Please try again.');
+    } finally {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+    }
+}
+
+function displayAIResults() {
+    const container = document.getElementById('aiCardsContainer');
+    container.innerHTML = '';
+    
+    flashcards.forEach((card, index) => {
+        const cardElement = document.createElement('div');
+        cardElement.className = 'card-item';
+        cardElement.innerHTML = `
+            <button type="button" class="remove-btn" onclick="removeCard(${index})">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="card-inputs">
+                <div class="form-group">
+                    <label>Question</label>
+                    <textarea class="form-control" rows="3" onchange="updateCard(${index}, 'question', this.value)">${card.question}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Answer</label>
+                    <textarea class="form-control" rows="3" onchange="updateCard(${index}, 'answer', this.value)">${card.answer}</textarea>
+                </div>
+            </div>
+        `;
+        container.appendChild(cardElement);
+    });
+}
+
+// Manual Flash Card Creation
+function addNewCard() {
+    const container = document.getElementById('manualCardsContainer');
+    const index = flashcards.length;
+    
+    flashcards.push({ question: '', answer: '' });
+    
+    const cardElement = document.createElement('div');
+    cardElement.className = 'card-item';
+    cardElement.innerHTML = `
+        <button type="button" class="remove-btn" onclick="removeCard(${index})">
+            <i class="fas fa-times"></i>
+        </button>
+        <div class="card-inputs">
+            <div class="form-group">
+                <label>Question</label>
+                <textarea class="form-control" rows="3" placeholder="Enter the question or term" 
+                         onchange="updateCard(${index}, 'question', this.value)"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Answer</label>
+                <textarea class="form-control" rows="3" placeholder="Enter the answer or definition" 
+                         onchange="updateCard(${index}, 'answer', this.value)"></textarea>
+            </div>
+        </div>
+    `;
+    container.appendChild(cardElement);
+    
+    updatePreview();
+}
+
+function removeCard(index) {
+    if (confirm('Are you sure you want to remove this card?')) {
+        flashcards.splice(index, 1);
+        
+        // Refresh the display
+        if (currentMethod === 'ai') {
+            displayAIResults();
+        } else {
+            refreshManualCards();
+        }
+        
+        updatePreview();
+    }
+}
+
+function refreshManualCards() {
+    const container = document.getElementById('manualCardsContainer');
+    container.innerHTML = '';
+    
+    flashcards.forEach((card, index) => {
+        const cardElement = document.createElement('div');
+        cardElement.className = 'card-item';
+        cardElement.innerHTML = `
+            <button type="button" class="remove-btn" onclick="removeCard(${index})">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="card-inputs">
+                <div class="form-group">
+                    <label>Question</label>
+                    <textarea class="form-control" rows="3" placeholder="Enter the question or term" 
+                             onchange="updateCard(${index}, 'question', this.value)">${card.question}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Answer</label>
+                    <textarea class="form-control" rows="3" placeholder="Enter the answer or definition" 
+                             onchange="updateCard(${index}, 'answer', this.value)">${card.answer}</textarea>
+                </div>
+            </div>
+        `;
+        container.appendChild(cardElement);
+    });
+}
+
+function updateCard(index, field, value) {
+    if (flashcards[index]) {
+        flashcards[index][field] = value;
+        updatePreview();
+    }
+}
+
+// Preview functionality
+function updatePreview() {
+    const previewContainer = document.getElementById('flashcardPreview');
+    const previewControls = document.getElementById('previewControls');
+    
+    if (flashcards.length === 0) {
+        previewContainer.innerHTML = '<p class="text-muted text-center">Cards will appear here as you create them</p>';
+        previewControls.style.display = 'none';
+        return;
+    }
+    
+    // Ensure current index is valid
+    if (currentPreviewIndex >= flashcards.length) {
+        currentPreviewIndex = 0;
+    }
+    
+    const card = flashcards[currentPreviewIndex];
+    
+    previewContainer.innerHTML = `
+        <div class="flashcard" onclick="flipCard(this)">
+            <div class="flashcard-inner">
+                <div class="flashcard-front">
+                    <div>${card.question || 'Enter question...'}</div>
+                </div>
+                <div class="flashcard-back">
+                    <div>${card.answer || 'Enter answer...'}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    previewControls.style.display = 'block';
+    document.getElementById('cardCounter').textContent = `${currentPreviewIndex + 1} / ${flashcards.length}`;
+}
+
+function flipCard(cardElement) {
+    cardElement.classList.toggle('flipped');
+}
+
+function prevCard() {
+    if (currentPreviewIndex > 0) {
+        currentPreviewIndex--;
+        updatePreview();
+    }
+}
+
+function nextCard() {
+    if (currentPreviewIndex < flashcards.length - 1) {
+        currentPreviewIndex++;
+        updatePreview();
+    }
+}
+
+function previewFlashcards() {
+    if (flashcards.length === 0) {
+        alert('Please create at least one flash card before previewing.');
+        return;
+    }
+    
+    document.getElementById('previewSection').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Save flash card set
+async function saveFlashcardSet() {
+    const title = document.getElementById('setTitle').value.trim();
+    const description = document.getElementById('setDescription').value.trim();
+    const subject = document.getElementById('setSubject').value;
+    
+    if (!title) {
+        alert('Please enter a title for your flash card set.');
+        document.getElementById('setTitle').focus();
+        return;
+    }
+    
+    if (flashcards.length === 0) {
+        alert('Please create at least one flash card.');
+        return;
+    }
+    
+    // Validate that all cards have both question and answer
+    const emptyCards = flashcards.some(card => !card.question.trim() || !card.answer.trim());
+    if (emptyCards) {
+        alert('Please ensure all flash cards have both a question and an answer.');
+        return;
+    }
+    
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span class="spinner"></span> Saving...';
+    button.classList.add('btn-loading');
+    button.disabled = true;
+    
+    try {
+        const response = await fetch('/study-tools/flashcards/save', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                title: title,
+                description: description,
+                subject: subject,
+                cards: flashcards
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('Flash card set saved successfully!');
+            window.location.href = '/study-tools/flashcards/' + data.set_id;
+        } else {
+            alert(data.message || 'Failed to save flash card set. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error saving flash card set:', error);
+        alert('An error occurred while saving. Please try again.');
+    } finally {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-loading');
+        button.disabled = false;
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up initial state
+    selectMethod('ai');
+});
+</script>
+{% endblock %}

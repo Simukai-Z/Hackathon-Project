@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}StudyCoach{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='study_coach_logo.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ url_for('static', filename='study_coach_logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='study_coach_logo.png') }}">
+    
+    <!-- Fonts -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono&display=swap">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='modern.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_css %}{% endblock %}
+    
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='modern.js') }}" defer></script>
+    {% block extra_js %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="nav">
+                <a href="{{ url_for('home') }}" class="nav-link logo-link">
+                    <img src="{{ url_for('static', filename='study_coach_logo.png') }}" alt="Study Coach" class="header-logo">
+                </a>
+                
+                {% if session.get('user_type') %}
+                    {% if session.user_type == 'student' %}
+                        <a href="{{ url_for('student_main') }}" class="nav-link">Dashboard</a>
+                    {% elif session.user_type == 'teacher' %}
+                        <a href="{{ url_for('teacher_main') }}" class="nav-link">Dashboard</a>
+                    {% endif %}
+                    <a href="{{ url_for('ai_page') }}" class="nav-link">AI Assistant</a>
+                    <a href="{{ url_for('study_tools.study_tools_dashboard') }}" class="nav-link">Study Tools</a>
+                    <a href="{{ url_for('logout') }}" class="nav-link">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                    <a href="{{ url_for('student_signup') }}" class="nav-link">Student Signup</a>
+                    <a href="{{ url_for('teacher_signup') }}" class="nav-link">Teacher Signup</a>
+                {% endif %}
+                
+                <!-- Theme Toggle -->
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+                    <span class="sr-only">Toggle theme</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <div class="toast-container">
+                {% for message in messages %}
+                    <div class="toast" role="alert">
+                        <span class="toast-message">{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main class="{% if 'dashboard' in request.endpoint %}dashboard-container{% else %}container{% endif %}">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; {{ current_year }} StudyCoach. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

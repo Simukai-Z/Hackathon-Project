@@ -1,0 +1,671 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Flash Cards - StudyCoach{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+/* Flash Cards List Styles */
+.flashcards-header {
+    background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.flashcards-header h1 {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.flashcards-header p {
+    margin: var(--spacing-sm) 0 0 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    text-decoration: none;
+}
+
+.btn-light {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-light:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+    color: white;
+    text-decoration: none;
+}
+
+/* Filter Controls */
+.filter-controls {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.dark-mode .filter-controls {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.filter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-md);
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.filter-group label {
+    font-weight: 600;
+    color: var(--text-primary-light);
+    font-size: 0.9rem;
+}
+
+.dark-mode .filter-group label {
+    color: var(--text-primary-dark);
+}
+
+.form-control, .form-select {
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--background-light);
+    color: var(--text-primary-light);
+    font-size: 0.9rem;
+    transition: all var(--transition-fast);
+}
+
+.dark-mode .form-control, .dark-mode .form-select {
+    border-color: var(--border-dark);
+    background: var(--background-dark);
+    color: var(--text-primary-dark);
+}
+
+.form-control:focus, .form-select:focus {
+    outline: none;
+    border-color: #4facfe;
+    box-shadow: 0 0 0 2px rgba(79, 172, 254, 0.2);
+}
+
+/* Flash Card Sets Grid */
+.flashcard-sets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: var(--spacing-lg);
+}
+
+.flashcard-set-card {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    transition: all var(--transition-normal);
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+    overflow: hidden;
+}
+
+.dark-mode .flashcard-set-card {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.flashcard-set-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4facfe, #00f2fe);
+}
+
+.flashcard-set-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+    color: inherit;
+}
+
+.set-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: var(--spacing-md);
+}
+
+.set-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary-light);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.dark-mode .set-title {
+    color: var(--text-primary-dark);
+}
+
+.mastery-badge {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mastery-beginner {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.mastery-learning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.mastery-good {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.mastery-excellent {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.set-description {
+    color: var(--text-secondary-light);
+    margin-bottom: var(--spacing-md);
+    line-height: 1.5;
+}
+
+.dark-mode .set-description {
+    color: var(--text-secondary-dark);
+}
+
+.set-meta {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--background-light);
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+}
+
+.dark-mode .set-meta {
+    background: var(--background-dark);
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.meta-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .meta-value {
+    color: var(--text-primary-dark);
+}
+
+.meta-label {
+    color: var(--text-secondary-light);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.dark-mode .meta-label {
+    color: var(--text-secondary-dark);
+}
+
+.set-subject {
+    display: inline-block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.set-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--spacing-md);
+    padding-top: var(--spacing-md);
+    border-top: 1px solid var(--border-light);
+}
+
+.dark-mode .set-actions {
+    border-top-color: var(--border-dark);
+}
+
+.last-studied {
+    font-size: 0.75rem;
+    color: var(--text-secondary-light);
+}
+
+.dark-mode .last-studied {
+    color: var(--text-secondary-dark);
+}
+
+.action-buttons {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.btn-sm {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    font-size: 0.75rem;
+    border-radius: var(--radius-sm);
+}
+
+.btn-primary {
+    background: #4facfe;
+    color: white;
+    border: none;
+}
+
+.btn-primary:hover {
+    background: #2196f3;
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    background: transparent;
+    color: #4facfe;
+    border: 1px solid #4facfe;
+}
+
+.btn-outline-primary:hover {
+    background: #4facfe;
+    color: white;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    color: var(--text-secondary-light);
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+}
+
+.dark-mode .empty-state {
+    color: var(--text-secondary-dark);
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: var(--spacing-lg);
+    opacity: 0.5;
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.empty-state h3 {
+    margin-bottom: var(--spacing-sm);
+    color: var(--text-primary-light);
+}
+
+.dark-mode .empty-state h3 {
+    color: var(--text-primary-dark);
+}
+
+.empty-state .btn {
+    margin-top: var(--spacing-md);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .flashcards-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .header-actions {
+        flex-direction: column;
+    }
+    
+    .filter-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .flashcard-sets-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .set-meta {
+        grid-template-columns: repeat(4, 1fr);
+        gap: var(--spacing-sm);
+    }
+    
+    .meta-value {
+        font-size: 1.25rem;
+    }
+    
+    .set-actions {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        align-items: stretch;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Flash Cards Header -->
+    <div class="flashcards-header">
+        <h1>
+            <i class="fas fa-clone"></i>
+            My Flash Card Sets
+        </h1>
+        <p>Study smarter with spaced repetition and track your learning progress</p>
+        
+        <div class="header-actions">
+            <a href="{{ url_for('study_tools.create_flashcard_set') }}" class="btn btn-light">
+                <i class="fas fa-plus"></i>
+                Create New Set
+            </a>
+            <a href="{{ url_for('study_tools.study_tools_dashboard') }}" class="btn btn-light">
+                <i class="fas fa-arrow-left"></i>
+                Back to Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="filter-controls">
+        <div class="filter-grid">
+            <div class="filter-group">
+                <label for="subjectFilter">
+                    <i class="fas fa-book"></i> Subject
+                </label>
+                <select id="subjectFilter" class="form-select" onchange="applyFilters()">
+                    <option value="">All Subjects</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Science">Science</option>
+                    <option value="History">History</option>
+                    <option value="Literature">Literature</option>
+                    <option value="Languages">Languages</option>
+                    <option value="Geography">Geography</option>
+                    <option value="Computer Science">Computer Science</option>
+                    <option value="Psychology">Psychology</option>
+                    <option value="Art">Art</option>
+                    <option value="Music">Music</option>
+                    <option value="General">General</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="masteryFilter">
+                    <i class="fas fa-chart-line"></i> Mastery Level
+                </label>
+                <select id="masteryFilter" class="form-select" onchange="applyFilters()">
+                    <option value="">All Levels</option>
+                    <option value="0-25">Beginner (0-25%)</option>
+                    <option value="26-50">Learning (26-50%)</option>
+                    <option value="51-75">Good (51-75%)</option>
+                    <option value="76-100">Excellent (76-100%)</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="searchFilter">
+                    <i class="fas fa-search"></i> Search
+                </label>
+                <input type="text" id="searchFilter" class="form-control" 
+                       placeholder="Search by title..." onkeyup="applyFilters()">
+            </div>
+            
+            <div class="filter-group">
+                <label for="sortBy">
+                    <i class="fas fa-sort"></i> Sort By
+                </label>
+                <select id="sortBy" class="form-select" onchange="applyFilters()">
+                    <option value="recent">Most Recent</option>
+                    <option value="title">Title A-Z</option>
+                    <option value="cards">Card Count</option>
+                    <option value="mastery">Mastery Level</option>
+                    <option value="studied">Last Studied</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Card Sets -->
+    {% if flashcard_sets %}
+    <div class="flashcard-sets-grid" id="flashcardSetsGrid">
+        {% for set in flashcard_sets %}
+        <div class="flashcard-set-card" 
+             data-subject="{{ set.subject }}" 
+             data-mastery="{{ set.mastery_level }}"
+             data-title="{{ set.title.lower() }}">
+            
+            <div class="set-header">
+                <h3 class="set-title">{{ set.title }}</h3>
+                <div class="mastery-badge {% if set.mastery_level <= 25 %}mastery-beginner{% elif set.mastery_level <= 50 %}mastery-learning{% elif set.mastery_level <= 75 %}mastery-good{% else %}mastery-excellent{% endif %}">
+                    {{ set.mastery_level }}%
+                </div>
+            </div>
+            
+            {% if set.description %}
+            <p class="set-description">{{ set.description[:100] }}{% if set.description|length > 100 %}...{% endif %}</p>
+            {% endif %}
+            
+            <div class="set-meta">
+                <div class="meta-item">
+                    <div class="meta-value">{{ set.card_count }}</div>
+                    <div class="meta-label">Cards</div>
+                </div>
+                <div class="meta-item">
+                    <div class="meta-value">{{ set.total_reviews }}</div>
+                    <div class="meta-label">Reviews</div>
+                </div>
+            </div>
+            
+            <div class="set-subject">{{ set.subject }}</div>
+            
+            <div class="set-actions">
+                <div class="last-studied">
+                    Last studied: {{ set.last_studied if set.last_studied != 'Never' else 'Never studied' }}
+                </div>
+                <div class="action-buttons">
+                    <a href="{{ url_for('study_tools.view_flashcard_set', set_id=set.id) }}" 
+                       class="btn btn-sm btn-primary">
+                        <i class="fas fa-play"></i>
+                        Study
+                    </a>
+                    <a href="{{ url_for('study_tools.quiz_flashcards', set_id=set.id) }}" 
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-question-circle"></i>
+                        Quiz
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="empty-state">
+        <i class="fas fa-clone"></i>
+        <h3>No Flash Card Sets Yet</h3>
+        <p>Create your first flash card set to start studying smarter with spaced repetition.</p>
+        <a href="{{ url_for('study_tools.create_flashcard_set') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Create Your First Set
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter and search functionality
+function applyFilters() {
+    const subjectFilter = document.getElementById('subjectFilter').value.toLowerCase();
+    const masteryFilter = document.getElementById('masteryFilter').value;
+    const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+    const sortBy = document.getElementById('sortBy').value;
+    
+    const cards = Array.from(document.querySelectorAll('.flashcard-set-card'));
+    
+    // Filter cards
+    const filteredCards = cards.filter(card => {
+        const subject = card.dataset.subject.toLowerCase();
+        const mastery = parseInt(card.dataset.mastery);
+        const title = card.dataset.title;
+        
+        // Subject filter
+        if (subjectFilter && !subject.includes(subjectFilter)) {
+            return false;
+        }
+        
+        // Mastery filter
+        if (masteryFilter) {
+            const [min, max] = masteryFilter.split('-').map(Number);
+            if (mastery < min || mastery > max) {
+                return false;
+            }
+        }
+        
+        // Search filter
+        if (searchFilter && !title.includes(searchFilter)) {
+            return false;
+        }
+        
+        return true;
+    });
+    
+    // Sort cards
+    filteredCards.sort((a, b) => {
+        switch (sortBy) {
+            case 'title':
+                return a.dataset.title.localeCompare(b.dataset.title);
+            case 'cards':
+                const aCards = parseInt(a.querySelector('.meta-value').textContent);
+                const bCards = parseInt(b.querySelector('.meta-value').textContent);
+                return bCards - aCards;
+            case 'mastery':
+                return parseInt(b.dataset.mastery) - parseInt(a.dataset.mastery);
+            case 'studied':
+                // This would need additional data attributes for proper sorting
+                return 0;
+            case 'recent':
+            default:
+                return 0; // Keep original order for recent
+        }
+    });
+    
+    // Hide all cards first
+    cards.forEach(card => {
+        card.style.display = 'none';
+    });
+    
+    // Show filtered and sorted cards
+    filteredCards.forEach(card => {
+        card.style.display = 'block';
+    });
+    
+    // Show empty state if no cards match
+    const grid = document.getElementById('flashcardSetsGrid');
+    if (filteredCards.length === 0 && cards.length > 0) {
+        if (!document.getElementById('noResults')) {
+            const noResults = document.createElement('div');
+            noResults.id = 'noResults';
+            noResults.className = 'empty-state';
+            noResults.innerHTML = `
+                <i class="fas fa-search"></i>
+                <h3>No Matching Flash Card Sets</h3>
+                <p>Try adjusting your filters or search terms.</p>
+                <button class="btn btn-primary" onclick="clearFilters()">
+                    <i class="fas fa-times"></i>
+                    Clear Filters
+                </button>
+            `;
+            grid.parentNode.insertBefore(noResults, grid.nextSibling);
+        }
+        document.getElementById('noResults').style.display = 'block';
+    } else {
+        const noResults = document.getElementById('noResults');
+        if (noResults) {
+            noResults.style.display = 'none';
+        }
+    }
+}
+
+function clearFilters() {
+    document.getElementById('subjectFilter').value = '';
+    document.getElementById('masteryFilter').value = '';
+    document.getElementById('searchFilter').value = '';
+    document.getElementById('sortBy').value = 'recent';
+    applyFilters();
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Apply initial sort
+    applyFilters();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,475 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}Study Tools - StudyCoach{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+/* Study Tools Dashboard Styles */
+.study-tools-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.study-tools-header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.study-tools-header p {
+    margin: var(--spacing-sm) 0 0 0;
+    opacity: 0.9;
+    font-size: 1.1rem;
+}
+
+/* Statistics Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.stat-card {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    text-align: center;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.dark-mode .stat-card {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-md);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary-light);
+    margin-bottom: var(--spacing-xs);
+}
+
+.dark-mode .stat-number {
+    color: var(--text-primary-dark);
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: var(--text-secondary-light);
+    font-weight: 500;
+}
+
+.dark-mode .stat-label {
+    color: var(--text-secondary-dark);
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.action-card {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    text-align: center;
+    transition: all var(--transition-normal);
+    text-decoration: none;
+    color: inherit;
+}
+
+.dark-mode .action-card {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.action-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    text-decoration: none;
+    color: inherit;
+}
+
+.action-icon {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.action-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary-light);
+    margin-bottom: var(--spacing-sm);
+}
+
+.dark-mode .action-title {
+    color: var(--text-primary-dark);
+}
+
+.action-description {
+    color: var(--text-secondary-light);
+    line-height: 1.5;
+}
+
+.dark-mode .action-description {
+    color: var(--text-secondary-dark);
+}
+
+/* Recent Activity Sections */
+.activity-section {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    overflow: hidden;
+}
+
+.dark-mode .activity-section {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.activity-header {
+    padding: var(--spacing-lg);
+    background: var(--background-light);
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dark-mode .activity-header {
+    background: var(--background-dark);
+    border-bottom-color: var(--border-dark);
+}
+
+.activity-header h3 {
+    margin: 0;
+    color: var(--text-primary-light);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.dark-mode .activity-header h3 {
+    color: var(--text-primary-dark);
+}
+
+.view-all-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color var(--transition-fast);
+}
+
+.view-all-link:hover {
+    color: #5a67d8;
+    text-decoration: none;
+}
+
+.activity-list {
+    padding: var(--spacing-lg);
+}
+
+.activity-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-sm);
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    color: inherit;
+}
+
+.dark-mode .activity-item {
+    border-color: var(--border-dark);
+}
+
+.activity-item:hover {
+    background: var(--background-light);
+    transform: translateX(4px);
+    text-decoration: none;
+    color: inherit;
+}
+
+.dark-mode .activity-item:hover {
+    background: var(--background-dark);
+}
+
+.activity-item:last-child {
+    margin-bottom: 0;
+}
+
+.activity-info h4 {
+    margin: 0 0 var(--spacing-xs) 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .activity-info h4 {
+    color: var(--text-primary-dark);
+}
+
+.activity-meta {
+    font-size: 0.875rem;
+    color: var(--text-secondary-light);
+}
+
+.dark-mode .activity-meta {
+    color: var(--text-secondary-dark);
+}
+
+.activity-stats {
+    text-align: right;
+    font-size: 0.875rem;
+    color: var(--text-secondary-light);
+}
+
+.dark-mode .activity-stats {
+    color: var(--text-secondary-dark);
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary-light);
+}
+
+.dark-mode .empty-state {
+    color: var(--text-secondary-dark);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .study-tools-header h1 {
+        font-size: 2rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .activity-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-xs);
+    }
+    
+    .activity-stats {
+        text-align: left;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Study Tools Header -->
+    <div class="study-tools-header">
+        <h1>
+            <i class="fas fa-brain"></i>
+            Study Tools
+        </h1>
+        <p>Create flash cards, generate study guides, and enhance your learning with AI-powered tools</p>
+    </div>
+
+    <!-- Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <div class="stat-number">{{ total_flashcard_sets }}</div>
+            <div class="stat-label">Flash Card Sets</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-clone"></i>
+            </div>
+            <div class="stat-number">{{ total_flashcards }}</div>
+            <div class="stat-label">Total Flash Cards</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <div class="stat-number">{{ total_study_guides }}</div>
+            <div class="stat-label">Study Guides</div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <a href="{{ url_for('study_tools.create_flashcard_set') }}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-plus-circle"></i>
+            </div>
+            <div class="action-title">Create Flash Cards</div>
+            <div class="action-description">
+                Build your own flash card sets or use AI to generate them from your notes and materials
+            </div>
+        </a>
+        
+        <a href="{{ url_for('study_tools.create_study_guide') }}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="action-title">Generate Study Guide</div>
+            <div class="action-description">
+                Create comprehensive study guides with AI assistance from your class materials
+            </div>
+        </a>
+        
+        <a href="{{ url_for('study_tools.flashcards_list') }}" class="action-card">
+            <div class="action-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+            <div class="action-title">Study Session</div>
+            <div class="action-description">
+                Review your flash cards with spaced repetition and track your progress
+            </div>
+        </a>
+    </div>
+
+    <!-- Recent Flash Cards -->
+    {% if recent_flashcards %}
+    <div class="activity-section">
+        <div class="activity-header">
+            <h3>
+                <i class="fas fa-clone"></i>
+                Recent Flash Card Sets
+            </h3>
+            <a href="{{ url_for('study_tools.flashcards_list') }}" class="view-all-link">
+                View All <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="activity-list">
+            {% for flashcard_set in recent_flashcards %}
+            <a href="{{ url_for('study_tools.view_flashcard_set', set_id=flashcard_set.id) }}" class="activity-item">
+                <div class="activity-info">
+                    <h4>{{ flashcard_set.title }}</h4>
+                    <div class="activity-meta">
+                        Created {{ flashcard_set.created_at[:10] }} • Last studied: {{ flashcard_set.last_studied }}
+                    </div>
+                </div>
+                <div class="activity-stats">
+                    <strong>{{ flashcard_set.card_count }}</strong> cards
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Study Guides -->
+    {% if recent_study_guides %}
+    <div class="activity-section">
+        <div class="activity-header">
+            <h3>
+                <i class="fas fa-book-open"></i>
+                Recent Study Guides
+            </h3>
+            <a href="{{ url_for('study_tools.study_guides_list') }}" class="view-all-link">
+                View All <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="activity-list">
+            {% for study_guide in recent_study_guides %}
+            <a href="{{ url_for('study_tools.view_study_guide', guide_id=study_guide.id) }}" class="activity-item">
+                <div class="activity-info">
+                    <h4>{{ study_guide.title }}</h4>
+                    <div class="activity-meta">
+                        {{ study_guide.subject }} • Created {{ study_guide.created_at[:10] }}
+                    </div>
+                </div>
+                <div class="activity-stats">
+                    Last accessed: {{ study_guide.last_accessed }}
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Empty State -->
+    {% if not recent_flashcards and not recent_study_guides %}
+    <div class="activity-section">
+        <div class="empty-state">
+            <i class="fas fa-lightbulb"></i>
+            <h3>Start Your Learning Journey</h3>
+            <p>Create your first flash card set or study guide to begin studying smarter with AI assistance.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Add any dashboard-specific JavaScript here
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects or other interactive features
+    console.log('Study Tools Dashboard loaded');
+});
+</script>
+{% endblock %}

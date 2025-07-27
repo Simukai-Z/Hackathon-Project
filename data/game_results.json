@@ -1,0 +1,418 @@
+[
+  {
+    "timestamp": "2025-07-26T21:30:34.768004",
+    "user_email": "epicrbot20099@gmail.com",
+    "flashcard_set_name": "Basic Roblox Lua",
+    "total_score": 0,
+    "total_questions": 3,
+    "correct_answers": 0,
+    "accuracy": "0.0",
+    "is_win": false,
+    "detailed_results": [
+      {
+        "question": "Explain the concept of coroutines in Roblox Lua.",
+        "correct_answer": "Coroutines in Roblox Lua are a way to achieve multitasking and concurrency. They allow for asynchronous execution of code.",
+        "user_answer": "They create a new thread essentually creating a new script inside a script",
+        "is_correct": false,
+        "time_taken": 27,
+        "ai_feedback": "Not quite right. The correct answer is: Coroutines in Roblox Lua are a way to achieve multitasking and concurrency. They allow for asynchronous execution of code."
+      },
+      {
+        "question": "How can you implement a custom event system in Roblox Lua?",
+        "correct_answer": "To implement a custom event system in Roblox Lua, you can use a combination of tables, functions, and callbacks to create a flexible and efficient event handling mechanism.",
+        "user_answer": ":getsignalchanged",
+        "is_correct": false,
+        "time_taken": 18,
+        "ai_feedback": "Not quite right. The correct answer is: To implement a custom event system in Roblox Lua, you can use a combination of tables, functions, and callbacks to create a flexible and efficient event handling mechanism."
+      },
+      {
+        "question": "What is the difference between 'pairs' and 'ipairs' functions in Roblox Lua?",
+        "correct_answer": "'pairs' function in Roblox Lua iterates over all key-value pairs in a table, while 'ipairs' function specifically iterates over integer keys and their corresponding values.",
+        "user_answer": "idk",
+        "is_correct": false,
+        "time_taken": 5,
+        "ai_feedback": "Not quite right. The correct answer is: 'pairs' function in Roblox Lua iterates over all key-value pairs in a table, while 'ipairs' function specifically iterates over integer keys and their corresponding values."
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-07-26T21:36:50.389924",
+    "user_email": "epicrbot20099@gmail.com",
+    "flashcard_set_name": "Basic Roblox Lua",
+    "total_score": 0,
+    "total_questions": 3,
+    "correct_answers": 0,
+    "accuracy": "0.0",
+    "is_win": false,
+    "detailed_results": [
+      {
+        "question": "Explain the concept of coroutines in Roblox Lua.",
+        "correct_answer": "Coroutines in Roblox Lua are a way to achieve multitasking and concurrency. They allow for asynchronous execution of code.",
+        "user_answer": "They create a new thread essentually creating a new script inside a script",
+        "is_correct": false,
+        "time_taken": 3,
+        "ai_feedback": "Not quite right. The correct answer is: Coroutines in Roblox Lua are a way to achieve multitasking and concurrency. They allow for asynchronous execution of code."
+      },
+      {
+        "question": "How does Roblox Lua handle error handling and exceptions?",
+        "correct_answer": "Roblox Lua uses pcall and xpcall functions for error handling and exceptions. pcall is used to protect calls to functions that may fail, while xpcall provides more control over error handling.",
+        "user_answer": "s",
+        "is_correct": false,
+        "time_taken": 16,
+        "ai_feedback": "Not quite right. The correct answer is: Roblox Lua uses pcall and xpcall functions for error handling and exceptions. pcall is used to protect calls to functions that may fail, while xpcall provides more control over error handling."
+      },
+      {
+        "question": "Explain the concept of metatables in Roblox Lua.",
+        "correct_answer": "Metatables in Roblox Lua are used to give tables special behaviors and properties. They allow for operator overloading and customizing how tables behave.",
+        "user_answer": "fgsdg",
+        "is_correct": false,
+        "time_taken": 2,
+        "ai_feedback": "Not quite right. The correct answer is: Metatables in Roblox Lua are used to give tables special behaviors and properties. They allow for operator overloading and customizing how tables behave."
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-07-27T04:43:31.530413",
+    "user_email": "epicrbot20099@gmail.com",
+    "flashcard_set_name": "Basic Roblox Lua",
+    "total_score": 0,
+    "total_questions": 3,
+    "correct_answers": 0,
+    "accuracy": "0.0",
+    "is_win": false,
+    "detailed_results": [
+      {
+        "question": "Explain the concept of metatables in Roblox Lua.",
+        "correct_answer": "Metatables in Roblox Lua are used to give tables special behaviors and properties. They allow for operator overloading and customizing how tables behave.",
+        "user_answer": "they can make classes work",
+        "is_correct": false,
+        "time_taken": 13,
+        "ai_feedback": "Not quite right. The correct answer is: Metatables in Roblox Lua are used to give tables special behaviors and properties. They allow for operator overloading and customizing how tables behave."
+      },
+      {
+        "question": "What are closures in Roblox Lua?",
+        "correct_answer": "Closures are functions that capture variables from their surrounding lexical scope. They are commonly used for callbacks and event handling.",
+        "user_answer": "idk",
+        "is_correct": false,
+        "time_taken": 3,
+        "ai_feedback": "Not quite right. The correct answer is: Closures are functions that capture variables from their surrounding lexical scope. They are commonly used for callbacks and event handling."
+      },
+      {
+        "question": "How can you create a custom data structure in Roblox Lua?",
+        "correct_answer": "To create a custom data structure in Roblox Lua, you can use tables with metatables to define specific behaviors and operations for the structure.",
+        "user_answer": "by useing metatables",
+        "is_correct": false,
+        "time_taken": 15,
+        "ai_feedback": "Not quite right. The correct answer is: To create a custom data structure in Roblox Lua, you can use tables with metatables to define specific behaviors and operations for the structure."
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-07-27T04:44:21.722000",
+    "user_email": "epicrbot20099@gmail.com",
+    "flashcard_set_name": "Basic Roblox Lua",
+    "total_score": 0,
+    "total_questions": 3,
+    "correct_answers": 0,
+    "accuracy": "0.0",
+    "is_win": false,
+    "detailed_results": [
+      {
+        "question": "Explain the concept of weak tables in Roblox Lua.",
+        "correct_answer": "Weak tables in Roblox Lua are tables that do not prevent their keys or values from being garbage collected. They are useful for managing memory efficiently.",
+        "user_answer": "id",
+        "is_correct": false,
+        "time_taken": 6,
+        "ai_feedback": "Not quite right. The correct answer is: Weak tables in Roblox Lua are tables that do not prevent their keys or values from being garbage collected. They are useful for managing memory efficiently."
+      },
+      {
+        "question": "How does Roblox Lua handle memory management?",
+        "correct_answer": "Roblox Lua uses automatic memory management through garbage collection. It automatically deallocates memory for objects that are no longer in use.",
+        "user_answer": "what",
+        "is_correct": false,
+        "time_taken": 4,
+        "ai_feedback": "Not quite right. The correct answer is: Roblox Lua uses automatic memory management through garbage collection. It automatically deallocates memory for objects that are no longer in use."
+      },
+      {
+        "question": "What are the advantages of using modules in Roblox Lua programming?",
+        "correct_answer": "Modules in Roblox Lua help organize code into reusable units, encapsulate functionality, and promote code reusability and maintainability.",
+        "user_answer": "they make code more manageable",
+        "is_correct": false,
+        "time_taken": 13,
+        "ai_feedback": "Not quite right. The correct answer is: Modules in Roblox Lua help organize code into reusable units, encapsulate functionality, and promote code reusability and maintainability."
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-07-27T04:58:31.960678",
+    "user_email": "epicrbot20099@gmail.com",
+    "flashcard_set_name": "Basic Roblox Lua",
+    "total_score": 53,
+    "total_questions": 8,
+    "correct_answers": 5,
+    "accuracy": "62.5",
+    "is_win": false,
+    "detailed_results": [
+      {
+        "question": "Explain the difference between '==' and '~=' operators in Roblox Lua.",
+        "correct_answer": "'==' is the equality operator in Roblox Lua, checking if two values are equal. '~=' is the inequality operator, checking if two values are not equal.",
+        "user_answer": "== means if somthing s equal and ~= is if somthing is not equal",
+        "is_correct": true,
+        "time_taken": 21,
+        "ai_feedback": "Great job! Your answer shows you understand that '==' means something is equal and '~=' means something is not equal. Keep up the good work!"
+      },
+      {
+        "question": "Explain the concept of metatables in Roblox Lua.",
+        "correct_answer": "Metatables in Roblox Lua are used to give tables special behaviors and properties. They allow for operator overloading and customizing how tables behave.",
+        "user_answer": "it can make classes?",
+        "is_correct": true,
+        "time_taken": 7,
+        "ai_feedback": "Great job! Your answer shows you understand that metatables can be used to create custom behaviors for tables. Keep up the good work!"
+      },
+      {
+        "question": "How can you implement a singleton pattern in Roblox Lua?",
+        "correct_answer": "To implement a singleton pattern in Roblox Lua, you can create a module that returns a single instance of an object, ensuring there is only one instance throughout the game's execution.",
+        "user_answer": "what is that?",
+        "is_correct": false,
+        "time_taken": 5,
+        "ai_feedback": "Good attempt! You're on the right track with recognizing a term you're unfamiliar with. The key concept is understanding how to ensure only one instance of an object exists in Roblox Lua. Try exploring the idea of managing single instances in programming."
+      },
+      {
+        "question": "How does inheritance work in Roblox Lua?",
+        "correct_answer": "Inheritance in Roblox Lua is achieved through metatables. Objects can inherit properties and methods from other objects by setting metatables.",
+        "user_answer": "not sure actually",
+        "is_correct": false,
+        "time_taken": 9,
+        "ai_feedback": "Good attempt! You're on the right track with some understanding. The key concept is inheritance through metatables in Roblox Lua. Try thinking about how objects can inherit properties and methods from other objects by setting metatables."
+      },
+      {
+        "question": "Explain the concept of coroutines in Roblox Lua.",
+        "correct_answer": "Coroutines in Roblox Lua are a way to achieve multitasking and concurrency. They allow for asynchronous execution of code.",
+        "user_answer": "they can create new threads, essentially creating a script inside a script if you know what I mean",
+        "is_correct": true,
+        "time_taken": 22,
+        "ai_feedback": "Great job! Your answer shows you understand that coroutines in Roblox Lua can create new threads, essentially creating a script inside a script. Keep up the good work!"
+      },
+      {
+        "question": "What is the purpose of the 'require' function in Roblox Lua?",
+        "correct_answer": "The 'require' function is used to include external modules in Roblox Lua scripts. It helps organize code into reusable parts.",
+        "user_answer": "it can get the contents that a module script returns",
+        "is_correct": true,
+        "time_taken": 14,
+        "ai_feedback": "Great job! Your answer shows you understand that the 'require' function can get the contents that a module script returns. Keep up the good work!"
+      },
+      {
+        "question": "Explain the concept of memoization in Roblox Lua.",
+        "correct_answer": "Memoization is a technique in Roblox Lua used to cache the results of expensive function calls to improve performance by avoiding unnecessary recalculations.",
+        "user_answer": "it can put stuff in memory",
+        "is_correct": true,
+        "time_taken": 12,
+        "ai_feedback": "Great job! Your answer shows you understand that memoization involves storing data in memory to improve performance. Keep up the good work!"
+      },
+      {
+        "question": "How can you implement a custom event system in Roblox Lua?",
+        "correct_answer": "To implement a custom event system in Roblox Lua, you can use a combination of tables, functions, and callbacks to create a flexible and efficient event handling mechanism.",
+        "user_answer": "use the .signalchanged event on your event",
+        "is_correct": false,
+        "time_taken": 25,
+        "ai_feedback": "Good attempt! You're on the right track with mentioning an event. The key concept is implementing a custom event system using tables, functions, and callbacks for flexibility and efficiency. Try thinking about how callbacks and functions can be used to handle events more comprehensively."
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-07-27T05:27:47.271260",
+    "user_email": "epicrbot20099@gmail.com",
+    "flashcard_set_name": "Basic Roblox Lua",
+    "total_score": 37,
+    "total_questions": 6,
+    "correct_answers": 3,
+    "accuracy": "50.0",
+    "is_win": false,
+    "detailed_results": [
+      {
+        "question": "Explain the concept of metatables in Roblox Lua.",
+        "correct_answer": "Metatables in Roblox Lua are used to give tables special behaviors and properties. They allow for operator overloading and customizing how tables behave.",
+        "user_answer": "it can make classes?",
+        "is_correct": true,
+        "time_taken": 7,
+        "ai_feedback": "Great job! Your answer shows you understand that metatables in Roblox Lua are used to give tables special behaviors and properties. They enable operator overloading and customizing table behaviors. Keep up the good work!"
+      },
+      {
+        "question": "What are the advantages of using modules in Roblox Lua programming?",
+        "correct_answer": "Modules in Roblox Lua help organize code into reusable units, encapsulate functionality, and promote code reusability and maintainability.",
+        "user_answer": "it can make the code more readable or easier to use later on",
+        "is_correct": true,
+        "time_taken": 21,
+        "ai_feedback": "Great job! Your answer shows you understand that modules in Roblox Lua can make the code more readable and easier to use later on. This is because modules help organize code into reusable units and promote code reusability and maintainability. Keep up the good work!"
+      },
+      {
+        "question": "How does inheritance work in Roblox Lua?",
+        "correct_answer": "Inheritance in Roblox Lua is achieved through metatables. Objects can inherit properties and methods from other objects by setting metatables.",
+        "user_answer": "it grands claaes lower in the hiearchy the functions of the main clas\\",
+        "is_correct": false,
+        "time_taken": 19,
+        "ai_feedback": "Good attempt! You're on the right track with understanding that inheritance involves passing functions down the hierarchy. The key concept is that in Roblox Lua, inheritance is achieved through metatables, allowing objects to inherit properties and methods. Try thinking about how metatables enable this inheritance process."
+      },
+      {
+        "question": "What are closures in Roblox Lua?",
+        "correct_answer": "Closures are functions that capture variables from their surrounding lexical scope. They are commonly used for callbacks and event handling.",
+        "user_answer": "I don't know actually",
+        "is_correct": false,
+        "time_taken": 6,
+        "ai_feedback": "Good attempt! You're on the right track with not knowing closures. The key concept is that closures are functions that capture variables from their surrounding lexical scope. They are commonly used for callbacks and event handling. Try thinking about how functions can remember their surrounding environment."
+      },
+      {
+        "question": "Explain the concept of memoization in Roblox Lua.",
+        "correct_answer": "Memoization is a technique in Roblox Lua used to cache the results of expensive function calls to improve performance by avoiding unnecessary recalculations.",
+        "user_answer": "it goes to memory",
+        "is_correct": true,
+        "time_taken": 6,
+        "ai_feedback": "Great job! Your answer shows you understand that memoization involves storing information in memory to improve performance. Keep it up!"
+      },
+      {
+        "question": "How can you implement a custom event system in Roblox Lua?",
+        "correct_answer": "To implement a custom event system in Roblox Lua, you can use a combination of tables, functions, and callbacks to create a flexible and efficient event handling mechanism.",
+        "user_answer": "you can use .getsignal changed to make your own events",
+        "is_correct": false,
+        "time_taken": 18,
+        "ai_feedback": "Good attempt! You're on the right track with using signals for events. The key concept is implementing a custom event system with tables, functions, and callbacks. Try thinking about how to set up your own event handling mechanism using these components."
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-07-27T05:34:19.245813",
+    "user_email": "epicrbot20099@gmail.com",
+    "flashcard_set_name": "Basic Roblox Lua",
+    "total_score": 24,
+    "total_questions": 5,
+    "correct_answers": 2,
+    "accuracy": "40.0",
+    "is_win": false,
+    "detailed_results": [
+      {
+        "question": "How does Roblox Lua handle error handling and exceptions?",
+        "correct_answer": "Roblox Lua uses pcall and xpcall functions for error handling and exceptions. pcall is used to protect calls to functions that may fail, while xpcall provides more control over error handling.",
+        "user_answer": "you can use pcall function",
+        "is_correct": true,
+        "time_taken": 14,
+        "ai_feedback": "Great job! Your answer shows you understand that Roblox Lua error handling can involve using the pcall function. Keep up the good work!"
+      },
+      {
+        "question": "Explain the concept of memoization in Roblox Lua.",
+        "correct_answer": "Memoization is a technique in Roblox Lua used to cache the results of expensive function calls to improve performance by avoiding unnecessary recalculations.",
+        "user_answer": "goes to the memory",
+        "is_correct": false,
+        "time_taken": 4,
+        "ai_feedback": "Good attempt! You're on the right track with mentioning memory. The key concept is memoization, which involves caching results of function calls to improve performance. Try thinking about how this caching helps avoid unnecessary recalculations."
+      },
+      {
+        "question": "How does Roblox Lua handle memory management?",
+        "correct_answer": "Roblox Lua uses automatic memory management through garbage collection. It automatically deallocates memory for objects that are no longer in use.",
+        "user_answer": "idk",
+        "is_correct": false,
+        "time_taken": 10,
+        "ai_feedback": "Good attempt! You're on the right track with memory management. The key concept is automatic memory management through garbage collection in Roblox Lua. Try thinking about how memory is automatically deallocated for unused objects."
+      },
+      {
+        "question": "Explain the concept of coroutines in Roblox Lua.",
+        "correct_answer": "Coroutines in Roblox Lua are a way to achieve multitasking and concurrency. They allow for asynchronous execution of code.",
+        "user_answer": "it can create new threads",
+        "is_correct": true,
+        "time_taken": 6,
+        "ai_feedback": "Great job! Your answer shows you understand that coroutines in Roblox Lua can create new threads. Keep up the good work!"
+      },
+      {
+        "question": "Explain the concept of weak tables in Roblox Lua.",
+        "correct_answer": "Weak tables in Roblox Lua are tables that do not prevent their keys or values from being garbage collected. They are useful for managing memory efficiently.",
+        "user_answer": "the are weak just like me :)",
+        "is_correct": false,
+        "time_taken": 12,
+        "ai_feedback": "Good attempt! You're on the right track with understanding weak tables. The key concept is that they do not prevent keys or values from being garbage collected. Try thinking about their role in memory management."
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-07-27T06:33:15.084548",
+    "user_email": "epicrbot20099@gmail.com",
+    "flashcard_set_name": "Basic Roblox Lua",
+    "total_score": 73,
+    "total_questions": 9,
+    "correct_answers": 6,
+    "accuracy": "66.7",
+    "is_win": false,
+    "detailed_results": [
+      {
+        "question": "How does inheritance work in Roblox Lua?",
+        "correct_answer": "Inheritance in Roblox Lua is achieved through metatables. Objects can inherit properties and methods from other objects by setting metatables.",
+        "user_answer": "it can get stuff from theprevious class",
+        "is_correct": true,
+        "time_taken": 11,
+        "ai_feedback": "Great job! Your answer shows you understand that inheritance allows getting properties from a previous class. Keep up the good work!"
+      },
+      {
+        "question": "How does Roblox Lua handle error handling and exceptions?",
+        "correct_answer": "Roblox Lua uses pcall and xpcall functions for error handling and exceptions. pcall is used to protect calls to functions that may fail, while xpcall provides more control over error handling.",
+        "user_answer": "pcall function",
+        "is_correct": true,
+        "time_taken": 7,
+        "ai_feedback": "Great job! Your answer shows you understand that Roblox Lua error handling involves using the pcall function. Keep up the good work!"
+      },
+      {
+        "question": "What is the difference between 'pairs' and 'ipairs' functions in Roblox Lua?",
+        "correct_answer": "'pairs' function in Roblox Lua iterates over all key-value pairs in a table, while 'ipairs' function specifically iterates over integer keys and their corresponding values.",
+        "user_answer": "idk",
+        "is_correct": false,
+        "time_taken": 3,
+        "ai_feedback": "Good attempt! You're on the right track with lack of knowledge. The key concept is the difference between 'pairs' and 'ipairs' functions in Roblox Lua. Try thinking about how 'pairs' and 'ipairs' function differently."
+      },
+      {
+        "question": "Explain the concept of weak tables in Roblox Lua.",
+        "correct_answer": "Weak tables in Roblox Lua are tables that do not prevent their keys or values from being garbage collected. They are useful for managing memory efficiently.",
+        "user_answer": "umm it's weak just like me?",
+        "is_correct": true,
+        "time_taken": 7,
+        "ai_feedback": "Great job! Your answer shows you understand that weak tables are not strong or lasting. Keep it up!"
+      },
+      {
+        "question": "What are the advantages of using modules in Roblox Lua programming?",
+        "correct_answer": "Modules in Roblox Lua help organize code into reusable units, encapsulate functionality, and promote code reusability and maintainability.",
+        "user_answer": "it makes it easier to readand it easier to edit later",
+        "is_correct": true,
+        "time_taken": 17,
+        "ai_feedback": "Great job! Your answer shows you understand that modules in Roblox Lua make it easier to read and edit later, promoting code maintainability. Well done!"
+      },
+      {
+        "question": "Explain the difference between '==' and '~=' operators in Roblox Lua.",
+        "correct_answer": "'==' is the equality operator in Roblox Lua, checking if two values are equal. '~=' is the inequality operator, checking if two values are not equal.",
+        "user_answer": "== means if somthing s equal and ~= is if somthing is not equal",
+        "is_correct": true,
+        "time_taken": 7,
+        "ai_feedback": "Great job! Your answer shows you understand that '==' means something is equal and '~=' means something is not equal. Keep up the good work!"
+      },
+      {
+        "question": "How can you implement a singleton pattern in Roblox Lua?",
+        "correct_answer": "To implement a singleton pattern in Roblox Lua, you can create a module that returns a single instance of an object, ensuring there is only one instance throughout the game's execution.",
+        "user_answer": "idk",
+        "is_correct": false,
+        "time_taken": 2,
+        "ai_feedback": "Good attempt! You're on the right track with some understanding missing. The key concept is implementing a single instance of an object in Roblox Lua. Try thinking about how to ensure there is only one instance throughout the game's execution."
+      },
+      {
+        "question": "Explain the concept of memoization in Roblox Lua.",
+        "correct_answer": "Memoization is a technique in Roblox Lua used to cache the results of expensive function calls to improve performance by avoiding unnecessary recalculations.",
+        "user_answer": "it save to memorty",
+        "is_correct": true,
+        "time_taken": 6,
+        "ai_feedback": "Great job! Your answer shows you understand that memoization involves saving data to memory to improve performance. Keep up the good work!"
+      },
+      {
+        "question": "What are closures in Roblox Lua?",
+        "correct_answer": "Closures are functions that capture variables from their surrounding lexical scope. They are commonly used for callbacks and event handling.",
+        "user_answer": "idk",
+        "is_correct": false,
+        "time_taken": 3,
+        "ai_feedback": "Good attempt! You're on the right track with not knowing the answer. The key concept is closures are functions that capture variables from their surrounding lexical scope. They are often used for callbacks and event handling. Try thinking about how functions can remember and access variables from where they were defined."
+      }
+    ]
+  }
+]

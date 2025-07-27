@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+
+{% block title %}Flash Cards{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h1>My Flash Card Sets</h1>
+        <a href="/study-tools/create-flashcards" class="btn btn-primary">Create New Set</a>
+    </div>
+
+    {% if flashcard_sets %}
+        <div class="flashcard-sets-grid">
+            {% for set_name, flashcard_set in flashcard_sets.items() %}
+            <div class="flashcard-set-card">
+                <h3>{{ set_name }}</h3>
+                <p>{{ flashcard_set.cards|length }} cards</p>
+                <p class="created-date">Created: {{ flashcard_set.created_at }}</p>
+                
+                <div class="progress-info">
+                    {% set progress = user_progress.get(set_name, {}) %}
+                    {% set progress_percentage = progress.get('correct_percentage', 0) %}
+                    {% set games_played = progress.get('games_played', 0) %}
+                    {% set total_questions = progress.get('total_questions', 0) %}
+                    {% set correct_answers = progress.get('correct_answers', 0) %}
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" data-progress="{{ progress_percentage }}"></div>
+                    </div>
+                    <span class="progress-text">{{ progress_percentage|round }}% mastered</span>
+                    
+                    {% if games_played > 0 %}
+                    <div class="detailed-stats">
+                        <small class="stats-text">
+                            {{ games_played }} game{{ 's' if games_played != 1 else '' }} played • 
+                            {{ correct_answers }}/{{ total_questions }} correct overall
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="detailed-stats">
+                        <small class="stats-text">No games played yet</small>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="card-actions">
+                    <a href="/study-tools/flashcards/study/{{ set_name }}" class="btn btn-primary">Study</a>
+                    <a href="/study-tools/flashcards/view/{{ set_name }}" class="btn btn-secondary">View Cards</a>
+                    <button onclick="deleteFlashcardSet('{{ set_name }}')" class="btn btn-danger">Delete</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📚</div>
+            <h2>No Flash Card Sets Yet</h2>
+            <p>Create your first flash card set to start studying!</p>
+            <a href="/study-tools/create-flashcards" class="btn btn-primary">Create Your First Set</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.header-section h1 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.flashcard-sets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.flashcard-set-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.flashcard-set-card:hover {
+    transform: translateY(-2px);
+}
+
+.flashcard-set-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.flashcard-set-card p {
+    color: var(--text-muted);
+    margin: 0.25rem 0;
+}
+
+.created-date {
+    font-size: 0.9rem;
+    margin-bottom: 1rem !important;
+}
+
+.progress-info {
+    margin: 1rem 0;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--background-light);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    transition: width 0.3s ease;
+}
+
+.progress-text {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.detailed-stats {
+    margin-top: 0.5rem;
+}
+
+.stats-text {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.card-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.card-actions .btn {
+    flex: 1;
+    min-width: 70px;
+    text-align: center;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h2 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+/* Dark mode support */
+body.dark-mode .flashcard-set-card,
+body.dark-mode .empty-state {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+body.dark-mode .progress-bar {
+    background: var(--dark-bg);
+}
+</style>
+
+<script>
+function deleteFlashcardSet(setName) {
+    if (confirm(`Are you sure you want to delete the flash card set "${setName}"? This action cannot be undone.`)) {
+        fetch(`/study-tools/flashcards/delete/${encodeURIComponent(setName)}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error deleting flash card set. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting flash card set. Please try again.');
+        });
+    }
+}
+
+// Set progress bar widths after page load
+document.addEventListener('DOMContentLoaded', function() {
+    const progressFills = document.querySelectorAll('.progress-fill');
+    progressFills.forEach(fill => {
+        const progress = fill.getAttribute('data-progress') || 0;
+        fill.style.width = progress + '%';
+    });
+});
+</script>
+{% endblock %}

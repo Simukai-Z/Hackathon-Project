@@ -1,0 +1,284 @@
+{
+  "epicrbot20099@gmail.com": {
+    "Basic Roblox Lua": {
+      "cards": [
+        {
+          "id": "5cc7d736-f3ed-43cb-af88-37e7d8127d32",
+          "front": "Explain the concept of metatables in Roblox Lua.",
+          "back": "Metatables in Roblox Lua are used to give tables special behaviors and properties. They allow for operator overloading and customizing how tables behave.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238588"
+        },
+        {
+          "id": "f0676f87-aa9d-4b79-8572-f9fabba9fb4d",
+          "front": "How does inheritance work in Roblox Lua?",
+          "back": "Inheritance in Roblox Lua is achieved through metatables. Objects can inherit properties and methods from other objects by setting metatables.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238608"
+        },
+        {
+          "id": "0ebe6a1a-50bb-4e74-b3af-e4b0830394f2",
+          "front": "What are closures in Roblox Lua?",
+          "back": "Closures are functions that capture variables from their surrounding lexical scope. They are commonly used for callbacks and event handling.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238616"
+        },
+        {
+          "id": "f57e4bfd-34ee-4fd8-a3d5-104f4b538a5b",
+          "front": "Explain the concept of coroutines in Roblox Lua.",
+          "back": "Coroutines in Roblox Lua are a way to achieve multitasking and concurrency. They allow for asynchronous execution of code.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238622"
+        },
+        {
+          "id": "32783767-ac2c-437a-84d1-7f4b34a145c5",
+          "front": "How can you implement a singleton pattern in Roblox Lua?",
+          "back": "To implement a singleton pattern in Roblox Lua, you can create a module that returns a single instance of an object, ensuring there is only one instance throughout the game's execution.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238628"
+        },
+        {
+          "id": "269e0ce0-82c5-44b0-a40a-bc1fe6150a12",
+          "front": "What is the purpose of the 'require' function in Roblox Lua?",
+          "back": "The 'require' function is used to include external modules in Roblox Lua scripts. It helps organize code into reusable parts.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238634"
+        },
+        {
+          "id": "59ece844-cfa9-4e85-9592-e08cf1d1aae6",
+          "front": "How does Roblox Lua handle memory management?",
+          "back": "Roblox Lua uses automatic memory management through garbage collection. It automatically deallocates memory for objects that are no longer in use.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238640"
+        },
+        {
+          "id": "5da49cdb-bd10-4efc-9f38-cb517704faf7",
+          "front": "Explain the difference between '==' and '~=' operators in Roblox Lua.",
+          "back": "'==' is the equality operator in Roblox Lua, checking if two values are equal. '~=' is the inequality operator, checking if two values are not equal.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238645"
+        },
+        {
+          "id": "0384f0ed-729e-47af-88de-0a513772f739",
+          "front": "How can you create a custom data structure in Roblox Lua?",
+          "back": "To create a custom data structure in Roblox Lua, you can use tables with metatables to define specific behaviors and operations for the structure.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238651"
+        },
+        {
+          "id": "20d415a9-43bf-4a8a-816b-a899fc7813cd",
+          "front": "Explain the concept of weak tables in Roblox Lua.",
+          "back": "Weak tables in Roblox Lua are tables that do not prevent their keys or values from being garbage collected. They are useful for managing memory efficiently.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238657"
+        },
+        {
+          "id": "a4b17dcf-f70b-46c4-a9d2-912077b8a2d1",
+          "front": "How can you implement a custom event system in Roblox Lua?",
+          "back": "To implement a custom event system in Roblox Lua, you can use a combination of tables, functions, and callbacks to create a flexible and efficient event handling mechanism.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238663"
+        },
+        {
+          "id": "993ed200-3318-4d90-85c1-d90f30bac9b5",
+          "front": "What are the advantages of using modules in Roblox Lua programming?",
+          "back": "Modules in Roblox Lua help organize code into reusable units, encapsulate functionality, and promote code reusability and maintainability.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238668"
+        },
+        {
+          "id": "2ddd758c-c329-47da-93ac-3087e2427e64",
+          "front": "Explain the concept of memoization in Roblox Lua.",
+          "back": "Memoization is a technique in Roblox Lua used to cache the results of expensive function calls to improve performance by avoiding unnecessary recalculations.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238674"
+        },
+        {
+          "id": "09aa7296-799a-4fe1-a0f2-16291a9ff952",
+          "front": "How does Roblox Lua handle error handling and exceptions?",
+          "back": "Roblox Lua uses pcall and xpcall functions for error handling and exceptions. pcall is used to protect calls to functions that may fail, while xpcall provides more control over error handling.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238679"
+        },
+        {
+          "id": "27a1b906-b891-443f-9de8-3e88997fe081",
+          "front": "What is the difference between 'pairs' and 'ipairs' functions in Roblox Lua?",
+          "back": "'pairs' function in Roblox Lua iterates over all key-value pairs in a table, while 'ipairs' function specifically iterates over integer keys and their corresponding values.",
+          "difficulty": "Hard",
+          "category": "Basic Roblox Lua",
+          "created_at": "2025-07-26T21:05:12.238685"
+        }
+      ],
+      "created_at": "2025-07-26T21:05:12.238859",
+      "difficulty": "advanced",
+      "total_cards": 15
+    },
+    "Fortnite study guide 2 - Flashcards": {
+      "cards": [
+        {
+          "id": "9dc7549e-3722-4812-8c57-81ef063c6e22",
+          "front": "What are the key terms associated with Building Basics in Fortnite study guide 2?",
+          "back": "Building basics in Fortnite involve materials (wood, brick, metal), structures (walls, ramps, floors, roofs), and edits for modifying structures. Understanding these terms is crucial for effective construction in the game.",
+          "difficulty": "Medium",
+          "type": "definition",
+          "study_guide_section": "Key Concepts",
+          "created_at": "2025-07-27T06:25:31.456405"
+        },
+        {
+          "id": "549d5593-99b7-48b3-9b29-20a2298a0ca1",
+          "front": "How can strategic building placement impact the outcome of engagements in Fortnite?",
+          "back": "Strategic building placement involves positioning walls for cover, ramps for mobility, and floors for stability to maximize effectiveness. Proper placement can provide advantages in battles by offering protection, high ground, and surprise trap placements.",
+          "difficulty": "Hard",
+          "type": "application",
+          "study_guide_section": "Key Concepts",
+          "created_at": "2025-07-27T06:25:31.456427"
+        },
+        {
+          "id": "05929752-2955-4423-be25-c183c4b1f6ad",
+          "front": "Provide an example of a real-world application of building skills learned in Fortnite study guide 2.",
+          "back": "In a professional context, applying quick decision-making skills under pressure can mirror the need for rapid building reactions in Fortnite battles. Both scenarios require composure and strategic thinking to succeed.",
+          "difficulty": "Medium",
+          "type": "application",
+          "study_guide_section": "Real-World Applications",
+          "created_at": "2025-07-27T06:25:31.456438"
+        },
+        {
+          "id": "88742e9c-9838-43a5-93a0-c87a5dbf8985",
+          "front": "How does turbo building contribute to rapid construction in Fortnite?",
+          "back": "Turbo building allows players to quickly place structures by holding down the build button, enabling swift construction during intense combat situations. This feature is essential for efficient building under pressure.",
+          "difficulty": "Medium",
+          "type": "definition",
+          "study_guide_section": "Important Details & Examples",
+          "created_at": "2025-07-27T06:25:31.456448"
+        },
+        {
+          "id": "a1e8fc1f-0cae-456a-911f-e2179bcac2f3",
+          "front": "Explain the importance of building muscle memory in Fortnite.",
+          "back": "Building muscle memory through practice is crucial for quick building reactions in high-pressure scenarios. It helps players execute building sequences instinctively, enhancing their efficiency and survival chances in battles.",
+          "difficulty": "Hard",
+          "type": "application",
+          "study_guide_section": "Important Details & Examples",
+          "created_at": "2025-07-27T06:25:31.456458"
+        },
+        {
+          "id": "86734a75-2e1e-4366-8b8f-d7028e4683b5",
+          "front": "How can trap placement within structures be used for surprise attacks in Fortnite?",
+          "back": "Placing traps within structures allows players to surprise opponents with unexpected attacks, adding a strategic element to building gameplay. This tactic can catch enemies off guard and secure advantageous positions.",
+          "difficulty": "Medium",
+          "type": "application",
+          "study_guide_section": "Important Details & Examples",
+          "created_at": "2025-07-27T06:25:31.456469"
+        },
+        {
+          "id": "6dc1ead7-0fde-41a8-8973-71cfa131dccd",
+          "front": "Describe a scenario where a player must build under heavy enemy fire in Fortnite.",
+          "back": "In a pressure building scenario, a player faces intense enemy fire and must construct defensive structures quickly and efficiently to protect themselves and potentially turn the tide of battle. This situation tests the player's reflexes and composure.",
+          "difficulty": "Hard",
+          "type": "example",
+          "study_guide_section": "Important Details & Examples",
+          "created_at": "2025-07-27T06:25:31.456479"
+        },
+        {
+          "id": "dc0638e1-9f05-49a5-9e78-b53bba96d57e",
+          "front": "What is the primary learning point related to Advanced Building Techniques in Fortnite study guide 2?",
+          "back": "The primary learning point is that mastering advanced building techniques provides a competitive edge in battles by allowing players to outbuild and outmaneuver opponents. These specialized maneuvers require practice and precision to execute effectively.",
+          "difficulty": "Medium",
+          "type": "definition",
+          "study_guide_section": "Summary & Review",
+          "created_at": "2025-07-27T06:25:31.456490"
+        },
+        {
+          "id": "a4b1a222-c9de-4141-bb1d-5d197195c65b",
+          "front": "How does the summary of Fortnite study guide 2 emphasize the importance of practice and consistency in building skills?",
+          "back": "The summary highlights that practice and consistency are key to improving building skills in Fortnite. By regularly practicing building techniques and reviewing the learned concepts, players can enhance their abilities and increase their chances of success in battles.",
+          "difficulty": "Medium",
+          "type": "application",
+          "study_guide_section": "Summary & Review",
+          "created_at": "2025-07-27T06:25:31.456499"
+        },
+        {
+          "id": "03c9e1b8-966c-48a7-aa0d-f4895d08dc8e",
+          "front": "Compare the importance of mastering building basics and advanced building techniques in Fortnite.",
+          "back": "While building basics are essential for survival, advanced building techniques provide a competitive edge in battles. Mastering both aspects is crucial for players to effectively construct structures, outmaneuver opponents, and increase their chances of winning in Fortnite.",
+          "difficulty": "Hard",
+          "type": "comparison",
+          "study_guide_section": "Key Concepts",
+          "created_at": "2025-07-27T06:25:31.456511"
+        },
+        {
+          "id": "8a8aa3e8-5ae4-4c2b-84c2-6ee9ec276f19",
+          "front": "Analyzing building patterns for efficiency and effectiveness is mentioned in which real-world application of Fortnite study guide 2?",
+          "back": "In the academic/research context, analyzing building patterns for efficiency and effectiveness parallels the strategic thinking required in Fortnite. This application involves evaluating construction strategies to optimize outcomes, whether in-game or in research scenarios.",
+          "difficulty": "Hard",
+          "type": "application",
+          "study_guide_section": "Real-World Applications",
+          "created_at": "2025-07-27T06:25:31.456524"
+        },
+        {
+          "id": "f9f64cf9-6c1b-4957-9b38-bff0cdcb4620",
+          "front": "How does building a defensive fort in Fortnite relate to the concept of cover and stability?",
+          "back": "Building a defensive fort involves creating structures for protection, demonstrating the strategic use of cover and stability in Fortnite. Players construct multi-level forts to shield themselves from enemy fire and establish a stable position for defense.",
+          "difficulty": "Medium",
+          "type": "example",
+          "study_guide_section": "Important Details & Examples",
+          "created_at": "2025-07-27T06:25:31.456531"
+        },
+        {
+          "id": "6343d582-8f31-44ce-a4d3-fda46bfc04e8",
+          "front": "Explain the significance of high ground advantage in Fortnite battles.",
+          "back": "Gaining high ground provides players with better visibility and shooting angles, granting them a strategic advantage over opponents. This positioning allows players to control engagements, scout enemy movements, and have a clearer line of sight for effective attacks.",
+          "difficulty": "Medium",
+          "type": "definition",
+          "study_guide_section": "Important Details & Examples",
+          "created_at": "2025-07-27T06:25:31.456538"
+        },
+        {
+          "id": "536b613e-f31b-4215-bb50-cf4d2408724e",
+          "front": "How can trap placement strategy be used effectively in Fortnite battles?",
+          "back": "Trap placement strategy involves strategically positioning traps within structures to surprise and eliminate opponents. By setting traps in unexpected locations or during intense combat situations, players can secure kills and gain tactical advantages in battles.",
+          "difficulty": "Medium",
+          "type": "application",
+          "study_guide_section": "Real-World Applications",
+          "created_at": "2025-07-27T06:25:31.456545"
+        },
+        {
+          "id": "9732298f-37a5-4213-a1c8-8c84b3361c85",
+          "front": "In what scenario would a player need to execute a 90-degree turn in Fortnite?",
+          "back": "A player might execute a 90-degree turn in Fortnite to rotate structures and create angles for better protection or surprise attacks. This maneuver allows players to adapt quickly to changing situations and optimize their defensive or offensive strategies.",
+          "difficulty": "Medium",
+          "type": "example",
+          "study_guide_section": "Key Concepts",
+          "created_at": "2025-07-27T06:25:31.456551"
+        },
+        {
+          "id": "251af597-bf40-4759-a1c2-335a04c0cb4e",
+          "front": "How does the concept of edit plays contribute to player strategies in Fortnite?",
+          "back": "Edit plays involve modifying structures to surprise opponents or create escape routes, adding a dynamic element to building strategies. By making quick edits, players can outsmart enemies and gain tactical advantages during engagements.",
+          "difficulty": "Medium",
+          "type": "application",
+          "study_guide_section": "Key Concepts",
+          "created_at": "2025-07-27T06:25:31.456558"
+        }
+      ],
+      "created_at": "2025-07-27T06:25:31.456782",
+      "difficulty": "Mixed",
+      "total_cards": 16,
+      "source": "study_guide",
+      "source_guide": "Fortnite study guide 2"
+    }
+  }
+}

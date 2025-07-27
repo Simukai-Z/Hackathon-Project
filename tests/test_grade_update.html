@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Update Grade Button</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-dialog {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 500px;
+            max-width: 90%;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Update Grade Button Functionality</h1>
+    
+    <div class="test-section">
+        <h3>Simulate Update Grade Button Click</h3>
+        <p>This button simulates clicking the "Update Grade" button with existing grade and feedback:</p>
+        <button class="btn btn-warning" onclick="showGradingModal('d2e9cbc7', '77b3a162-0548-461b-9194-06e7b4f193d7', 'epicrbot20099@gmail.com', 'Test Student', 'Test Assignment', '90', 'Previously graded assignment')">
+            <i class="fas fa-edit"></i> Update Grade (Test)
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h3>Test Results:</h3>
+        <div id="testResults">
+            <p>Click the button above to test the modal functionality.</p>
+        </div>
+    </div>
+
+    <!-- Grading Modal -->
+    <div class="modal-overlay" id="gradingModal" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h5 class="modal-title">Grade Assignment</h5>
+                <button type="button" class="close-modal" onclick="closeGradingModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="gradingForm">
+                    <input type="hidden" id="gradeClassroomId">
+                    <input type="hidden" id="gradeAssignmentId">
+                    <input type="hidden" id="gradeStudentEmail">
+                    
+                    <div style="margin-bottom: 15px;">
+                        <div><strong>Student:</strong> <span id="gradeStudentName"></span></div>
+                        <div><strong>Assignment:</strong> <span id="gradeAssignmentTitle"></span></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gradeInput">Grade (0-100):</label>
+                        <input type="number" id="gradeInput" min="0" max="100" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feedbackInput">Feedback:</label>
+                        <textarea id="feedbackInput" rows="4" placeholder="Provide feedback for the student..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeGradingModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="testSubmitGrade()">Save Grade (Test)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showGradingModal(classroomId, assignmentId, studentEmail, studentName, assignmentTitle, currentGrade = '', currentFeedback = '') {
+            // Populate modal fields
+            document.getElementById('gradeClassroomId').value = classroomId;
+            document.getElementById('gradeAssignmentId').value = assignmentId;
+            document.getElementById('gradeStudentEmail').value = studentEmail;
+            document.getElementById('gradeStudentName').textContent = studentName;
+            document.getElementById('gradeAssignmentTitle').textContent = assignmentTitle;
+            document.getElementById('gradeInput').value = currentGrade;
+            document.getElementById('feedbackInput').value = currentFeedback;
+            
+            // Show modal
+            document.getElementById('gradingModal').style.display = 'flex';
+            
+            // Log test results
+            document.getElementById('testResults').innerHTML = `
+                <h4>✅ Modal Opened Successfully!</h4>
+                <p><strong>Classroom ID:</strong> ${classroomId}</p>
+                <p><strong>Assignment ID:</strong> ${assignmentId}</p>
+                <p><strong>Student Email:</strong> ${studentEmail}</p>
+                <p><strong>Student Name:</strong> ${studentName}</p>
+                <p><strong>Assignment Title:</strong> ${assignmentTitle}</p>
+                <p><strong>Current Grade:</strong> ${currentGrade}</p>
+                <p><strong>Current Feedback:</strong> ${currentFeedback}</p>
+                <p>The grade input field should show: <strong>${currentGrade}</strong></p>
+                <p>The feedback textarea should show: <strong>${currentFeedback}</strong></p>
+            `;
+        }
+
+        function closeGradingModal() {
+            document.getElementById('gradingModal').style.display = 'none';
+        }
+
+        function testSubmitGrade() {
+            const classroomId = document.getElementById('gradeClassroomId').value;
+            const assignmentId = document.getElementById('gradeAssignmentId').value;
+            const studentEmail = document.getElementById('gradeStudentEmail').value;
+            const grade = document.getElementById('gradeInput').value;
+            const feedback = document.getElementById('feedbackInput').value;
+            
+            if (!grade || grade < 0 || grade > 100) {
+                alert('Please enter a valid grade between 0 and 100.');
+                return;
+            }
+            
+            // Simulate the form submission (without actually calling the backend)
+            document.getElementById('testResults').innerHTML += `
+                <hr>
+                <h4>✅ Form Submission Test</h4>
+                <p><strong>Would submit to:</strong> /grade_assignment</p>
+                <p><strong>Classroom ID:</strong> ${classroomId}</p>
+                <p><strong>Assignment ID:</strong> ${assignmentId}</p>
+                <p><strong>Student Email:</strong> ${studentEmail}</p>
+                <p><strong>Grade:</strong> ${grade}</p>
+                <p><strong>Feedback:</strong> ${feedback}</p>
+                <p><em>In the real app, this would update the grade and close the modal.</em></p>
+            `;
+            
+            alert('Test successful! Check the results below.');
+            closeGradingModal();
+        }
+    </script>
+</body>
+</html>

@@ -4,52 +4,173 @@ body {
     margin: 0;
     padding: 0;
 }
+
+body.dark-mode {
+    background: #0a0a0a !important;
+    color: #ffffff !important;
+}
+
+/* Submission content styling */
+.submission-content {
+    margin: 1rem 0;
+}
+
+.text-submission, .link-submission, .file-submission {
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 0.375rem;
+    border-left: 3px solid #007bff;
+}
+
+.link-submission {
+    border-left-color: #28a745;
+}
+
+.file-submission {
+    border-left-color: #ffc107;
+}
+
+.submission-text {
+    background-color: white;
+    padding: 0.75rem;
+    border-radius: 0.25rem;
+    border: 1px solid #dee2e6;
+    margin-top: 0.5rem;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.submitted-link a, .link-submission a {
+    color: #007bff;
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.submitted-link a:hover, .link-submission a:hover {
+    text-decoration: underline;
+}
+
+/* Assignment description styling */
+.assignment-description {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background-color: #e3f2fd;
+    border-radius: 0.5rem;
+    border-left: 4px solid #2196f3;
+}
+
+.assignment-description h4 {
+    color: #1976d2;
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.description-content {
+    background-color: white;
+    padding: 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #bbdefb;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+/* Dark mode support for assignment descriptions */
+.dark-mode .assignment-description {
+    background-color: #1a237e;
+    border-left-color: #3f51b5;
+}
+
+.dark-mode .assignment-description h4 {
+    color: #90caf9;
+}
+
+.dark-mode .description-content {
+    background-color: #0d47a1;
+    border-color: #1976d2;
+    color: #ffffff;
+}
+
 .container {
-    max-width: 600px;
-    margin: 40px auto;
+    max-width: 1400px;
+    margin: 20px auto;
     background: #fff;
     border-radius: 20px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-    padding: 32px 32px 24px 32px;
+    padding: 24px 48px 20px 48px;
     text-align: center;
 }
+
+.dark-mode .container {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #404040;
+}
+
 .card {
     background: #fff;
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    padding: 40px 48px;
-    margin: 32px auto 0 auto;
-    max-width: 600px;
+    padding: 32px 56px;
+    margin: 20px auto 0 auto;
+    max-width: 1400px;
     font-size: 1.25em;
+}
+
+.dark-mode .card {
+    background: #1a1a1a !important;
+    color: #ffffff !important;
+    border: 1px solid #404040;
 }
 h1 {
     color: #22314f;
     margin-bottom: 8px;
 }
+
+.dark-mode h1 {
+    color: #ffffff !important;
+}
+
 h2, h3 {
     color: #22314f;
+}
+
+.dark-mode h2, .dark-mode h3 {
+    color: #ffffff !important;
 }
 label {
     font-weight: bold;
     margin-top: 12px;
     display: block;
 }
+
+.dark-mode label {
+    color: #ffffff !important;
+}
+
 input[type="text"], input[type="email"] {
-    padding: 8px;
+    padding: 12px 16px;
     margin: 8px 4px;
     border: 1px solid #ccc;
     border-radius: 6px;
-    width: 180px;
+    width: 220px;
+    font-size: 1.1rem;
+}
+
+.dark-mode input[type="text"], .dark-mode input[type="email"] {
+    background: #2d2d2d !important;
+    color: #ffffff !important;
+    border-color: #404040 !important;
 }
 button {
     background: #22314f;
     color: #fff;
     border: none;
     border-radius: 6px;
-    padding: 8px 16px;
+    padding: 12px 20px;
     margin: 8px 4px;
     cursor: pointer;
-    font-size: 1em;
+    font-size: 1.1rem;
 }
 button:hover {
     background: #2d4373;
@@ -93,4 +214,43 @@ a {
         width: 90%;
         margin-bottom: 24px;
     }
+}
+
+/* Study Materials Links in Chat */
+.study-link {
+    color: #667eea !important;
+    text-decoration: none;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(102, 126, 234, 0.1);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    transition: all 0.2s ease;
+    display: inline-block;
+    margin: 0 2px;
+}
+
+.study-link:hover {
+    background: rgba(102, 126, 234, 0.2);
+    border-color: rgba(102, 126, 234, 0.4);
+    text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+.study-link:active {
+    transform: translateY(0);
+}
+
+/* Dark mode support for study links */
+body.dark-mode .study-link {
+    color: #a5b4fc !important;
+    background: rgba(165, 180, 252, 0.15);
+    border-color: rgba(165, 180, 252, 0.3);
+}
+
+body.dark-mode .study-link:hover {
+    background: rgba(165, 180, 252, 0.25);
+    border-color: rgba(165, 180, 252, 0.5);
+    box-shadow: 0 2px 4px rgba(165, 180, 252, 0.3);
 }

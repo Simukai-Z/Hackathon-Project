@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Study Guides{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h1>My Study Guides</h1>
+        <a href="/study-tools/create-study-guide" class="btn btn-primary">Create New Guide</a>
+    </div>
+
+    {% if study_guides %}
+        <div class="study-guides-grid">
+            {% for guide_title, study_guide in study_guides.items() %}
+            <div class="study-guide-card">
+                <h3>{{ guide_title }}</h3>
+                <p class="guide-style">{{ study_guide.get('style', 'outline').title() }} Style</p>
+                <p class="complexity-level">{{ study_guide.get('complexity_level', 'intermediate').title() }} Level</p>
+                <p class="created-date">Created: {{ study_guide.created_at }}</p>
+                
+                <div class="guide-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">{{ study_guide.get('estimated_length', 30) }}</span>
+                        <span class="stat-label">min study time</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">{{ study_guide.get('sections', [])|length }}</span>
+                        <span class="stat-label">sections</span>
+                    </div>
+                </div>
+
+                <div class="guide-actions">
+                    <a href="/study-tools/study-guides/view/{{ guide_title | urlencode }}" class="btn btn-primary">Study</a>
+                    <a href="/study-tools/study-guides/export/{{ guide_title | urlencode }}" class="btn btn-secondary">Export PDF</a>
+                    {% if study_guide.get('related_flashcards') %}
+                        {% for flashcard_set in study_guide.related_flashcards %}
+                        <a href="/study-tools/flashcards/view/{{ flashcard_set | urlencode }}" class="btn btn-success">
+                            <i class="fas fa-cards-blank"></i> View Flashcards
+                        </a>
+                        {% endfor %}
+                    {% endif %}
+                    <button class="btn btn-danger" data-guide-title="{{ guide_title }}" onclick="deleteStudyGuideHandler(this)">Delete</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📖</div>
+            <h2>No Study Guides Yet</h2>
+            <p>Create your first AI-generated study guide to enhance your learning!</p>
+            <a href="/study-tools/create-study-guide" class="btn btn-primary">Create Your First Guide</a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.header-section h1 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.study-guides-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.study-guide-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s ease;
+}
+
+.study-guide-card:hover {
+    transform: translateY(-2px);
+}
+
+.study-guide-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.guide-style {
+    color: var(--accent-color);
+    font-weight: 600;
+    margin: 0.25rem 0;
+}
+
+.complexity-level {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0.25rem 0;
+}
+
+.created-date {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.guide-stats {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: var(--background-light);
+    border-radius: 8px;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+.guide-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.guide-actions .btn {
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.85rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h2 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    color: var(--text-muted);
+    margin-bottom: 2rem;
+    font-size: 1.1rem;
+}
+
+/* Dark mode support */
+body.dark-mode .study-guide-card,
+body.dark-mode .empty-state {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+body.dark-mode .guide-stats {
+    background: var(--dark-bg);
+}
+</style>
+
+<script>
+function deleteStudyGuideHandler(button) {
+    const guideTitle = button.getAttribute('data-guide-title');
+    deleteStudyGuide(guideTitle);
+}
+
+function deleteStudyGuide(guideTitle) {
+    if (confirm(`Are you sure you want to delete the study guide "${guideTitle}"? This action cannot be undone.`)) {
+        fetch(`/study-tools/study-guides/delete/${encodeURIComponent(guideTitle)}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error deleting study guide. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting study guide. Please try again.');
+        });
+    }
+}
+</script>
+{% endblock %}

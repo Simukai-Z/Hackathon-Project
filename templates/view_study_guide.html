@@ -1,0 +1,932 @@
+{% extends 'base.html' %}
+
+{% block title %}Study Guide: {{ study_guide.title }}{% endblock %}
+
+{% block content %}
+<div class="container" id="study-guide-container" data-study-guide="{{ study_guide | tojson | e }}">
+    <div class="study-guide-header">
+        <div class="guide-meta">
+            <h1>{{ study_guide.title }}</h1>
+            <div class="guide-info">
+                <span class="creation-date">Created: {{ study_guide.created_at }}</span>
+                {% if study_guide.assignment %}
+                <span class="assignment-tag">Based on: {{ study_guide.assignment }}</span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="guide-actions">
+            <button class="btn btn-secondary" onclick="toggleTOC()">
+                <i class="fas fa-list"></i> Table of Contents
+            </button>
+            <button class="btn btn-success" onclick="generateFlashcardsAI()">
+                <i class="fas fa-cards-blank"></i> Generate Flashcards
+            </button>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Guide
+            </button>
+        </div>
+    </div>
+
+    <div class="study-guide-layout">
+        <aside class="table-of-contents" id="toc-panel">
+            <h3>Contents</h3>
+            <ul class="toc-list" id="toc-list">
+                <!-- Generated dynamically -->
+            </ul>
+        </aside>
+
+        <main class="study-guide-content">
+            <div class="content-sections">
+                {% for section in study_guide.sections %}
+                <section class="guide-section" id="section-{{ loop.index }}">
+                    <h2 class="section-title">{{ section.title }}</h2>
+                    <div class="section-content">
+                        {% if section.type == 'key_concepts' %}
+                            <div class="key-concepts">
+                                {% for concept in section.content %}
+                                <div class="concept-item">
+                                    <h4 class="concept-title">{{ concept.term }}</h4>
+                                    <p class="concept-definition">{{ concept.definition }}</p>
+                                    {% if concept.example %}
+                                    <div class="concept-example">
+                                        <strong>Example:</strong> {{ concept.example }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% elif section.type == 'summary' %}
+                            <div class="summary-content">
+                                <p>{{ section.content }}</p>
+                            </div>
+                        {% elif section.type == 'questions' %}
+                            <div class="practice-questions">
+                                {% for question in section.content %}
+                                <div class="question-item">
+                                    <h4 class="question-text">{{ question.question }}</h4>
+                                    <div class="question-answer" style="display: none;">
+                                        <strong>Answer:</strong> {{ question.answer }}
+                                    </div>
+                                    <button class="reveal-answer-btn" onclick="toggleAnswer(this)">
+                                        Show Answer
+                                    </button>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        {% elif section.type == 'ai_content' %}
+                            <div class="ai-generated-content">
+                                <div class="markdown-content">
+                                    {{ section.content | markdown | safe }}
+                                </div>
+                            </div>
+                        {% elif section.type == 'outline' %}
+                            <div class="outline-content">
+                                {% for item in section.content %}
+                                    {% if item.level == 1 %}
+                                    <h3>{{ item.text }}</h3>
+                                    {% elif item.level == 2 %}
+                                    <h4>{{ item.text }}</h4>
+                                    {% else %}
+                                    <p class="outline-item">{{ item.text }}</p>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="generic-content">
+                                <p>{{ section.content }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </section>
+                {% endfor %}
+            </div>
+        </main>
+    </div>
+
+    <div class="study-guide-footer">
+        <div class="footer-section">
+            <h3><i class="fas fa-graduation-cap"></i> Study Tools</h3>
+            <p>Transform this study guide into interactive learning materials</p>
+            <div class="study-tools-actions">
+                <button class="btn btn-success btn-lg" onclick="generateFlashcards()">
+                    <i class="fas fa-cards-blank"></i> Generate Flashcards
+                    <small>Create AI-powered flashcards from this guide</small>
+                </button>
+                <button class="btn btn-info" onclick="startQuickReview()">
+                    <i class="fas fa-brain"></i> Quick Review
+                </button>
+                <button class="btn btn-warning" onclick="exportToPDF()">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
+        <div class="navigation-buttons">
+            <a href="/study-tools/study-guides" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Study Guides
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.study-guide-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.guide-meta h1 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.guide-info {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.assignment-tag {
+    background: var(--accent-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.guide-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.study-guide-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.table-of-contents {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 2rem;
+    max-height: calc(100vh - 4rem);
+    overflow-y: auto;
+}
+
+.table-of-contents h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.toc-list {
+    list-style: none;
+    padding: 0;
+}
+
+.toc-list li {
+    margin-bottom: 0.5rem;
+}
+
+.toc-list a {
+    color: var(--text-color);
+    text-decoration: none;
+    display: block;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.toc-list a:hover {
+    background: var(--background-light);
+    color: var(--primary-color);
+}
+
+.toc-list a.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+.study-guide-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.guide-section {
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.guide-section:last-child {
+    border-bottom: none;
+}
+
+.section-title {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--background-light);
+}
+
+.key-concepts {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.concept-item {
+    background: var(--background-light);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-color);
+}
+
+.concept-title {
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+}
+
+.concept-definition {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.concept-example {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    font-style: italic;
+    border: 1px solid var(--border-color);
+}
+
+.summary-content {
+    line-height: 1.7;
+    font-size: 1.05rem;
+}
+
+.practice-questions {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.question-item {
+    background: var(--background-light);
+    padding: 1.5rem;
+    border-radius: 8px;
+}
+
+.question-text {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.question-answer {
+    background: white;
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 1rem 0;
+    border-left: 4px solid var(--accent-color);
+}
+
+.reveal-answer-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s ease;
+}
+
+.reveal-answer-btn:hover {
+    background: var(--primary-dark);
+}
+
+.outline-content h3,
+.outline-content h4 {
+    color: var(--primary-color);
+    margin: 1rem 0 0.5rem;
+}
+
+.outline-item {
+    margin-left: 1rem;
+    line-height: 1.6;
+}
+
+.study-guide-footer {
+    margin-top: 2rem;
+    padding: 2rem;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.05), rgba(0, 242, 254, 0.05));
+    border-radius: 8px;
+}
+
+.footer-section {
+    margin-bottom: 2rem;
+}
+
+.footer-section h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.footer-section p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.study-tools-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.study-tools-actions .btn-lg {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 200px;
+}
+
+.study-tools-actions .btn-lg small {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    font-weight: normal;
+}
+
+.study-tools-actions .btn:not(.btn-lg) {
+    padding: 0.6rem 1rem;
+}
+
+.navigation-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .study-guide-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .study-guide-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .table-of-contents {
+        position: static;
+        max-height: none;
+        display: none;
+    }
+    
+    .table-of-contents.mobile-show {
+        display: block;
+    }
+}
+
+/* Print styles */
+@media print {
+    .guide-actions,
+    .table-of-contents,
+    .study-guide-footer {
+        display: none;
+    }
+    
+    .study-guide-layout {
+        grid-template-columns: 1fr;
+    }
+    
+    .guide-section {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
+/* Dark mode support */
+body.dark-mode .table-of-contents,
+body.dark-mode .study-guide-content {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+body.dark-mode .concept-item,
+body.dark-mode .question-item {
+    background: var(--dark-bg);
+}
+
+body.dark-mode .concept-example,
+body.dark-mode .question-answer {
+    background: var(--dark-card);
+    border-color: var(--dark-border);
+}
+
+body.dark-mode .toc-list a:hover {
+    background: var(--dark-bg);
+}
+
+/* AI-generated content styles */
+.ai-generated-content {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    line-height: 1.6;
+    max-width: none;
+}
+
+.ai-generated-content .markdown-content {
+    white-space: pre-wrap;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.ai-generated-content h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    border-bottom: 3px solid var(--primary-color);
+    margin: 2rem 0 1rem 0;
+    padding-bottom: 0.5rem;
+}
+
+.ai-generated-content h2 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin: 2rem 0 1rem 0;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 0.3rem;
+}
+
+.ai-generated-content h3 {
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    margin: 1.5rem 0 0.8rem 0;
+}
+
+.ai-generated-content h4 {
+    font-size: 1.2rem;
+    color: var(--text-color);
+    margin: 1rem 0 0.5rem 0;
+    font-weight: 600;
+}
+
+.ai-generated-content p {
+    margin: 1rem 0;
+    line-height: 1.7;
+}
+
+.ai-generated-content ul, 
+.ai-generated-content ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.ai-generated-content li {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.ai-generated-content strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.ai-generated-content em {
+    color: var(--secondary-color);
+    font-style: italic;
+}
+
+.ai-generated-content hr {
+    border: none;
+    border-top: 2px solid #ddd;
+    margin: 2rem 0;
+}
+
+.ai-generated-content blockquote {
+    border-left: 4px solid var(--primary-color);
+    margin: 1rem 0;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    font-style: italic;
+}
+
+.ai-generated-content code {
+    background: #f4f4f4;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #e74c3c;
+}
+
+.ai-generated-content pre {
+    background: #f4f4f4;
+    padding: 1rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    margin: 1rem 0;
+}
+
+/* Dark mode support for AI content */
+body.dark-mode .ai-generated-content .markdown-content {
+    color: var(--dark-text);
+}
+
+body.dark-mode .ai-generated-content h1,
+body.dark-mode .ai-generated-content h2 {
+    color: var(--dark-primary);
+}
+
+body.dark-mode .ai-generated-content h3 {
+    color: var(--dark-secondary);
+}
+
+body.dark-mode .ai-generated-content strong {
+    color: var(--dark-primary);
+}
+
+body.dark-mode .ai-generated-content em {
+    color: var(--dark-secondary);
+}
+
+body.dark-mode .ai-generated-content blockquote {
+    background: var(--dark-card);
+    border-left-color: var(--dark-primary);
+}
+
+body.dark-mode .ai-generated-content code,
+body.dark-mode .ai-generated-content pre {
+    background: var(--dark-bg);
+    color: var(--dark-text);
+}
+</style>
+
+<script>
+// Generate table of contents
+function generateTOC() {
+    const sections = document.querySelectorAll('.guide-section');
+    const tocList = document.getElementById('toc-list');
+    
+    sections.forEach((section, index) => {
+        const title = section.querySelector('.section-title').textContent;
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = `#section-${index + 1}`;
+        a.textContent = title;
+        a.addEventListener('click', (e) => {
+            e.preventDefault();
+            section.scrollIntoView({ behavior: 'smooth' });
+            updateActiveTOC(a);
+        });
+        li.appendChild(a);
+        tocList.appendChild(li);
+    });
+}
+
+// Update active TOC item
+function updateActiveTOC(activeLink) {
+    document.querySelectorAll('.toc-list a').forEach(link => {
+        link.classList.remove('active');
+    });
+    activeLink.classList.add('active');
+}
+
+// Initialize study guide data from data attribute
+function initializeStudyGuideData() {
+    try {
+        const container = document.getElementById('study-guide-container');
+        const dataAttr = container.getAttribute('data-study-guide');
+        window.studyGuideData = JSON.parse(dataAttr);
+    } catch (e) {
+        console.error('Error parsing study guide data:', e);
+        window.studyGuideData = {};
+    }
+}
+
+// Toggle table of contents on mobile
+function toggleTOC() {
+    const toc = document.getElementById('toc-panel');
+    toc.classList.toggle('mobile-show');
+}
+
+// Toggle answer visibility
+function toggleAnswer(button) {
+    const questionItem = button.closest('.question-item');
+    const answer = questionItem.querySelector('.question-answer');
+    
+    if (answer.style.display === 'none') {
+        answer.style.display = 'block';
+        button.textContent = 'Hide Answer';
+    } else {
+        answer.style.display = 'none';
+        button.textContent = 'Show Answer';
+    }
+}
+
+// Generate flash cards from study guide
+function generateFlashcards() {
+    console.log('generateFlashcards (old) called');
+    const studyGuide = window.studyGuideData;
+    console.log('Study guide sections:', studyGuide.sections);
+    const flashcards = [];
+    
+    // Extract concepts for flash cards
+    studyGuide.sections.forEach(section => {
+        if (section.type === 'key_concepts') {
+            section.content.forEach(concept => {
+                flashcards.push({
+                    front: concept.term,
+                    back: concept.definition + (concept.example ? '\n\nExample: ' + concept.example : '')
+                });
+            });
+        } else if (section.type === 'questions') {
+            section.content.forEach(question => {
+                flashcards.push({
+                    front: question.question,
+                    back: question.answer
+                });
+            });
+        } else if (section.type === 'ai_content') {
+            // For AI-generated content, use the AI flashcard generation instead
+            console.log('AI content detected, redirecting to AI flashcard generation');
+            generateFlashcardsAI();
+            return;
+        }
+    });
+    
+    if (flashcards.length > 0) {
+        // Create flash card set from study guide
+        const setName = studyGuide.title + ' - Flash Cards';
+        const setData = {
+            name: setName,
+            cards: flashcards,
+            created_at: new Date().toISOString(),
+            assignment: studyGuide.assignment || null
+        };
+        
+        // Send to server
+        fetch('/study-tools/api/flashcards', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(setData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Created ${flashcards.length} flash cards from this study guide!`);
+                window.open(`/study-tools/flashcards/view/${encodeURIComponent(setName)}`, '_blank');
+            } else {
+                alert('Error creating flash cards: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error creating flash cards');
+        });
+    } else {
+        console.log('No traditional key_concepts or questions found, sections:', studyGuide.sections.map(s => s.type));
+        alert('This study guide uses AI-generated content. The AI flashcard generator should be used instead.');
+        // Automatically call the AI function
+        generateFlashcardsAI();
+    }
+}
+
+// Generate flashcards from study guide using AI
+async function generateFlashcardsAI() {
+    console.log('generateFlashcardsAI called');
+    const studyGuide = window.studyGuideData;
+    console.log('Study guide data:', studyGuide);
+    const guideTitle = studyGuide.title;
+    
+    if (confirm(`Generate flashcards from "${guideTitle}"? This will create a new flashcard set based on the key concepts and content from this study guide.`)) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        button.disabled = true;
+        
+        try {
+            const response = await fetch('/study-tools/api/generate-flashcards-from-guide', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    guide_title: guideTitle,
+                    num_cards: 15
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                const message = `Successfully generated ${data.cards_count} flashcards from this study guide!`;
+                const viewFlashcards = confirm(`${message}\n\nWould you like to view the new flashcard set now?`);
+                
+                if (viewFlashcards) {
+                    window.open(`/study-tools/flashcards/view/${encodeURIComponent(data.flashcard_set_name)}`, '_blank');
+                } else {
+                    // Show info about accessing flashcards later
+                    const showInfo = confirm(`Flashcards created successfully!\n\nYou can access them later from:\n• The Study Guides page (new "View Flashcards" button)\n• The Flashcards section in Study Tools\n\nWould you like to go to the Study Guides page now?`);
+                    if (showInfo) {
+                        window.location.href = '/study-tools/study-guides';
+                    }
+                }
+            } else {
+                alert(`Failed to generate flashcards: ${data.error || 'Unknown error occurred'}`);
+            }
+        } catch (error) {
+            console.error('Error generating flashcards:', error);
+            alert('An error occurred while generating flashcards. Please try again.');
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }
+}
+
+// Quick review function
+function startQuickReview() {
+    const sections = document.querySelectorAll('.guide-section');
+    if (sections.length === 0) {
+        alert('No content available for quick review.');
+        return;
+    }
+    
+    let currentSection = 0;
+    
+    function showSection(index) {
+        // Hide all sections
+        sections.forEach(section => section.style.display = 'none');
+        
+        if (index < sections.length) {
+            // Show current section
+            sections[index].style.display = 'block';
+            sections[index].scrollIntoView({ behavior: 'smooth' });
+            
+            // Create review navigation
+            if (!document.getElementById('review-controls')) {
+                const controls = document.createElement('div');
+                controls.id = 'review-controls';
+                controls.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: white;
+                    padding: 15px;
+                    border-radius: 10px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    display: flex;
+                    gap: 10px;
+                    align-items: center;
+                `;
+                
+                controls.innerHTML = `
+                    <button onclick="previousSection()" class="btn btn-sm btn-secondary" ${index === 0 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span style="margin: 0 15px; font-weight: bold;">
+                        Section ${index + 1} of ${sections.length}
+                    </span>
+                    <button onclick="nextSection()" class="btn btn-sm btn-primary" ${index === sections.length - 1 ? 'disabled' : ''}>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button onclick="exitReview()" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-times"></i> Exit
+                    </button>
+                `;
+                
+                document.body.appendChild(controls);
+            } else {
+                // Update existing controls
+                const controls = document.getElementById('review-controls');
+                controls.innerHTML = `
+                    <button onclick="previousSection()" class="btn btn-sm btn-secondary" ${index === 0 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span style="margin: 0 15px; font-weight: bold;">
+                        Section ${index + 1} of ${sections.length}
+                    </span>
+                    <button onclick="nextSection()" class="btn btn-sm btn-primary" ${index === sections.length - 1 ? 'disabled' : ''}>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button onclick="exitReview()" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-times"></i> Exit
+                    </button>
+                `;
+            }
+        }
+    }
+    
+    // Global functions for review navigation
+    window.nextSection = function() {
+        if (currentSection < sections.length - 1) {
+            currentSection++;
+            showSection(currentSection);
+        }
+    };
+    
+    window.previousSection = function() {
+        if (currentSection > 0) {
+            currentSection--;
+            showSection(currentSection);
+        }
+    };
+    
+    window.exitReview = function() {
+        // Show all sections
+        sections.forEach(section => section.style.display = 'block');
+        
+        // Remove controls
+        const controls = document.getElementById('review-controls');
+        if (controls) {
+            controls.remove();
+        }
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    
+    // Start review
+    showSection(0);
+}
+
+// Export to PDF function
+function exportToPDF() {
+    const originalMode = document.body.classList.contains('print-mode');
+    
+    // Add print-friendly styles
+    document.body.classList.add('print-mode');
+    
+    // Hide non-essential elements
+    const elementsToHide = document.querySelectorAll('.guide-actions, .table-of-contents, .study-guide-footer, #review-controls');
+    elementsToHide.forEach(el => {
+        if (el) el.style.display = 'none';
+    });
+    
+    // Trigger print
+    setTimeout(() => {
+        window.print();
+        
+        // Restore after print
+        setTimeout(() => {
+            elementsToHide.forEach(el => {
+                if (el) el.style.display = '';
+            });
+            
+            if (!originalMode) {
+                document.body.classList.remove('print-mode');
+            }
+        }, 1000);
+    }, 100);
+}
+
+// Intersection Observer for TOC highlighting
+function setupScrollSpy() {
+    const sections = document.querySelectorAll('.guide-section');
+    const tocLinks = document.querySelectorAll('.toc-list a');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const index = Array.from(sections).indexOf(entry.target);
+                if (index !== -1 && tocLinks[index]) {
+                    updateActiveTOC(tocLinks[index]);
+                }
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    sections.forEach(section => observer.observe(section));
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    initializeStudyGuideData();
+    generateTOC();
+    setupScrollSpy();
+});
+</script>
+{% endblock %}

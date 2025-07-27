@@ -1,0 +1,897 @@
+{% extends "dashboard_base.html" %}
+
+{% block title %}{{ guide.title }} - StudyCoach{% endblock %}
+
+{% block extra_css %}
+{{ super() }}
+<style>
+/* Study Guide View Styles */
+.guide-header {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.guide-header h1 {
+    margin: 0 0 var(--spacing-sm) 0;
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.guide-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+    opacity: 0.9;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-size: 0.95rem;
+}
+
+.subject-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+/* Toolbar */
+.guide-toolbar {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.dark-mode .guide-toolbar {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.toolbar-section {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.view-options {
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+.view-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    background: var(--background-light);
+    color: var(--text-primary-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: 0.875rem;
+}
+
+.dark-mode .view-btn {
+    border-color: var(--border-dark);
+    background: var(--background-dark);
+    color: var(--text-primary-dark);
+}
+
+.view-btn.active {
+    background: #11998e;
+    color: white;
+    border-color: #11998e;
+}
+
+.view-btn:hover:not(.active) {
+    background: var(--background-primary-light);
+}
+
+.dark-mode .view-btn:hover:not(.active) {
+    background: var(--background-primary-dark);
+}
+
+/* Action Buttons */
+.btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+.btn-primary {
+    background: #11998e;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #0e8074;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--background-light);
+    color: var(--text-primary-light);
+    border: 1px solid var(--border-light);
+}
+
+.dark-mode .btn-secondary {
+    background: var(--background-dark);
+    color: var(--text-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.btn-secondary:hover {
+    background: var(--background-primary-light);
+}
+
+.dark-mode .btn-secondary:hover {
+    background: var(--background-primary-dark);
+}
+
+.btn-success {
+    background: #10b981;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid #11998e;
+    color: #11998e;
+}
+
+.btn-outline:hover {
+    background: #11998e;
+    color: white;
+}
+
+/* Main Content Area */
+.content-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: var(--spacing-xl);
+    align-items: start;
+}
+
+.guide-content {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+}
+
+.dark-mode .guide-content {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.content-area {
+    padding: var(--spacing-xl);
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+/* Study Guide Content Styling */
+.study-content {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .study-content {
+    color: var(--text-primary-dark);
+}
+
+.study-content h1 {
+    color: #11998e;
+    border-bottom: 2px solid #11998e;
+    padding-bottom: var(--spacing-sm);
+    margin: var(--spacing-xl) 0 var(--spacing-lg) 0;
+    font-size: 2rem;
+}
+
+.study-content h2 {
+    color: #11998e;
+    margin: var(--spacing-xl) 0 var(--spacing-md) 0;
+    font-size: 1.5rem;
+}
+
+.study-content h3 {
+    color: var(--text-primary-light);
+    margin: var(--spacing-lg) 0 var(--spacing-md) 0;
+    font-size: 1.25rem;
+}
+
+.dark-mode .study-content h3 {
+    color: var(--text-primary-dark);
+}
+
+.study-content h4, .study-content h5, .study-content h6 {
+    color: var(--text-secondary-light);
+    margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+}
+
+.dark-mode .study-content h4, 
+.dark-mode .study-content h5, 
+.dark-mode .study-content h6 {
+    color: var(--text-secondary-dark);
+}
+
+.study-content p {
+    margin-bottom: var(--spacing-md);
+}
+
+.study-content ul, .study-content ol {
+    margin: var(--spacing-md) 0;
+    padding-left: var(--spacing-lg);
+}
+
+.study-content li {
+    margin-bottom: var(--spacing-xs);
+}
+
+.study-content strong {
+    color: #11998e;
+    font-weight: 600;
+}
+
+.study-content em {
+    font-style: italic;
+    color: var(--text-secondary-light);
+}
+
+.dark-mode .study-content em {
+    color: var(--text-secondary-dark);
+}
+
+.study-content code {
+    background: var(--background-light);
+    color: #e11d48;
+    padding: var(--spacing-xs);
+    border-radius: var(--radius-sm);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+.dark-mode .study-content code {
+    background: var(--background-dark);
+}
+
+.study-content blockquote {
+    border-left: 4px solid #11998e;
+    padding: var(--spacing-md);
+    margin: var(--spacing-md) 0;
+    background: rgba(17, 153, 142, 0.05);
+    font-style: italic;
+}
+
+/* Sidebar */
+.sidebar {
+    position: sticky;
+    top: var(--spacing-lg);
+}
+
+.sidebar-section {
+    background: var(--background-primary-light);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-lg);
+}
+
+.dark-mode .sidebar-section {
+    background: var(--background-primary-dark);
+    border-color: var(--border-dark);
+}
+
+.sidebar-title {
+    font-weight: 600;
+    color: var(--text-primary-light);
+    margin-bottom: var(--spacing-md);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.dark-mode .sidebar-title {
+    color: var(--text-primary-dark);
+}
+
+/* Table of Contents */
+.toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.toc-item {
+    margin-bottom: var(--spacing-xs);
+}
+
+.toc-link {
+    display: block;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    color: var(--text-secondary-light);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+    font-size: 0.9rem;
+}
+
+.dark-mode .toc-link {
+    color: var(--text-secondary-dark);
+}
+
+.toc-link:hover, .toc-link.active {
+    background: #11998e;
+    color: white;
+}
+
+.toc-link.level-2 {
+    padding-left: var(--spacing-lg);
+}
+
+.toc-link.level-3 {
+    padding-left: calc(var(--spacing-lg) * 1.5);
+}
+
+/* Notes Section */
+.notes-area {
+    min-height: 150px;
+    width: 100%;
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--background-light);
+    color: var(--text-primary-light);
+    font-family: inherit;
+    resize: vertical;
+}
+
+.dark-mode .notes-area {
+    border-color: var(--border-dark);
+    background: var(--background-dark);
+    color: var(--text-primary-dark);
+}
+
+.notes-area:focus {
+    outline: none;
+    border-color: #11998e;
+    box-shadow: 0 0 0 2px rgba(17, 153, 142, 0.2);
+}
+
+.notes-actions {
+    margin-top: var(--spacing-sm);
+    display: flex;
+    gap: var(--spacing-xs);
+}
+
+/* Progress Tracker */
+.progress-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm);
+    background: var(--background-light);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-xs);
+}
+
+.dark-mode .progress-item {
+    background: var(--background-dark);
+}
+
+.progress-label {
+    font-size: 0.875rem;
+    color: var(--text-primary-light);
+}
+
+.dark-mode .progress-label {
+    color: var(--text-primary-dark);
+}
+
+.progress-badge {
+    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: #10b981;
+    color: white;
+}
+
+/* Print Styles */
+@media print {
+    .guide-toolbar, .sidebar, .btn {
+        display: none !important;
+    }
+    
+    .content-wrapper {
+        grid-template-columns: 1fr;
+    }
+    
+    .guide-content {
+        border: none;
+        box-shadow: none;
+    }
+    
+    .study-content {
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+    .content-wrapper {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        position: static;
+        margin-top: var(--spacing-lg);
+    }
+}
+
+@media (max-width: 768px) {
+    .guide-header h1 {
+        font-size: 2rem;
+    }
+    
+    .guide-meta {
+        flex-direction: column;
+        gap: var(--spacing-sm);
+    }
+    
+    .guide-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .toolbar-section {
+        justify-content: center;
+    }
+    
+    .view-options {
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Guide Header -->
+    <div class="guide-header">
+        <h1>{{ guide.title }}</h1>
+        {% if guide.description %}
+        <p>{{ guide.description }}</p>
+        {% endif %}
+        
+        <div class="guide-meta">
+            <div class="meta-item">
+                <i class="fas fa-book"></i>
+                <span class="subject-badge">{{ guide.subject }}</span>
+            </div>
+            <div class="meta-item">
+                <i class="fas fa-calendar"></i>
+                <span>Created {{ guide.created_at.strftime('%B %d, %Y') }}</span>
+            </div>
+            {% if guide.last_studied %}
+            <div class="meta-item">
+                <i class="fas fa-clock"></i>
+                <span>Last studied {{ guide.last_studied.strftime('%B %d, %Y') }}</span>
+            </div>
+            {% endif %}
+            <div class="meta-item">
+                <i class="fas fa-eye"></i>
+                <span>{{ guide.view_count or 0 }} views</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="guide-toolbar">
+        <div class="toolbar-section">
+            <div class="view-options">
+                <button class="view-btn active" onclick="setViewMode('read')">
+                    <i class="fas fa-book-open"></i>
+                    Read
+                </button>
+                <button class="view-btn" onclick="setViewMode('focus')">
+                    <i class="fas fa-eye"></i>
+                    Focus
+                </button>
+                <button class="view-btn" onclick="setViewMode('print')">
+                    <i class="fas fa-print"></i>
+                    Print
+                </button>
+            </div>
+        </div>
+        
+        <div class="toolbar-section">
+            <button class="btn btn-secondary" onclick="exportToPDF()">
+                <i class="fas fa-file-pdf"></i>
+                Export PDF
+            </button>
+            <button class="btn btn-outline" onclick="generateFlashcards()">
+                <i class="fas fa-layer-group"></i>
+                Create Flashcards
+            </button>
+            <a href="{{ url_for('study_tools.edit_study_guide', guide_id=guide.id) }}" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+                Edit
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <!-- Study Guide Content -->
+        <div class="guide-content">
+            <div class="content-area">
+                <div class="study-content" id="studyContent">
+                    {{ guide.content|safe }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <!-- Table of Contents -->
+            <div class="sidebar-section">
+                <h4 class="sidebar-title">
+                    <i class="fas fa-list"></i>
+                    Table of Contents
+                </h4>
+                <ul class="toc-list" id="tocList">
+                    <!-- Generated by JavaScript -->
+                </ul>
+            </div>
+
+            <!-- Personal Notes -->
+            <div class="sidebar-section">
+                <h4 class="sidebar-title">
+                    <i class="fas fa-sticky-note"></i>
+                    Personal Notes
+                </h4>
+                <textarea class="notes-area" id="personalNotes" placeholder="Add your personal notes and insights here...">{{ guide.notes or '' }}</textarea>
+                <div class="notes-actions">
+                    <button class="btn btn-primary btn-sm" onclick="saveNotes()">
+                        <i class="fas fa-save"></i>
+                        Save
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="clearNotes()">
+                        <i class="fas fa-trash"></i>
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Study Progress -->
+            <div class="sidebar-section">
+                <h4 class="sidebar-title">
+                    <i class="fas fa-chart-line"></i>
+                    Study Progress
+                </h4>
+                <div class="progress-item">
+                    <span class="progress-label">Times Studied</span>
+                    <span class="progress-badge">{{ guide.study_count or 0 }}</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-label">Total Time</span>
+                    <span class="progress-badge" id="studyTime">{{ (guide.total_study_time or 0) // 60 }}m</span>
+                </div>
+                <div class="progress-item">
+                    <span class="progress-label">Completion</span>
+                    <span class="progress-badge">{{ guide.completion_percentage or 0 }}%</span>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="sidebar-section">
+                <h4 class="sidebar-title">
+                    <i class="fas fa-bolt"></i>
+                    Quick Actions
+                </h4>
+                <div style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                    <button class="btn btn-secondary btn-sm" onclick="markAsStudied()">
+                        <i class="fas fa-check"></i>
+                        Mark as Studied
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="shareGuide()">
+                        <i class="fas fa-share"></i>
+                        Share Guide
+                    </button>
+                    <button class="btn btn-secondary btn-sm" onclick="duplicateGuide()">
+                        <i class="fas fa-copy"></i>
+                        Duplicate
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let studyStartTime = Date.now();
+let currentViewMode = 'read';
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    generateTableOfContents();
+    trackStudySession();
+    setupScrollSpy();
+    
+    console.log('Study Guide view loaded');
+});
+
+// Generate table of contents
+function generateTableOfContents() {
+    const content = document.getElementById('studyContent');
+    const tocList = document.getElementById('tocList');
+    const headings = content.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    
+    tocList.innerHTML = '';
+    
+    headings.forEach((heading, index) => {
+        const level = parseInt(heading.tagName.charAt(1));
+        const text = heading.textContent;
+        const id = 'heading-' + index;
+        
+        // Add ID to heading for linking
+        heading.id = id;
+        
+        // Create TOC item
+        const li = document.createElement('li');
+        li.className = 'toc-item';
+        
+        const link = document.createElement('a');
+        link.href = '#' + id;
+        link.className = 'toc-link level-' + level;
+        link.textContent = text;
+        link.onclick = (e) => {
+            e.preventDefault();
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        };
+        
+        li.appendChild(link);
+        tocList.appendChild(li);
+    });
+}
+
+// Setup scroll spy for TOC
+function setupScrollSpy() {
+    const tocLinks = document.querySelectorAll('.toc-link');
+    const headings = document.querySelectorAll('#studyContent h1, #studyContent h2, #studyContent h3, #studyContent h4, #studyContent h5, #studyContent h6');
+    
+    window.addEventListener('scroll', () => {
+        let currentHeading = '';
+        
+        headings.forEach(heading => {
+            const rect = heading.getBoundingClientRect();
+            if (rect.top <= 100) {
+                currentHeading = heading.id;
+            }
+        });
+        
+        tocLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + currentHeading) {
+                link.classList.add('active');
+            }
+        });
+    });
+}
+
+// View mode functions
+function setViewMode(mode) {
+    const buttons = document.querySelectorAll('.view-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    currentViewMode = mode;
+    
+    const sidebar = document.getElementById('sidebar');
+    const contentWrapper = document.querySelector('.content-wrapper');
+    
+    switch(mode) {
+        case 'read':
+            sidebar.style.display = 'block';
+            contentWrapper.style.gridTemplateColumns = '1fr 300px';
+            break;
+        case 'focus':
+            sidebar.style.display = 'none';
+            contentWrapper.style.gridTemplateColumns = '1fr';
+            break;
+        case 'print':
+            window.print();
+            break;
+    }
+}
+
+// Study session tracking
+function trackStudySession() {
+    // Update study count
+    fetch(`/study-tools/study-guides/{{ guide.id }}/track-study`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    });
+    
+    // Track time spent
+    setInterval(() => {
+        const timeSpent = Math.floor((Date.now() - studyStartTime) / 1000 / 60); // minutes
+        document.getElementById('studyTime').textContent = timeSpent + 'm';
+    }, 60000); // Update every minute
+    
+    // Save study time on page unload
+    window.addEventListener('beforeunload', () => {
+        const timeSpent = Math.floor((Date.now() - studyStartTime) / 1000 / 60);
+        if (timeSpent > 0) {
+            navigator.sendBeacon(`/study-tools/study-guides/{{ guide.id }}/track-time`, 
+                JSON.stringify({ time_spent: timeSpent }));
+        }
+    });
+}
+
+// Notes functions
+async function saveNotes() {
+    const notes = document.getElementById('personalNotes').value;
+    
+    try {
+        const response = await fetch(`/study-tools/study-guides/{{ guide.id }}/save-notes`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ notes: notes })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Show success feedback
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Saved';
+            btn.style.background = '#10b981';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+            }, 2000);
+        } else {
+            alert('Failed to save notes. Please try again.');
+        }
+    } catch (error) {
+        console.error('Error saving notes:', error);
+        alert('An error occurred while saving notes.');
+    }
+}
+
+function clearNotes() {
+    if (confirm('Are you sure you want to clear all notes?')) {
+        document.getElementById('personalNotes').value = '';
+    }
+}
+
+// Export and share functions
+function exportToPDF() {
+    const originalMode = currentViewMode;
+    setViewMode('focus');
+    
+    setTimeout(() => {
+        window.print();
+        setTimeout(() => setViewMode(originalMode), 100);
+    }, 100);
+}
+
+function generateFlashcards() {
+    const guideTitle = "{{ guide.title }}";
+    const url = `/study-tools/flashcards/create?from_guide={{ guide.id }}&title=${encodeURIComponent(guideTitle + ' - Flashcards')}`;
+    window.location.href = url;
+}
+
+function markAsStudied() {
+    fetch(`/study-tools/study-guides/{{ guide.id }}/mark-studied`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    }).then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Update UI to show studied status
+            const btn = event.target;
+            btn.innerHTML = '<i class="fas fa-check"></i> Studied!';
+            btn.style.background = '#10b981';
+            btn.disabled = true;
+        }
+    });
+}
+
+function shareGuide() {
+    const url = window.location.href;
+    if (navigator.share) {
+        navigator.share({
+            title: "{{ guide.title }}",
+            text: "Check out this study guide",
+            url: url
+        });
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Link copied to clipboard!');
+        });
+    }
+}
+
+function duplicateGuide() {
+    if (confirm('Create a copy of this study guide?')) {
+        fetch(`/study-tools/study-guides/{{ guide.id }}/duplicate`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        }).then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = `/study-tools/study-guides/${data.new_guide_id}`;
+            } else {
+                alert('Failed to duplicate guide. Please try again.');
+            }
+        });
+    }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 'p':
+                e.preventDefault();
+                exportToPDF();
+                break;
+            case 's':
+                e.preventDefault();
+                saveNotes();
+                break;
+            case 'f':
+                e.preventDefault();
+                setViewMode('focus');
+                break;
+        }
+    }
+});
+</script>
+{% endblock %}

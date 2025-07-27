@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Study Guide{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="header-section">
+        <h1>Create Study Guide</h1>
+        <a href="/study-tools/study-guides" class="btn btn-secondary">Back to Study Guides</a>
+    </div>
+
+    <form id="study-guide-form" class="study-guide-creation-form">
+        <div class="form-section">
+            <label for="guide-title">Study Guide Title:</label>
+            <input type="text" id="guide-title" name="guide_title" required placeholder="e.g., Biology Chapter 5 - Cell Structure" class="form-control">
+        </div>
+
+        <div class="form-section">
+            <label for="content-source">Content Source:</label>
+            <select id="content-source" name="content_source" class="form-control" onchange="toggleContentInput()">
+                <option value="text">Manual Text Input</option>
+                <option value="file">Upload File</option>
+                <option value="assignment">From Assignment</option>
+            </select>
+        </div>
+
+        <!-- Text Input Section -->
+        <div id="text-input-section" class="form-section">
+            <label for="content-text">Paste your study content:</label>
+            <textarea id="content-text" name="content_text" rows="12" placeholder="Paste your notes, textbook content, or study material here..." class="form-control"></textarea>
+        </div>
+
+        <!-- File Upload Section -->
+        <div id="file-input-section" class="form-section" style="display: none;">
+            <label for="content-file">Upload Study Material:</label>
+            <input type="file" id="content-file" name="content_file" accept=".txt,.pdf,.doc,.docx" class="form-control">
+            <small class="form-help">Supported formats: TXT, PDF, DOC, DOCX</small>
+        </div>
+
+        <!-- Assignment Selection -->
+        <div id="assignment-input-section" class="form-section" style="display: none;">
+            <label for="assignment-select">Select Assignment:</label>
+            <select id="assignment-select" name="assignment_id" class="form-control">
+                <option value="">Choose an assignment...</option>
+                <!-- Assignments will be populated via JavaScript -->
+            </select>
+            <div class="loading-indicator" id="assignment-loading" style="display: none;">
+                Loading assignments...
+            </div>
+        </div>
+
+        <div class="form-section">
+            <label for="guide-style">Study Guide Style:</label>
+            <select id="guide-style" name="guide_style" class="form-control">
+                <option value="comprehensive">Comprehensive Overview</option>
+                <option value="outline" selected>Structured Outline</option>
+                <option value="summary">Key Points Summary</option>
+                <option value="qa">Question & Answer Format</option>
+                <option value="visual">Visual Learning Guide</option>
+            </select>
+        </div>
+
+        <div class="form-section">
+            <label for="complexity-level">Complexity Level:</label>
+            <select id="complexity-level" name="complexity_level" class="form-control">
+                <option value="basic">Basic - Simple explanations and definitions</option>
+                <option value="intermediate" selected>Intermediate - Detailed understanding</option>
+                <option value="advanced">Advanced - In-depth analysis and connections</option>
+            </select>
+        </div>
+
+        <div class="form-section">
+            <label for="sections">Include Sections:</label>
+            <div class="checkbox-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="sections" value="overview" checked> Overview & Introduction
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="sections" value="key_concepts" checked> Key Concepts
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="sections" value="examples" checked> Examples & Applications
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="sections" value="practice" checked> Practice Questions
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="sections" value="summary"> Summary & Review
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="sections" value="resources"> Additional Resources
+                </label>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <label for="estimated-length">Estimated Study Time:</label>
+            <select id="estimated-length" name="estimated_length" class="form-control">
+                <option value="15">15 minutes</option>
+                <option value="30" selected>30 minutes</option>
+                <option value="45">45 minutes</option>
+                <option value="60">1 hour</option>
+                <option value="90">1.5 hours</option>
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Generate Study Guide</button>
+            <button type="button" onclick="previewContent()" class="btn btn-secondary">Preview Content</button>
+        </div>
+    </form>
+
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="loading-spinner"></div>
+            <h3>Creating Study Guide...</h3>
+            <p>AI is generating your personalized study guide. This may take a moment.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.header-section h1 {
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.study-guide-creation-form {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.form-section {
+    margin-bottom: 1.5rem;
+}
+
+.form-section label {
+    display: block;
+    font-weight: 600;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid var(--background-light);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--accent-color);
+}
+
+.form-help {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    font-weight: normal !important;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.checkbox-label:hover {
+    background: var(--background-light);
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 0.5rem;
+    width: auto;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--background-light);
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--background-light);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Dark mode support */
+body.dark-mode .study-guide-creation-form,
+body.dark-mode .modal-content {
+    background: var(--dark-card);
+    border: 1px solid var(--dark-border);
+}
+
+body.dark-mode .form-control {
+    background: var(--dark-bg);
+    border-color: var(--dark-border);
+    color: var(--text-color);
+}
+
+body.dark-mode .checkbox-label:hover {
+    background: var(--dark-bg);
+}
+</style>
+
+<script>
+function toggleContentInput() {
+    const source = document.getElementById('content-source').value;
+    const textSection = document.getElementById('text-input-section');
+    const fileSection = document.getElementById('file-input-section');
+    const assignmentSection = document.getElementById('assignment-input-section');
+    
+    // Hide all sections
+    textSection.style.display = 'none';
+    fileSection.style.display = 'none';
+    assignmentSection.style.display = 'none';
+    
+    // Show selected section
+    if (source === 'text') {
+        textSection.style.display = 'block';
+    } else if (source === 'file') {
+        fileSection.style.display = 'block';
+    } else if (source === 'assignment') {
+        assignmentSection.style.display = 'block';
+        loadAssignments();
+    }
+}
+
+function loadAssignments() {
+    // This would fetch assignments from the server
+    // For now, we'll just show a placeholder
+    const select = document.getElementById('assignment-select');
+    select.innerHTML = '<option value="">Loading assignments...</option>';
+    
+    // In a real implementation, you'd fetch assignments here
+    setTimeout(() => {
+        select.innerHTML = `
+            <option value="">Choose an assignment...</option>
+            <option value="1">Biology Chapter 5 - Cell Structure</option>
+            <option value="2">History Essay - World War II</option>
+            <option value="3">Math Problem Set - Calculus</option>
+        `;
+    }, 1000);
+}
+
+function previewContent() {
+    const source = document.getElementById('content-source').value;
+    let content = '';
+    
+    if (source === 'text') {
+        content = document.getElementById('content-text').value;
+    } else if (source === 'file') {
+        const file = document.getElementById('content-file').files[0];
+        if (file) {
+            content = `File selected: ${file.name} (${file.size} bytes)`;
+        }
+    } else if (source === 'assignment') {
+        const assignment = document.getElementById('assignment-select').value;
+        if (assignment) {
+            content = `Assignment selected: ${document.getElementById('assignment-select').selectedOptions[0].text}`;
+        }
+    }
+    
+    if (content) {
+        alert(`Content preview:\n\n${content.substring(0, 200)}${content.length > 200 ? '...' : ''}`);
+    } else {
+        alert('Please provide content to preview.');
+    }
+}
+
+// Load assignments when assignment source is selected
+function loadAssignments() {
+    const assignmentSelect = document.getElementById('assignment-select');
+    const loadingIndicator = document.getElementById('assignment-loading');
+    
+    loadingIndicator.style.display = 'block';
+    assignmentSelect.innerHTML = '<option value="">Loading assignments...</option>';
+    
+    fetch('/study-tools/api/assignments')
+        .then(response => response.json())
+        .then(data => {
+            loadingIndicator.style.display = 'none';
+            assignmentSelect.innerHTML = '<option value="">Choose an assignment...</option>';
+            
+            if (data.success && data.assignments.length > 0) {
+                data.assignments.forEach(assignment => {
+                    const option = document.createElement('option');
+                    option.value = assignment.id;
+                    option.textContent = assignment.title;
+                    assignmentSelect.appendChild(option);
+                });
+            } else {
+                assignmentSelect.innerHTML = '<option value="">No assignments available</option>';
+            }
+        })
+        .catch(error => {
+            loadingIndicator.style.display = 'none';
+            assignmentSelect.innerHTML = '<option value="">Error loading assignments</option>';
+            console.error('Error loading assignments:', error);
+        });
+}
+
+// Source type change handler
+document.querySelectorAll('input[name="content_source"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+        // Hide all input sections first
+        document.getElementById('text-input-section').style.display = 'none';
+        document.getElementById('file-input-section').style.display = 'none';
+        document.getElementById('assignment-input-section').style.display = 'none';
+        
+        // Show the selected input section
+        const selectedValue = this.value;
+        if (selectedValue === 'text') {
+            document.getElementById('text-input-section').style.display = 'block';
+        } else if (selectedValue === 'file') {
+            document.getElementById('file-input-section').style.display = 'block';
+        } else if (selectedValue === 'assignment') {
+            document.getElementById('assignment-input-section').style.display = 'block';
+            // Load assignments when this section is shown
+            loadAssignments();
+        }
+    });
+});
+
+document.getElementById('study-guide-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Show loading modal
+    document.getElementById('loading-modal').style.display = 'flex';
+    
+    // Collect form data
+    const formData = new FormData(this);
+    
+    // Get selected sections
+    const sections = [];
+    document.querySelectorAll('input[name="sections"]:checked').forEach(cb => {
+        sections.push(cb.value);
+    });
+    formData.append('sections_json', JSON.stringify(sections));
+    
+    // Submit form
+    fetch('/study-tools/api/create-study-guide', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById('loading-modal').style.display = 'none';
+        
+        if (data.success) {
+            alert('Study guide created successfully!');
+            window.location.href = '/study-tools/study-guides';
+        } else {
+            alert(`Error: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        document.getElementById('loading-modal').style.display = 'none';
+        console.error('Error:', error);
+        alert('An error occurred while creating the study guide. Please try again.');
+    });
+});
+</script>
+{% endblock %}

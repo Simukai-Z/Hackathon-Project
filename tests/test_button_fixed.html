@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Update Grade Button - Fixed</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-warning { background-color: #ffc107; color: black; }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-dialog {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            width: 500px;
+            max-width: 90%;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn-primary { background-color: #007bff; color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>Test Update Grade Button - Fixed Version</h1>
+    
+    <p><strong>Problem:</strong> The original button didn't work because the feedback contained special characters that broke the JavaScript onclick attribute.</p>
+    
+    <p><strong>Solution:</strong> Use data attributes instead of inline parameters.</p>
+    
+    <h3>Test Button (with problematic feedback):</h3>
+    <button class="btn btn-warning" 
+            data-classroom-id="d2e9cbc7"
+            data-assignment-id="77b3a162-0548-461b-9194-06e7b4f193d7"
+            data-student-email="epicrbot20099@gmail.com"
+            data-student-name="Epic Student"
+            data-assignment-title="EYAHHH IT WORKED!!"
+            data-current-grade="70"
+            data-current-feedback="EPic, thank you for your resubmission of the assignment &quot;EYAHHH IT WORKED!!&quot;. Your enthusiasm and determination to improve your work are commendable and essential qualities for success. However, there are still several areas that need attention to further enhance your assignment.\\n\\nStrengths:\\n- Your persistent enthusiasm and dedication to improving your assignment are noteworthy.\\n- You&#39;ve demonstrated a willingness to revise and resubmit your work, which is an important part of the learning process."
+            onclick="showGradingModalFromData(this)">
+        <i class="fas fa-edit"></i> Update Grade (Test)
+    </button>
+    
+    <div id="result" style="margin-top: 20px;">
+        <p>Click the button above to test...</p>
+    </div>
+
+    <!-- Grading Modal -->
+    <div class="modal-overlay" id="gradingModal" style="display: none;">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h5 class="modal-title">Grade Assignment</h5>
+                <button type="button" class="close-modal" onclick="closeGradingModal()">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="gradingForm">
+                    <input type="hidden" id="gradeClassroomId">
+                    <input type="hidden" id="gradeAssignmentId">
+                    <input type="hidden" id="gradeStudentEmail">
+                    
+                    <div style="margin-bottom: 15px;">
+                        <div><strong>Student:</strong> <span id="gradeStudentName"></span></div>
+                        <div><strong>Assignment:</strong> <span id="gradeAssignmentTitle"></span></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="gradeInput">Grade (0-100):</label>
+                        <input type="number" id="gradeInput" min="0" max="100" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="feedbackInput">Feedback:</label>
+                        <textarea id="feedbackInput" rows="4" placeholder="Provide feedback for the student..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeGradingModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" onclick="testSubmitGrade()">Save Grade (Test)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showGradingModal(classroomId, assignmentId, studentEmail, studentName, assignmentTitle, currentGrade = '', currentFeedback = '') {
+            document.getElementById('gradeClassroomId').value = classroomId;
+            document.getElementById('gradeAssignmentId').value = assignmentId;
+            document.getElementById('gradeStudentEmail').value = studentEmail;
+            document.getElementById('gradeStudentName').textContent = studentName;
+            document.getElementById('gradeAssignmentTitle').textContent = assignmentTitle;
+            document.getElementById('gradeInput').value = currentGrade;
+            document.getElementById('feedbackInput').value = currentFeedback;
+            
+            document.getElementById('gradingModal').style.display = 'flex';
+        }
+
+        function showGradingModalFromData(button) {
+            const classroomId = button.getAttribute('data-classroom-id');
+            const assignmentId = button.getAttribute('data-assignment-id');
+            const studentEmail = button.getAttribute('data-student-email');
+            const studentName = button.getAttribute('data-student-name');
+            const assignmentTitle = button.getAttribute('data-assignment-title');
+            const currentGrade = button.getAttribute('data-current-grade') || '';
+            let currentFeedback = button.getAttribute('data-current-feedback') || '';
+            
+            // Decode HTML entities and escape sequences
+            currentFeedback = currentFeedback
+                .replace(/&quot;/g, '"')
+                .replace(/&#39;/g, "'")
+                .replace(/\\\\n/g, '\\n')
+                .replace(/\\\\r/g, '\\r');
+            
+            console.log('Opening modal with data:', {
+                classroomId,
+                assignmentId,
+                studentEmail,
+                studentName,
+                assignmentTitle,
+                currentGrade,
+                feedbackLength: currentFeedback.length
+            });
+            
+            showGradingModal(classroomId, assignmentId, studentEmail, studentName, assignmentTitle, currentGrade, currentFeedback);
+            
+            document.getElementById('result').innerHTML = '<p class="success">✅ Modal opened successfully! The grade input should show "' + currentGrade + '" and the feedback textarea should be pre-filled.</p>';
+        }
+
+        function closeGradingModal() {
+            document.getElementById('gradingModal').style.display = 'none';
+        }
+
+        function testSubmitGrade() {
+            const grade = document.getElementById('gradeInput').value;
+            const feedback = document.getElementById('feedbackInput').value;
+            
+            alert('Test successful!\\nGrade: ' + grade + '\\nFeedback length: ' + feedback.length + ' characters');
+            closeGradingModal();
+        }
+    </script>
+</body>
+</html>
