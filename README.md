@@ -1,6 +1,25 @@
+
+<!-- TABS START -->
+<details open>
+<summary><strong>README</strong></summary>
+
 # StudyCoach - AI-Powered Educational Platform
 
 An intelligent tutoring and classroom management system that connects students and teachers through AI-assisted learning.
+
+</details>
+
+<details>
+<summary><strong>Documentation</strong></summary>
+
+See the full documentation here: [docs/DOCUMENTATION.md](docs/DOCUMENTATION.md)
+
+---
+
+<!-- Optionally, you can embed a summary or key sections from the documentation here. For full details, visit the link above. -->
+
+</details>
+<!-- TABS END -->
 
 ## 🚀 Quick Start
 
