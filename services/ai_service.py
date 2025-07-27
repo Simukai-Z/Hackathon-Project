@@ -369,3 +369,22 @@ class AIService:
                 "success": False,
                 "error": str(e)
             }
+
+    def generate_response(self, prompt, max_tokens=1000, temperature=0.7):
+        """Generate a general AI response for any prompt"""
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": "You are a helpful AI assistant that provides accurate and detailed responses."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=max_tokens,
+                temperature=temperature
+            )
+            
+            return response.choices[0].message.content
+            
+        except Exception as e:
+            print(f"Error generating AI response: {e}")
+            raise e

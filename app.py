@@ -420,14 +420,50 @@ def ai_page():
     # Check if game results are passed in the URL
     game_results = request.args.get('game_results')
     initial_message = None
+    game_results_context = None
     
     if game_results:
         try:
             import urllib.parse
             results_data = json.loads(urllib.parse.unquote(game_results))
-            initial_message = results_data.get('message', '')
-        except:
-            pass
+            
+            # Extract comprehensive game results for AI context
+            game_results_context = {
+                'set_name': results_data.get('set_name', 'Unknown'),
+                'score': results_data.get('score', 0),
+                'accuracy': results_data.get('accuracy', 0),
+                'total_questions': results_data.get('total_questions', 0),
+                'correct_answers': results_data.get('correct_answers', 0),
+                'performance_level': results_data.get('performance_level', 'unknown'),
+                'is_win': results_data.get('is_win', False),
+                'average_time': results_data.get('average_time', 0),
+                'lives_remaining': results_data.get('lives_remaining', 0)
+            }
+            
+            # Create an enhanced initial message that includes performance context
+            performance_emoji = "🎉" if game_results_context['is_win'] else "💪"
+            performance_text = "excellent" if game_results_context['accuracy'] >= 90 else "great" if game_results_context['accuracy'] >= 75 else "good progress"
+            
+            initial_message = f"""I just completed the {game_results_context['set_name']} study game! Here are my results:
+
+{performance_emoji} **Game Performance Summary:**
+• Score: {game_results_context['score']} points
+• Accuracy: {game_results_context['accuracy']}% ({game_results_context['correct_answers']}/{game_results_context['total_questions']} correct)
+• Performance Level: {game_results_context['performance_level'].title()}
+• Result: {"Won! 🏆" if game_results_context['is_win'] else "Still learning 📚"}
+• Average Response Time: {game_results_context['average_time']}s
+• Lives Remaining: {game_results_context['lives_remaining']}/3
+
+I'd like to discuss my performance and get some personalized study advice. What areas should I focus on based on these results?"""
+            
+        except Exception as e:
+            print(f"Error parsing game results: {e}")
+            # Fallback to basic message if parsing fails
+            try:
+                results_data = json.loads(urllib.parse.unquote(game_results))
+                initial_message = results_data.get('message', '')
+            except:
+                pass
     
     # Pre-load resources for hyperlink processing as fallback
     user_email = session['email']

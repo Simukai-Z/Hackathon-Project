@@ -133,8 +133,18 @@
             </div>
         </div>
         <div class="ai-popup-actions">
-            <button class="ai-action-btn" onclick="closeAIPopup()">Continue Studying</button>
-            <button class="ai-action-btn primary" onclick="goToAIAssistant()">Chat with AI</button>
+            <button class="ai-action-btn" onclick="closeAIPopup()">
+                <span class="btn-icon">📚</span>
+                <span class="btn-text">Continue Studying</span>
+            </button>
+            <button class="ai-action-btn secondary" onclick="tryGameAgain()">
+                <span class="btn-icon">🔄</span>
+                <span class="btn-text">Try Again</span>
+            </button>
+            <button class="ai-action-btn primary" onclick="goToAIAssistant()">
+                <span class="btn-icon">💬</span>
+                <span class="btn-text">Chat with AI</span>
+            </button>
         </div>
     </div>
 </div>
@@ -888,6 +898,24 @@ function resetGame() {
     }
 }
 
+function tryGameAgain() {
+    // Close the AI popup first
+    if (window.aiPopup) {
+        window.aiPopup.hide();
+    }
+    
+    // Reset the game state
+    resetGame();
+    
+    // Start a new game automatically
+    setTimeout(() => {
+        startGame();
+    }, 500); // Small delay for smooth transition
+}
+
+// Global function for popup controls (accessible from popup buttons)
+window.tryGameAgain = tryGameAgain;
+
 function startGame() {
     gameActive = true;
     gameScore = 0;
@@ -1131,11 +1159,24 @@ async function endGame() {
         gameTimerInterval = null;
     }
     
-    // Calculate final stats
+    // Calculate comprehensive final stats
     const totalQuestions = gameResults.length;
     const correctAnswers = gameResults.filter(r => r.is_correct).length;
     const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions * 100).toFixed(1) : 0;
+    const averageTime = totalQuestions > 0 ? (gameResults.reduce((sum, r) => sum + r.time_taken, 0) / totalQuestions).toFixed(1) : 0;
     const isWin = accuracy >= 70; // 70% or higher is a win
+    
+    // Determine performance level for more specific messaging
+    let performanceLevel = 'struggling';
+    if (isWin) {
+        if (accuracy >= 95 && gameScore >= 80) performanceLevel = 'excellent';
+        else if (accuracy >= 85 && gameScore >= 60) performanceLevel = 'great';
+        else performanceLevel = 'good';
+    } else {
+        if (accuracy >= 65) performanceLevel = 'close';
+        else if (accuracy >= 40) performanceLevel = 'learning';
+        else performanceLevel = 'encouraging';
+    }
     
     // Log game results to AI memory
     try {
@@ -1150,7 +1191,10 @@ async function endGame() {
                 total_questions: totalQuestions,
                 correct_answers: correctAnswers,
                 accuracy: accuracy,
+                average_time: averageTime,
+                performance_level: performanceLevel,
                 is_win: isWin,
+                lives_remaining: gameLives,
                 game_results: gameResults
             })
         });
@@ -1158,28 +1202,32 @@ async function endGame() {
         console.error('Error logging game results:', error);
     }
     
-    // Show AI assistant congratulations/advice using custom popup
-    const message = isWin 
-        ? `🎉 Congratulations! You completed the {{ set_name }} study game with ${accuracy}% accuracy and scored ${gameScore} points! Great job mastering the material!`
-        : `Good effort on the {{ set_name }} study game! You scored ${gameScore} points with ${accuracy}% accuracy. Keep practicing - you're getting better! Consider reviewing the cards you missed.`;
-    
-    // Create game result object for AI popup
+    // Create enhanced game result object for AI popup
     const gameResult = {
         set_name: '{{ set_name }}',
         score: gameScore,
-        accuracy: accuracy,
+        accuracy: parseFloat(accuracy),
+        average_time: parseFloat(averageTime),
+        performance_level: performanceLevel,
         is_win: isWin,
-        message: message,
         total_questions: totalQuestions,
-        lives_remaining: lives
+        correct_answers: correctAnswers,
+        lives_remaining: gameLives,
+        detailed_results: gameResults
     };
     
-    // Show AI popup instead of basic alert
+    // Show enhanced AI popup with congratulations/support
     if (window.aiPopup) {
+        console.log('Showing AI popup with game results:', gameResult);
         aiPopup.setCurrentGameResult(gameResult);
         aiPopup.show(gameResult);
     } else {
-        // Fallback for if AI popup fails to load
+        console.warn('AI popup not available, using fallback');
+        // Enhanced fallback with better messaging
+        const message = isWin 
+            ? `🎉 Congratulations! You completed the {{ set_name }} study game with ${accuracy}% accuracy and scored ${gameScore} points! Great job mastering the material!`
+            : `Good effort on the {{ set_name }} study game! You scored ${gameScore} points with ${accuracy}% accuracy. Keep practicing - you're getting better! Consider reviewing the cards you missed.`;
+        
         const aiUrl = `/ai?game_results=${encodeURIComponent(JSON.stringify(gameResult))}`;
         if (confirm(`Game Over! ${message}\n\nWould you like to chat with your AI Assistant about your results?`)) {
             window.location.href = aiUrl;

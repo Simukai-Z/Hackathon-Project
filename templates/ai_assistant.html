@@ -764,49 +764,29 @@
             
             console.log('Processing message for links:', content);
             
-            // Start with original content - don't escape HTML yet
+            // Check if content already contains any HTML - if so, return as-is to prevent corruption
+            const containsHtml = content.includes('<a ') ||
+                                content.includes('</a>') ||
+                                content.includes('href=') ||
+                                content.includes('target="_blank"') ||
+                                content.includes('class="');
+            
+            if (containsHtml) {
+                console.log('Content contains HTML, skipping frontend processing to prevent corruption');
+                return content;
+            }
+            
+            // Start with original content
             let processedContent = content;
             
-            // Clean up any existing malformed HTML first
-            processedContent = cleanupMalformedHTML(processedContent);
-            console.log('After cleanup:', processedContent);
-
-            // Helper function to clean up malformed HTML
-            function cleanupMalformedHTML(text) {
-                // Remove nested links like: study guides titled 'Roblox <a href=...>study guides'
-                text = text.replace(/(<a[^>]*>)([^<]*)<a[^>]*>([^<]*)<\/a>([^<]*)<\/a>/gi, '$1$2$3$4</a>');
-                
-                // Remove multiple nested study guide links
-                text = text.replace(/study guides[^<]*<a[^>]*>study guides[^<]*<\/a>/gi, 'study guides');
-                
-                // Clean up patterns like "Roblox <a>study guides</a>" target="_blank">
-                text = text.replace(/([^<]*)<a[^>]*>([^<]*)<\/a>([^"]*"[^>]*>)/gi, '$1$2');
-                
-                // Remove incomplete/broken link tags
-                text = text.replace(/just click here to [^"]*" target="_blank">([^<]*)<\/a>/gi, '$1');
-                
-                // Remove other malformed link patterns
-                text = text.replace(/[^"]*" target="_blank">([^<]*)<\/a>/gi, '$1');
-                
-                // Remove incomplete opening tags without proper start
-                text = text.replace(/[^<]*" target="_blank">([^<]*)<\/a>/gi, '$1');
-                
-                // Clean up any remaining orphaned closing tags
-                text = text.replace(/<\/a>/gi, '');
-                
-                // Clean up duplicate nested links with same content
-                text = text.replace(/<a[^>]*>([^<]*)<a[^>]*>\1<\/a>([^<]*)<\/a>/gi, '<a href="/study-tools/study-guides" target="_blank" class="study-link">$1</a>$2');
-                
-                return text;
-            }
-
             // Ensure resources are loaded
             const resources = await fetchResources();
             console.log('Resources available for processing:', resources);
 
             // Helper function to safely replace text while avoiding HTML conflicts and greeting contexts
-            function safeTextReplace(text, searchTerm, replacement) {
+            function safeTextReplace(text, searchTerm, replacement, caseInsensitive = false) {
                 // Skip replacement if the term appears in common greeting patterns
+                const flags = caseInsensitive ? 'gi' : 'g';
                 const greetingPatterns = [
                     new RegExp(`\\b(hello|hi|hey)\\s+${escapeRegex(searchTerm)}\\b`, 'gi'),
                     new RegExp(`\\b${escapeRegex(searchTerm)}\\s*(,|!)`, 'gi'), // "Epic!" or "Epic,"
@@ -824,84 +804,34 @@
                 // Check if the search term is already part of an HTML link or tag
                 const htmlLinkPattern = new RegExp(`<a[^>]*>[^<]*${escapeRegex(searchTerm)}[^<]*</a>`, 'gi');
                 const insideTagPattern = new RegExp(`<[^>]*${escapeRegex(searchTerm)}[^>]*>`, 'gi');
-                const brokenLinkPattern = new RegExp(`${escapeRegex(searchTerm)}[^<]*</a>`, 'gi');
-                const alreadyLinkedPattern = new RegExp(`>${escapeRegex(searchTerm)}</a>`, 'gi');
                 
-                if (htmlLinkPattern.test(text) || insideTagPattern.test(text) || brokenLinkPattern.test(text) || alreadyLinkedPattern.test(text)) {
+                if (htmlLinkPattern.test(text) || insideTagPattern.test(text)) {
                     console.log(`⚠️ Skipping replacement of "${searchTerm}" - already part of HTML`);
                     return text;
                 }
                 
-                // Use a temporary placeholder to avoid conflicts
-                const placeholder = `__TEMP_LINK_${Math.random().toString(36).substr(2, 9)}__`;
-                
-                // Split text into parts: outside links vs inside links
-                const parts = text.split(/(<a[^>]*>.*?<\/a>)/gi);
-                
-                let result = '';
-                for (let i = 0; i < parts.length; i++) {
-                    const part = parts[i];
-                    
-                    // If this part is a link, don't modify it
-                    if (part.match(/^<a[^>]*>.*?<\/a>$/i)) {
-                        result += part;
-                    } else {
-                        // Only process text outside of links
-                        const regex = new RegExp(`\\b${escapeRegex(searchTerm)}\\b`, 'gi');
-                        const processedPart = part.replace(regex, (match, offset, string) => {
-                            // Additional context check: don't replace if preceded by greeting words
-                            const beforeMatch = string.substring(Math.max(0, offset - 20), offset).toLowerCase();
-                            if (beforeMatch.includes('hello') || beforeMatch.includes('hi ') || beforeMatch.includes('hey ')) {
-                                return match; // Return original text, don't replace
-                            }
-                            
-                            return placeholder;
-                        });
-                        
-                        result += processedPart;
-                    }
-                }
-                
-                // Final pass: replace placeholder with actual HTML link
-                result = result.replace(new RegExp(escapeRegex(placeholder), 'g'), replacement);
-                
-                return result;
+                // Simple text replacement since we've confirmed no HTML links exist
+                const regex = new RegExp(escapeRegex(searchTerm), flags);
+                return text.replace(regex, replacement);
+            }
+
+            // Helper function to escape regex special characters
+            function escapeRegex(string) {
+                return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             }
 
             // Process resources if available
             if (resources) {
-                // First, process general terms BEFORE specific resources to avoid conflicts
-                const generalTerms = [
-                    { term: 'flashcards', url: '/study-tools/flashcards', className: 'study-link' },
-                    { term: 'study guides', url: '/study-tools/study-guides', className: 'study-link' }
-                ];
-
-                generalTerms.forEach(({ term, url, className }) => {
-                    // Only add general links if the term isn't already part of a link and not followed by specific content
-                    if (!processedContent.includes(`>${term}</a>`) && !processedContent.includes(`${term}:`)) {
-                        const replacement = `<a href="${url}" target="_blank" class="${className}">${term}</a>`;
-                        
-                        // Only replace standalone occurrences, not when followed by specific names
-                        const regex = new RegExp(`\\b${escapeRegex(term)}\\b(?!\\s+titled|\\s+named|\\s*:)`, 'gi');
-                        const oldContent = processedContent;
-                        processedContent = processedContent.replace(regex, replacement);
-                        
-                        if (oldContent !== processedContent) {
-                            console.log(`✅ Applied general term link for: ${term}`);
-                        }
-                    }
-                });
-
-                // Now process specific resources - these take priority over general terms
+                // Process specific resources FIRST - these take priority over general terms
                 // Process flashcard sets
                 if (resources.flashcards && resources.flashcards.length > 0) {
                     console.log('Processing flashcards:', resources.flashcards);
                     resources.flashcards.forEach(flashcard => {
                         const setName = flashcard.name || flashcard.title;
-                        if (setName) {
+                        if (setName && setName.length > 3) {
                             const replacement = `<a href="/study-tools/flashcards/view/${encodeURIComponent(setName)}" class="resource-link flashcard-link" target="_blank" title="View flashcard set">${setName}</a>`;
                             const oldContent = processedContent;
-                            processedContent = safeTextReplace(processedContent, setName, replacement);
+                            processedContent = safeTextReplace(processedContent, setName, replacement, true);
                             if (oldContent !== processedContent) {
                                 console.log(`✅ Applied flashcard link for: ${setName}`);
                             }
@@ -932,13 +862,36 @@
                         const assignmentTitle = assignment.title;
                         const assignmentId = assignment.id;
                         const classCode = assignment.class_code;
+                        
+                        console.log(`Processing assignment: "${assignmentTitle}" (ID: ${assignmentId}, Class: ${classCode})`);
+                        
                         if (assignmentTitle && assignmentId && classCode) {
-                            const replacement = `<a href="/student_main?class=${classCode}" class="resource-link assignment-link" title="View assignment: ${assignmentTitle}" onclick="console.log('Setting assignment ID to open:', '${assignmentId}'); sessionStorage.setItem('openAssignmentModal', '${assignmentId}'); return true;">${assignmentTitle}</a>`;
+                            // Clean the assignment title for better matching
+                            const cleanTitle = assignmentTitle.trim();
+                            
+                            const replacement = `<a href="/student_main?class=${classCode}" class="resource-link assignment-link" title="View assignment: ${cleanTitle}" onclick="console.log('Setting assignment ID to open:', '${assignmentId}'); sessionStorage.setItem('openAssignmentModal', '${assignmentId}'); return true;">${cleanTitle}</a>`;
                             const oldContent = processedContent;
-                            processedContent = safeTextReplace(processedContent, assignmentTitle, replacement);
+                            processedContent = safeTextReplace(processedContent, cleanTitle, replacement);
                             if (oldContent !== processedContent) {
-                                console.log(`✅ Applied assignment link for: ${assignmentTitle} (Class: ${classCode}, ID: ${assignmentId})`);
+                                console.log(`✅ Applied assignment link for: "${cleanTitle}" (Class: ${classCode}, ID: ${assignmentId})`);
+                            } else {
+                                console.log(`⚠️ No replacement made for assignment: "${cleanTitle}" - checking for case variations`);
+                                
+                                // Try case-insensitive replacement for assignments that might have different casing
+                                const caseInsensitiveReplacement = safeTextReplace(processedContent, cleanTitle, replacement, true);
+                                if (caseInsensitiveReplacement !== processedContent) {
+                                    processedContent = caseInsensitiveReplacement;
+                                    console.log(`✅ Applied case-insensitive assignment link for: "${cleanTitle}"`);
+                                } else {
+                                    console.log(`❌ Failed to create link for assignment: "${cleanTitle}"`);
+                                }
                             }
+                        } else {
+                            console.log(`⚠️ Skipping assignment due to missing data:`, {
+                                title: assignmentTitle,
+                                id: assignmentId,
+                                classCode: classCode
+                            });
                         }
                     });
                 }
@@ -958,6 +911,42 @@
                         }
                     });
                 }
+
+                // Now process general terms AFTER specific resources to avoid conflicts
+                const generalTerms = [
+                    { term: 'flashcards', url: '/study-tools/flashcards', className: 'study-link' },
+                    { term: 'study guides', url: '/study-tools/study-guides', className: 'study-link' }
+                ];
+
+                generalTerms.forEach(({ term, url, className }) => {
+                    // Only add general links if the term isn't already part of a link
+                    if (!processedContent.includes(`>${term}</a>`) && !processedContent.includes(`${term}</a>`)) {
+                        const replacement = `<a href="${url}" target="_blank" class="${className}">${term}</a>`;
+                        
+                        // Only replace standalone occurrences, not when they're part of specific titles
+                        const regex = new RegExp(`\\b${escapeRegex(term)}\\b(?!\\s+titled|\\s+named|\\s*:|')`, 'gi');
+                        const oldContent = processedContent;
+                        processedContent = processedContent.replace(regex, (match, offset, string) => {
+                            // Don't replace if it's part of a specific study guide name
+                            const beforeMatch = string.substring(Math.max(0, offset - 30), offset);
+                            const afterMatch = string.substring(offset + match.length, offset + match.length + 30);
+                            
+                            // Skip if surrounded by quotes or if it's part of a title
+                            if (beforeMatch.includes("'") && afterMatch.includes("'")) {
+                                return match;
+                            }
+                            if (beforeMatch.toLowerCase().includes('titled') || beforeMatch.toLowerCase().includes('named')) {
+                                return match;
+                            }
+                            
+                            return replacement;
+                        });
+                        
+                        if (oldContent !== processedContent) {
+                            console.log(`✅ Applied general term link for: ${term}`);
+                        }
+                    }
+                });
             }
 
             // Escape HTML entities for safety, but preserve our HTML links
@@ -1014,6 +1003,125 @@
             
             // Re-render history to apply any new links
             await renderHistory();
+        };
+
+        // Test function specifically for assignment hyperlinks
+        window.testAssignmentLinks = async function() {
+            console.log('📝 Testing assignment hyperlink processing...');
+            
+            // Get resources first
+            const resources = await fetchResources(); 
+            console.log('All resources:', resources);
+            
+            if (resources && resources.assignments) {
+                console.log('📋 Assignment data found:', resources.assignments);
+                
+                // Test each assignment
+                resources.assignments.forEach((assignment, index) => {
+                    console.log(`\n🔍 Testing assignment ${index + 1}:`);
+                    console.log(`  Title: "${assignment.title}"`);
+                    console.log(`  ID: "${assignment.id}"`);
+                    console.log(`  Class: "${assignment.class_code}"`);
+                    
+                    // Check if all required fields exist
+                    if (assignment.title && assignment.id && assignment.class_code) {
+                        console.log(`  ✅ Has all required fields`);
+                        
+                        // Test the hyperlink creation
+                        const testText = `Please work on your ${assignment.title} assignment.`;
+                        console.log(`  Test text: "${testText}"`);
+                        
+                        // Test if the assignment title can be found and linked
+                        const expectedUrl = `/student_main?class=${assignment.class_code}`;
+                        const replacement = `<a href="${expectedUrl}" class="resource-link assignment-link" title="View assignment: ${assignment.title}" onclick="sessionStorage.setItem('openAssignmentModal', '${assignment.id}'); return true;">${assignment.title}</a>`;
+                        
+                        // Check if the replacement would work
+                        const regex = new RegExp(`\\b${escapeRegex(assignment.title)}\\b`, 'gi');
+                        if (regex.test(testText)) {
+                            console.log(`  ✅ Assignment title "${assignment.title}" can be matched`);
+                            
+                            const result = testText.replace(regex, replacement);
+                            console.log(`  🔗 Generated link: ${result}`);
+                        } else {
+                            console.log(`  ❌ Assignment title "${assignment.title}" cannot be matched with regex`);
+                        }
+                    } else {
+                        console.log(`  ❌ Missing required fields:`, {
+                            hasTitle: !!assignment.title,
+                            hasId: !!assignment.id,
+                            hasClassCode: !!assignment.class_code
+                        });
+                    }
+                });
+                
+                // Test with a sample text containing multiple assignments
+                const sampleText = `Don't forget to complete your ${resources.assignments.map(a => a.title).join(' and ')} assignments before the deadline.`;
+                console.log(`\n🧪 Testing with sample text: "${sampleText}"`);
+                
+                const processed = await processMessageForLinks(sampleText);
+                console.log(`📤 Processed result: ${processed}`);
+                
+                // Create visual test result
+                const testDiv = document.createElement('div');
+                testDiv.style.cssText = 'border: 2px solid #9b59b6; padding: 15px; margin: 10px; background: #f8f9fa; border-radius: 8px;';
+                testDiv.innerHTML = `
+                    <h4 style="color: #9b59b6; margin-top: 0;">📝 Assignment Links Test</h4>
+                    <div style="background: white; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
+                        <strong>Original:</strong> ${sampleText}<br><br>
+                        <strong>With Links:</strong> ${processed}
+                    </div>
+                `;
+                document.body.appendChild(testDiv);
+                
+            } else {
+                console.log('❌ No assignments found in resources');
+            }
+        };
+
+        // Enhanced test function for debugging the exact issue
+        window.testCompleteFlow = async function() {
+            console.log('🔬 Testing complete hyperlink processing flow...');
+            
+            // Test with the exact problematic text
+            const testText = `Hey EPic! 🚀 Let's check out the study guides you have:
+
+📖 You currently have a study guides titled 'Roblox study guide'. It contains 1017 characters of valuable information. If you want to dive into it, just click here to view your study guides.`;
+
+            console.log('1️⃣ Original text:', testText);
+            
+            // Step 1: Cleanup
+            const cleaned = cleanupMalformedHTML(testText);
+            console.log('2️⃣ After cleanup:', cleaned);
+            
+            // Step 2: Get resources
+            const resources = await fetchResources();
+            console.log('3️⃣ Available resources:', resources);
+            
+            // Step 3: Process with new logic
+            const processed = await processMessageForLinks(testText);
+            console.log('4️⃣ Final processed result:', processed);
+            
+            // Create visual test
+            const testDiv = document.createElement('div');
+            testDiv.style.cssText = 'border: 2px solid #28a745; padding: 15px; margin: 10px; background: #f8f9fa; border-radius: 8px;';
+            testDiv.innerHTML = `
+                <h4 style="color: #28a745; margin-top: 0;">✅ Fixed Result Test</h4>
+                <div style="background: white; padding: 10px; border-radius: 4px; border: 1px solid #ddd;">
+                    ${processed}
+                </div>
+            `;
+            document.body.appendChild(testDiv);
+            
+            console.log('✅ Test complete - check the green box above for the result');
+            
+            // Test if the Roblox study guide link works
+            if (processed.includes('study-guides/view/Roblox%20study%20guide')) {
+                console.log('🎉 SUCCESS: Roblox study guide link is properly generated!');
+            } else {
+                console.log('❌ FAILURE: Roblox study guide link is not working properly');
+            }
+            
+            return processed;
         };
 
         // Test function for debugging broken HTML links
@@ -1192,7 +1300,25 @@ If you need any specific help or guidance on any topic within the guide, feel fr
                 
                 // Process AI messages for automatic hyperlinks
                 if (msg.role === 'ai') {
-                    textDiv.innerHTML = await processMessageForLinks(msg.content);
+                    // Check if the message contains any HTML tags or attributes
+                    const containsHtml = msg.content && (
+                        msg.content.includes('<a ') ||
+                        msg.content.includes('</a>') ||
+                        msg.content.includes('href=') ||
+                        msg.content.includes('target="_blank"') ||
+                        msg.content.includes('class="')
+                    );
+                    
+                    if (containsHtml) {
+                        // Message already contains HTML from backend processing - display as-is
+                        // Don't apply any cleaning or additional processing to avoid corruption
+                        textDiv.innerHTML = msg.content;
+                        console.log('Displaying backend-processed HTML content as-is');
+                    } else {
+                        // Plain text message - apply frontend link processing
+                        textDiv.innerHTML = await processMessageForLinks(msg.content);
+                        console.log('Applied frontend link processing to plain text');
+                    }
                 } else {
                     textDiv.textContent = msg.content;
                 }

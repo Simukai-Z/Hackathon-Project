@@ -30,6 +30,37 @@
       ],
       "assignment": null,
       "created_at": "2025-07-26T23:42:39.137406"
+    },
+    "Roblox study guide but cool": {
+      "title": "Roblox study guide but cool",
+      "style": "outline",
+      "complexity_level": "intermediate",
+      "estimated_length": 60,
+      "sections": [
+        {
+          "title": "Key Concepts",
+          "type": "key_concepts",
+          "content": [
+            {
+              "term": "Core Concept 1 - Roblox study guide but cool",
+              "definition": "Fundamental understanding derived from the provided content.",
+              "example": "Practical application example from the study material."
+            },
+            {
+              "term": "Important Principle - Roblox study guide but cool",
+              "definition": "Key principle that governs the understanding of this topic.",
+              "example": "Real-world scenario demonstrating this principle."
+            }
+          ]
+        },
+        {
+          "title": "Summary",
+          "type": "summary",
+          "content": "# Study Guide: Roblox Study Guide but Cool\n\n## Overview\nIn this study guide, we will delve into learning Roblox Studio in a fun and engaging manner. Roblox Studio is a powerful tool that allows users to create their own games, simulations, and experiences within the Roblox platform. By understanding the key concepts and topics covered in this guide, you will be equipped with the knowledge and skills to unleash your creativity and build exciting projects in Roblox.\n\n## Key Concepts and Topics\n\n##..."
+        }
+      ],
+      "assignment": null,
+      "created_at": "2025-07-27T05:36:14.021915"
     }
   }
 }

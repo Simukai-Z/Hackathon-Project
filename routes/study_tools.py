@@ -917,52 +917,78 @@ def check_answer():
                 ai_service = AIService()
                 
                 prompt = f"""
-You are an expert educational assessment tool. Your job is to evaluate whether a student's answer demonstrates understanding of the concept, even if the wording is different.
+You are an expert educational assessment AI. Evaluate if the student's answer demonstrates understanding of the concept, even with different wording.
 
 Question: {question}
 Expected Answer: {correct_answer}
 Student's Answer: {user_answer}
 
-Assessment Guidelines:
-- Accept answers that show conceptual understanding, even with different phrasing
+IMPORTANT EVALUATION CRITERIA:
+- Focus on conceptual understanding, not exact word matching
 - Be very lenient with spelling errors, typos, and capitalization
-- Accept synonyms and equivalent terms (e.g., "car" = "automobile", "big" = "large")
-- Focus on meaning, not exact word matching
-- Consider abbreviations and common shorthand acceptable
-- Accept answers in different sentence structures or orders
-- Be encouraging while still maintaining accuracy
+- Accept synonyms and equivalent terms
+- Accept answers in different sentence structures
+- Consider abbreviations and shorthand acceptable
+- Reward partial understanding with encouraging feedback
+- If the student shows ANY understanding of the core concept, mark as correct
 
-Examples of what to accept:
-- If expected: "photosynthesis", accept: "fotosynthesis", "photo synthesis", "the process plants use to make food"
-- If expected: "mitochondria", accept: "mitochondria", "powerhouse of cell", "organelle that makes energy"
-- If expected: "JavaScript function", accept: "JS function", "function in javascript", "a function"
+EXAMPLES:
+- For "coroutines": Accept "threads", "new script", "multitasking", "async"
+- For "metatables": Accept "classes", "custom behavior", "special tables"
+- For "pairs vs ipairs": Accept "all vs numbers", "everything vs integers"
 
-CRITICAL: You must respond with ONLY a valid JSON object, no markdown, no explanations outside the JSON:
-
-{{
-    "is_correct": true,
-    "feedback": "Great job! Your answer shows you understand the concept.",
-    "confidence": 0.95
-}}
-
-OR
+You MUST respond with ONLY valid JSON in this exact format:
 
 {{
-    "is_correct": false,
-    "feedback": "Not quite right. The correct answer is about [key concept]. Try thinking about [hint].",
-    "confidence": 0.90
+  "is_correct": true,
+  "feedback": "Great job! Your answer shows you understand that [concept]. [encouragement]",
+  "confidence": 0.95
 }}
+
+OR for incorrect answers:
+
+{{
+  "is_correct": false,
+  "feedback": "Good attempt! You're on the right track with [partial understanding]. The key concept is [explanation]. Try thinking about [hint].",
+  "confidence": 0.90
+}}
+
+CRITICAL: Return ONLY the JSON object. No markdown, no extra text, no explanations outside the JSON.
 """
                 
                 response = ai_service.generate_response(prompt, max_tokens=300)
+                
+                print(f"🤖 AI Response for answer check: {response}")
                 
                 # Enhanced JSON parsing
                 try:
                     import re
                     
-                    # First try to find complete JSON object
+                    # Clean the response first
+                    response_cleaned = response.strip()
+                    
+                    # Remove any markdown formatting
+                    if response_cleaned.startswith('```'):
+                        response_cleaned = re.sub(r'^```(?:json)?\s*', '', response_cleaned)
+                        response_cleaned = re.sub(r'\s*```$', '', response_cleaned)
+                    
+                    # First try to parse as direct JSON
+                    try:
+                        result = json.loads(response_cleaned)
+                        if 'is_correct' in result:
+                            # Ensure we have all required fields
+                            result['is_correct'] = bool(result.get('is_correct', False))
+                            result['feedback'] = str(result.get('feedback', 'Answer checked.'))
+                            result['confidence'] = float(result.get('confidence', 0.8))
+                            
+                            print(f"✅ AI answer check result: {result}")
+                            return jsonify(result)
+                    except json.JSONDecodeError:
+                        pass
+                    
+                    # Try to find JSON object within the response
                     json_pattern = r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}'
-                    json_matches = re.findall(json_pattern, response)
+                    json_matches = re.findall(json_pattern, response_cleaned)
                     
                     for json_str in json_matches:
                         try:
@@ -973,7 +999,7 @@ OR
                                 result['feedback'] = str(result.get('feedback', 'Answer checked.'))
                                 result['confidence'] = float(result.get('confidence', 0.8))
                                 
-                                print(f"AI answer check result: {result}")
+                                print(f"✅ AI answer check result: {result}")
                                 return jsonify(result)
                         except (json.JSONDecodeError, ValueError):
                             continue
@@ -1170,23 +1196,53 @@ def get_resources():
             # Extract assignments and rubrics
             for class_code, classroom in user_classrooms:
                 # Add assignments
+                assignments_added = 0
                 for assignment in classroom.get('assignments', []):
-                    resources['assignments'].append({
+                    assignment_data = {
                         'id': assignment.get('id'),
                         'title': assignment.get('title'),
                         'class_code': class_code
-                    })
+                    }
+                    # Only add if all required fields are present
+                    if assignment_data['id'] and assignment_data['title'] and assignment_data['class_code']:
+                        resources['assignments'].append(assignment_data)
+                        assignments_added += 1
+                    else:
+                        print(f"⚠️ Skipping assignment with missing data: {assignment_data}")
+                
+                print(f"Added {assignments_added} assignments from class {class_code}")
                 
                 # Add rubrics
+                rubrics_added = 0
                 for rubric in classroom.get('rubrics', []):
-                    resources['rubrics'].append({
+                    rubric_data = {
                         'id': rubric.get('id'),
                         'title': rubric.get('title'),
                         'class_code': class_code
-                    })
+                    }
+                    # Only add if all required fields are present
+                    if rubric_data['id'] and rubric_data['title'] and rubric_data['class_code']:
+                        resources['rubrics'].append(rubric_data)
+                        rubrics_added += 1
+                    else:
+                        print(f"⚠️ Skipping rubric with missing data: {rubric_data}")
+                
+                print(f"Added {rubrics_added} rubrics from class {class_code}")
                     
         except Exception as e:
             print(f"Error loading classroom resources: {e}")
+        
+        print(f"DEBUG: Resources loaded for user {user_email}:")
+        print(f"  Flashcards: {len(resources['flashcards'])}")
+        print(f"  Study guides: {len(resources['study_guides'])}")
+        print(f"  Assignments: {len(resources['assignments'])}")
+        print(f"  Rubrics: {len(resources['rubrics'])}")
+        
+        # Debug assignment details
+        if resources['assignments']:
+            print("📝 Assignment details:")
+            for i, assignment in enumerate(resources['assignments']):
+                print(f"  {i+1}. '{assignment['title']}' (ID: {assignment['id']}, Class: {assignment['class_code']})")
         
         return jsonify(resources)
         

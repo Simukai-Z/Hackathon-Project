@@ -8,7 +8,7 @@
     height: 100%;
     background: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(5px);
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     z-index: 10000;
@@ -16,11 +16,11 @@
     transition: opacity 0.3s ease;
 }
 
-.ai-popup-overlay.ai-popup-visible {
+.ai-popup-overlay.show {
     opacity: 1;
 }
 
-.ai-popup-container {
+.ai-popup {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
@@ -33,7 +33,7 @@
     position: relative;
 }
 
-.ai-popup-visible .ai-popup-container {
+.ai-popup-overlay.show .ai-popup {
     transform: scale(1) translateY(0);
 }
 
@@ -159,17 +159,33 @@
     font-size: 1.1em;
     line-height: 1.6;
     color: #333;
-    display: none;
+    display: block;
     min-height: 60px;
-    padding: 10px 0;
+    padding: 15px 0;
+    animation: fadeInUp 0.6s ease-out;
 }
 
 .ai-message p {
     margin: 0 0 15px 0;
+    opacity: 0;
+    transform: translateY(10px);
+    animation: fadeInText 0.5s ease-out forwards;
 }
+
+.ai-message p:nth-child(1) { animation-delay: 0.1s; }
+.ai-message p:nth-child(2) { animation-delay: 0.3s; }
+.ai-message p:nth-child(3) { animation-delay: 0.5s; }
+.ai-message p:nth-child(4) { animation-delay: 0.7s; }
 
 .ai-message p:last-child {
     margin-bottom: 0;
+}
+
+@keyframes fadeInText {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .ai-popup-actions {
@@ -177,12 +193,14 @@
     padding: 20px;
     display: flex;
     justify-content: space-between;
-    gap: 15px;
+    gap: 12px;
+    flex-wrap: wrap;
 }
 
-.ai-popup-actions .btn {
+.ai-action-btn {
     flex: 1;
-    padding: 12px 20px;
+    min-width: 120px;
+    padding: 12px 16px;
     border: none;
     border-radius: 10px;
     font-weight: 600;
@@ -192,31 +210,49 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-}
-
-.ai-popup-actions .btn-secondary {
+    gap: 8px;
+    font-size: 14px;
     background: #6c757d;
     color: white;
 }
 
-.ai-popup-actions .btn-secondary:hover {
-    background: #5a6268;
-    transform: translateY(-1px);
+.ai-action-btn .btn-icon {
+    font-size: 16px;
 }
 
-.ai-popup-actions .btn-primary {
+.ai-action-btn .btn-text {
+    font-weight: 600;
+}
+
+.ai-action-btn:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.ai-action-btn.secondary {
+    background: #17a2b8;
+    color: white;
+}
+
+.ai-action-btn.secondary:hover {
+    background: #138496;
+    box-shadow: 0 2px 8px rgba(23, 162, 184, 0.3);
+}
+
+.ai-action-btn.primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     position: relative;
     overflow: hidden;
 }
 
-.ai-popup-actions .btn-primary:hover {
+.ai-action-btn.primary:hover {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
-.ai-popup-actions .btn-primary::before {
+.ai-action-btn.primary::before {
     content: '';
     position: absolute;
     top: 0;
@@ -227,7 +263,7 @@
     transition: left 0.5s;
 }
 
-.ai-popup-actions .btn-primary:hover::before {
+.ai-action-btn.primary:hover::before {
     left: 100%;
 }
 
@@ -269,14 +305,32 @@
     .ai-popup-actions {
         padding: 15px;
         flex-direction: column;
+        gap: 10px;
     }
     
-    .ai-popup-actions .btn {
-        margin-bottom: 10px;
-    }
-    
-    .ai-popup-actions .btn:last-child {
+    .ai-action-btn {
         margin-bottom: 0;
+        min-width: auto;
+    }
+    
+    .ai-action-btn:last-child {
+        margin-bottom: 0;
+    }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+    .ai-popup-actions {
+        flex-direction: column;
+    }
+    
+    .ai-action-btn {
+        width: 100%;
+        min-width: auto;
+    }
+    
+    .ai-action-btn .btn-text {
+        font-size: 13px;
     }
 }
 
@@ -291,7 +345,29 @@
         color: #e2e8f0;
     }
     
+    .ai-message p {
+        color: #e2e8f0;
+    }
+    
     .ai-popup-actions {
         background: #1a202c;
     }
+}
+
+/* Manual dark mode class for better control */
+.dark-mode .ai-popup-content {
+    background: #2d3748;
+    color: #e2e8f0;
+}
+
+.dark-mode .ai-message {
+    color: #e2e8f0;
+}
+
+.dark-mode .ai-message p {
+    color: #e2e8f0;
+}
+
+.dark-mode .ai-popup-actions {
+    background: #1a202c;
 }
