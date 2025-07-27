@@ -30,9 +30,16 @@
                 </div>
 
                 <div class="guide-actions">
-                    <a href="/study-tools/study-guides/view/{{ guide_title }}" class="btn btn-primary">Study</a>
-                    <a href="/study-tools/study-guides/export/{{ guide_title }}" class="btn btn-secondary">Export PDF</a>
-                    <button onclick="deleteStudyGuide('{{ guide_title }}')" class="btn btn-danger">Delete</button>
+                    <a href="/study-tools/study-guides/view/{{ guide_title | urlencode }}" class="btn btn-primary">Study</a>
+                    <a href="/study-tools/study-guides/export/{{ guide_title | urlencode }}" class="btn btn-secondary">Export PDF</a>
+                    {% if study_guide.get('related_flashcards') %}
+                        {% for flashcard_set in study_guide.related_flashcards %}
+                        <a href="/study-tools/flashcards/view/{{ flashcard_set | urlencode }}" class="btn btn-success">
+                            <i class="fas fa-cards-blank"></i> View Flashcards
+                        </a>
+                        {% endfor %}
+                    {% endif %}
+                    <button class="btn btn-danger" data-guide-title="{{ guide_title }}" onclick="deleteStudyGuideHandler(this)">Delete</button>
                 </div>
             </div>
             {% endfor %}
@@ -141,10 +148,10 @@
 
 .guide-actions .btn {
     flex: 1;
-    min-width: 80px;
+    min-width: 100px;
     text-align: center;
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
+    padding: 0.5rem 0.8rem;
+    font-size: 0.85rem;
 }
 
 .empty-state {
@@ -184,6 +191,11 @@ body.dark-mode .guide-stats {
 </style>
 
 <script>
+function deleteStudyGuideHandler(button) {
+    const guideTitle = button.getAttribute('data-guide-title');
+    deleteStudyGuide(guideTitle);
+}
+
 function deleteStudyGuide(guideTitle) {
     if (confirm(`Are you sure you want to delete the study guide "${guideTitle}"? This action cannot be undone.`)) {
         fetch(`/study-tools/study-guides/delete/${encodeURIComponent(guideTitle)}`, {

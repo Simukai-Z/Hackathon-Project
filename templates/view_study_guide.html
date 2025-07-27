@@ -3,7 +3,7 @@
 {% block title %}Study Guide: {{ study_guide.title }}{% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container" id="study-guide-container" data-study-guide="{{ study_guide | tojson | e }}">
     <div class="study-guide-header">
         <div class="guide-meta">
             <h1>{{ study_guide.title }}</h1>
@@ -17,6 +17,9 @@
         <div class="guide-actions">
             <button class="btn btn-secondary" onclick="toggleTOC()">
                 <i class="fas fa-list"></i> Table of Contents
+            </button>
+            <button class="btn btn-success" onclick="generateFlashcardsAI()">
+                <i class="fas fa-cards-blank"></i> Generate Flashcards
             </button>
             <button class="btn btn-primary" onclick="window.print()">
                 <i class="fas fa-print"></i> Print Guide
@@ -70,6 +73,12 @@
                                 </div>
                                 {% endfor %}
                             </div>
+                        {% elif section.type == 'ai_content' %}
+                            <div class="ai-generated-content">
+                                <div class="markdown-content">
+                                    {{ section.content | markdown | safe }}
+                                </div>
+                            </div>
                         {% elif section.type == 'outline' %}
                             <div class="outline-content">
                                 {% for item in section.content %}
@@ -95,13 +104,26 @@
     </div>
 
     <div class="study-guide-footer">
+        <div class="footer-section">
+            <h3><i class="fas fa-graduation-cap"></i> Study Tools</h3>
+            <p>Transform this study guide into interactive learning materials</p>
+            <div class="study-tools-actions">
+                <button class="btn btn-success btn-lg" onclick="generateFlashcards()">
+                    <i class="fas fa-cards-blank"></i> Generate Flashcards
+                    <small>Create AI-powered flashcards from this guide</small>
+                </button>
+                <button class="btn btn-info" onclick="startQuickReview()">
+                    <i class="fas fa-brain"></i> Quick Review
+                </button>
+                <button class="btn btn-warning" onclick="exportToPDF()">
+                    <i class="fas fa-file-pdf"></i> Export PDF
+                </button>
+            </div>
+        </div>
         <div class="navigation-buttons">
             <a href="/study-tools/study-guides" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to Study Guides
             </a>
-            <button class="btn btn-primary" onclick="generateFlashcards()">
-                <i class="fas fa-clone"></i> Generate Flash Cards
-            </button>
         </div>
     </div>
 </div>
@@ -306,9 +328,55 @@
 
 .study-guide-footer {
     margin-top: 2rem;
+    padding: 2rem;
     text-align: center;
-    padding-top: 2rem;
     border-top: 1px solid var(--border-color);
+    background: linear-gradient(135deg, rgba(79, 172, 254, 0.05), rgba(0, 242, 254, 0.05));
+    border-radius: 8px;
+}
+
+.footer-section {
+    margin-bottom: 2rem;
+}
+
+.footer-section h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1.3rem;
+}
+
+.footer-section p {
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+    font-size: 1rem;
+}
+
+.study-tools-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.study-tools-actions .btn-lg {
+    padding: 1rem 1.5rem;
+    font-size: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 200px;
+}
+
+.study-tools-actions .btn-lg small {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    font-weight: normal;
+}
+
+.study-tools-actions .btn:not(.btn-lg) {
+    padding: 0.6rem 1rem;
 }
 
 .navigation-buttons {
@@ -378,6 +446,138 @@ body.dark-mode .question-answer {
 body.dark-mode .toc-list a:hover {
     background: var(--dark-bg);
 }
+
+/* AI-generated content styles */
+.ai-generated-content {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    line-height: 1.6;
+    max-width: none;
+}
+
+.ai-generated-content .markdown-content {
+    white-space: pre-wrap;
+    font-size: 1rem;
+    color: var(--text-color);
+}
+
+.ai-generated-content h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    border-bottom: 3px solid var(--primary-color);
+    margin: 2rem 0 1rem 0;
+    padding-bottom: 0.5rem;
+}
+
+.ai-generated-content h2 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin: 2rem 0 1rem 0;
+    border-bottom: 2px solid #ddd;
+    padding-bottom: 0.3rem;
+}
+
+.ai-generated-content h3 {
+    font-size: 1.5rem;
+    color: var(--secondary-color);
+    margin: 1.5rem 0 0.8rem 0;
+}
+
+.ai-generated-content h4 {
+    font-size: 1.2rem;
+    color: var(--text-color);
+    margin: 1rem 0 0.5rem 0;
+    font-weight: 600;
+}
+
+.ai-generated-content p {
+    margin: 1rem 0;
+    line-height: 1.7;
+}
+
+.ai-generated-content ul, 
+.ai-generated-content ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.ai-generated-content li {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.ai-generated-content strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.ai-generated-content em {
+    color: var(--secondary-color);
+    font-style: italic;
+}
+
+.ai-generated-content hr {
+    border: none;
+    border-top: 2px solid #ddd;
+    margin: 2rem 0;
+}
+
+.ai-generated-content blockquote {
+    border-left: 4px solid var(--primary-color);
+    margin: 1rem 0;
+    padding: 1rem 1.5rem;
+    background: #f8f9fa;
+    font-style: italic;
+}
+
+.ai-generated-content code {
+    background: #f4f4f4;
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #e74c3c;
+}
+
+.ai-generated-content pre {
+    background: #f4f4f4;
+    padding: 1rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    margin: 1rem 0;
+}
+
+/* Dark mode support for AI content */
+body.dark-mode .ai-generated-content .markdown-content {
+    color: var(--dark-text);
+}
+
+body.dark-mode .ai-generated-content h1,
+body.dark-mode .ai-generated-content h2 {
+    color: var(--dark-primary);
+}
+
+body.dark-mode .ai-generated-content h3 {
+    color: var(--dark-secondary);
+}
+
+body.dark-mode .ai-generated-content strong {
+    color: var(--dark-primary);
+}
+
+body.dark-mode .ai-generated-content em {
+    color: var(--dark-secondary);
+}
+
+body.dark-mode .ai-generated-content blockquote {
+    background: var(--dark-card);
+    border-left-color: var(--dark-primary);
+}
+
+body.dark-mode .ai-generated-content code,
+body.dark-mode .ai-generated-content pre {
+    background: var(--dark-bg);
+    color: var(--dark-text);
+}
 </style>
 
 <script>
@@ -410,6 +610,18 @@ function updateActiveTOC(activeLink) {
     activeLink.classList.add('active');
 }
 
+// Initialize study guide data from data attribute
+function initializeStudyGuideData() {
+    try {
+        const container = document.getElementById('study-guide-container');
+        const dataAttr = container.getAttribute('data-study-guide');
+        window.studyGuideData = JSON.parse(dataAttr);
+    } catch (e) {
+        console.error('Error parsing study guide data:', e);
+        window.studyGuideData = {};
+    }
+}
+
 // Toggle table of contents on mobile
 function toggleTOC() {
     const toc = document.getElementById('toc-panel');
@@ -432,7 +644,9 @@ function toggleAnswer(button) {
 
 // Generate flash cards from study guide
 function generateFlashcards() {
-    const studyGuide = {{ study_guide | tojson }};
+    console.log('generateFlashcards (old) called');
+    const studyGuide = window.studyGuideData;
+    console.log('Study guide sections:', studyGuide.sections);
     const flashcards = [];
     
     // Extract concepts for flash cards
@@ -451,6 +665,11 @@ function generateFlashcards() {
                     back: question.answer
                 });
             });
+        } else if (section.type === 'ai_content') {
+            // For AI-generated content, use the AI flashcard generation instead
+            console.log('AI content detected, redirecting to AI flashcard generation');
+            generateFlashcardsAI();
+            return;
         }
     });
     
@@ -486,8 +705,202 @@ function generateFlashcards() {
             alert('Error creating flash cards');
         });
     } else {
-        alert('No suitable content found for flash cards in this study guide.');
+        console.log('No traditional key_concepts or questions found, sections:', studyGuide.sections.map(s => s.type));
+        alert('This study guide uses AI-generated content. The AI flashcard generator should be used instead.');
+        // Automatically call the AI function
+        generateFlashcardsAI();
     }
+}
+
+// Generate flashcards from study guide using AI
+async function generateFlashcardsAI() {
+    console.log('generateFlashcardsAI called');
+    const studyGuide = window.studyGuideData;
+    console.log('Study guide data:', studyGuide);
+    const guideTitle = studyGuide.title;
+    
+    if (confirm(`Generate flashcards from "${guideTitle}"? This will create a new flashcard set based on the key concepts and content from this study guide.`)) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+        button.disabled = true;
+        
+        try {
+            const response = await fetch('/study-tools/api/generate-flashcards-from-guide', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    guide_title: guideTitle,
+                    num_cards: 15
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                const message = `Successfully generated ${data.cards_count} flashcards from this study guide!`;
+                const viewFlashcards = confirm(`${message}\n\nWould you like to view the new flashcard set now?`);
+                
+                if (viewFlashcards) {
+                    window.open(`/study-tools/flashcards/view/${encodeURIComponent(data.flashcard_set_name)}`, '_blank');
+                } else {
+                    // Show info about accessing flashcards later
+                    const showInfo = confirm(`Flashcards created successfully!\n\nYou can access them later from:\n• The Study Guides page (new "View Flashcards" button)\n• The Flashcards section in Study Tools\n\nWould you like to go to the Study Guides page now?`);
+                    if (showInfo) {
+                        window.location.href = '/study-tools/study-guides';
+                    }
+                }
+            } else {
+                alert(`Failed to generate flashcards: ${data.error || 'Unknown error occurred'}`);
+            }
+        } catch (error) {
+            console.error('Error generating flashcards:', error);
+            alert('An error occurred while generating flashcards. Please try again.');
+        } finally {
+            button.innerHTML = originalText;
+            button.disabled = false;
+        }
+    }
+}
+
+// Quick review function
+function startQuickReview() {
+    const sections = document.querySelectorAll('.guide-section');
+    if (sections.length === 0) {
+        alert('No content available for quick review.');
+        return;
+    }
+    
+    let currentSection = 0;
+    
+    function showSection(index) {
+        // Hide all sections
+        sections.forEach(section => section.style.display = 'none');
+        
+        if (index < sections.length) {
+            // Show current section
+            sections[index].style.display = 'block';
+            sections[index].scrollIntoView({ behavior: 'smooth' });
+            
+            // Create review navigation
+            if (!document.getElementById('review-controls')) {
+                const controls = document.createElement('div');
+                controls.id = 'review-controls';
+                controls.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: white;
+                    padding: 15px;
+                    border-radius: 10px;
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    display: flex;
+                    gap: 10px;
+                    align-items: center;
+                `;
+                
+                controls.innerHTML = `
+                    <button onclick="previousSection()" class="btn btn-sm btn-secondary" ${index === 0 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span style="margin: 0 15px; font-weight: bold;">
+                        Section ${index + 1} of ${sections.length}
+                    </span>
+                    <button onclick="nextSection()" class="btn btn-sm btn-primary" ${index === sections.length - 1 ? 'disabled' : ''}>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button onclick="exitReview()" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-times"></i> Exit
+                    </button>
+                `;
+                
+                document.body.appendChild(controls);
+            } else {
+                // Update existing controls
+                const controls = document.getElementById('review-controls');
+                controls.innerHTML = `
+                    <button onclick="previousSection()" class="btn btn-sm btn-secondary" ${index === 0 ? 'disabled' : ''}>
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </button>
+                    <span style="margin: 0 15px; font-weight: bold;">
+                        Section ${index + 1} of ${sections.length}
+                    </span>
+                    <button onclick="nextSection()" class="btn btn-sm btn-primary" ${index === sections.length - 1 ? 'disabled' : ''}>
+                        Next <i class="fas fa-chevron-right"></i>
+                    </button>
+                    <button onclick="exitReview()" class="btn btn-sm btn-outline-danger">
+                        <i class="fas fa-times"></i> Exit
+                    </button>
+                `;
+            }
+        }
+    }
+    
+    // Global functions for review navigation
+    window.nextSection = function() {
+        if (currentSection < sections.length - 1) {
+            currentSection++;
+            showSection(currentSection);
+        }
+    };
+    
+    window.previousSection = function() {
+        if (currentSection > 0) {
+            currentSection--;
+            showSection(currentSection);
+        }
+    };
+    
+    window.exitReview = function() {
+        // Show all sections
+        sections.forEach(section => section.style.display = 'block');
+        
+        // Remove controls
+        const controls = document.getElementById('review-controls');
+        if (controls) {
+            controls.remove();
+        }
+        
+        // Scroll to top
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    
+    // Start review
+    showSection(0);
+}
+
+// Export to PDF function
+function exportToPDF() {
+    const originalMode = document.body.classList.contains('print-mode');
+    
+    // Add print-friendly styles
+    document.body.classList.add('print-mode');
+    
+    // Hide non-essential elements
+    const elementsToHide = document.querySelectorAll('.guide-actions, .table-of-contents, .study-guide-footer, #review-controls');
+    elementsToHide.forEach(el => {
+        if (el) el.style.display = 'none';
+    });
+    
+    // Trigger print
+    setTimeout(() => {
+        window.print();
+        
+        // Restore after print
+        setTimeout(() => {
+            elementsToHide.forEach(el => {
+                if (el) el.style.display = '';
+            });
+            
+            if (!originalMode) {
+                document.body.classList.remove('print-mode');
+            }
+        }, 1000);
+    }, 100);
 }
 
 // Intersection Observer for TOC highlighting
@@ -511,6 +924,7 @@ function setupScrollSpy() {
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
+    initializeStudyGuideData();
     generateTOC();
     setupScrollSpy();
 });

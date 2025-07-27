@@ -140,6 +140,68 @@ def load_study_progress():
         print(f"Error loading study progress: {e}")
     return {}
 
+def calculate_progress_from_game_results(user_email):
+    """Calculate user progress from game results data"""
+    try:
+        user_results_file = os.path.join('data', 'user_game_results', f"{user_email.replace('@', '_').replace('.', '_')}.json")
+        
+        if not os.path.exists(user_results_file):
+            return {}
+        
+        with open(user_results_file, 'r') as f:
+            user_results = json.load(f)
+        
+        # Group results by flashcard set
+        set_progress = {}
+        
+        for result in user_results:
+            set_name = result.get('flashcard_set_name')
+            if not set_name:
+                continue
+                
+            if set_name not in set_progress:
+                set_progress[set_name] = {
+                    'total_questions': 0,
+                    'correct_answers': 0,
+                    'games_played': 0,
+                    'best_accuracy': 0,
+                    'recent_accuracy': 0
+                }
+            
+            # Update statistics
+            progress = set_progress[set_name]
+            progress['total_questions'] += result.get('total_questions', 0)
+            progress['correct_answers'] += result.get('correct_answers', 0)
+            progress['games_played'] += 1
+            
+            # Track accuracy
+            current_accuracy = float(result.get('accuracy', 0))
+            if current_accuracy > progress['best_accuracy']:
+                progress['best_accuracy'] = current_accuracy
+            progress['recent_accuracy'] = current_accuracy  # Most recent game
+        
+        # Calculate final percentages
+        final_progress = {}
+        for set_name, stats in set_progress.items():
+            if stats['total_questions'] > 0:
+                overall_accuracy = (stats['correct_answers'] / stats['total_questions']) * 100
+                # Use a weighted average of overall accuracy and best single-game performance
+                mastery_score = (overall_accuracy * 0.7) + (stats['best_accuracy'] * 0.3)
+                
+                final_progress[set_name] = {
+                    'correct_percentage': round(mastery_score, 1),
+                    'games_played': stats['games_played'],
+                    'total_questions': stats['total_questions'],
+                    'correct_answers': stats['correct_answers'],
+                    'best_accuracy': stats['best_accuracy']
+                }
+        
+        return final_progress
+        
+    except Exception as e:
+        print(f"Error calculating progress from game results: {e}")
+        return {}
+
 def save_study_progress(data):
     """Save study progress to JSON file"""
     try:
@@ -159,12 +221,13 @@ def study_tools_dashboard():
     user_email = session['email']
     flashcards_data = load_flashcards()
     study_guides_data = load_study_guides()
-    progress_data = load_study_progress()
+    
+    # Calculate progress from game results instead of using static progress file
+    user_progress = calculate_progress_from_game_results(user_email)
     
     # Get user's flash card sets
     user_flashcards = flashcards_data.get(user_email, {})
     user_study_guides = study_guides_data.get(user_email, {})
-    user_progress = progress_data.get(user_email, {})
     
     # Calculate statistics
     total_flashcard_sets = len(user_flashcards)
@@ -207,10 +270,11 @@ def flashcards():
     
     user_email = session['email']
     flashcards_data = load_flashcards()
-    progress_data = load_study_progress()
+    
+    # Calculate progress from game results instead of using static progress file
+    user_progress = calculate_progress_from_game_results(user_email)
     
     user_flashcards = flashcards_data.get(user_email, {})
-    user_progress = progress_data.get(user_email, {})
     
     return render_template('flashcards.html',
                          flashcard_sets=user_flashcards,
@@ -428,7 +492,23 @@ def study_guides():
     
     user_email = session['email']
     study_guides_data = load_study_guides()
+    flashcards_data = load_flashcards()
+    
     user_study_guides = study_guides_data.get(user_email, {})
+    user_flashcards = flashcards_data.get(user_email, {})
+    
+    # Add flashcard information to each study guide
+    for guide_title, guide_data in user_study_guides.items():
+        # Look for flashcard sets that were generated from this study guide
+        related_flashcard_sets = []
+        for fc_set_name, fc_data in user_flashcards.items():
+            # Check if this flashcard set was generated from this study guide
+            if (fc_set_name.startswith(guide_title) or 
+                guide_title.lower() in fc_set_name.lower() or
+                fc_set_name.endswith('- Flash Cards') and fc_set_name.replace('- Flash Cards', '').strip() == guide_title):
+                related_flashcard_sets.append(fc_set_name)
+        
+        guide_data['related_flashcards'] = related_flashcard_sets
     
     return render_template('study_guides.html',
                          study_guides=user_study_guides)
@@ -449,7 +529,7 @@ def api_create_study_guide():
     
     try:
         user_email = session['email']
-        guide_title = request.form.get('guide_title')
+        guide_title = request.form.get('guide_title', '').strip()
         content_source = request.form.get('content_source')
         guide_style = request.form.get('guide_style', 'outline')
         complexity_level = request.form.get('complexity_level', 'intermediate')
@@ -517,47 +597,12 @@ def api_create_study_guide():
                 if result['success']:
                     ai_guide_content = result['study_guide']
                     
-                    # Parse AI response and create structured sections
-                    if 'key_concepts' in selected_sections:
-                        study_guide_sections.append({
-                            'title': 'Key Concepts',
-                            'type': 'key_concepts',
-                            'content': [
-                                {
-                                    'term': f'Core Concept 1 - {guide_title}',
-                                    'definition': 'Fundamental understanding derived from the provided content.',
-                                    'example': 'Practical application example from the study material.'
-                                },
-                                {
-                                    'term': f'Important Principle - {guide_title}',
-                                    'definition': 'Key principle that governs the understanding of this topic.',
-                                    'example': 'Real-world scenario demonstrating this principle.'
-                                }
-                            ]
-                        })
-                    
-                    if 'summary' in selected_sections:
-                        study_guide_sections.append({
-                            'title': 'Summary',
-                            'type': 'summary',
-                            'content': ai_guide_content[:500] + '...' if len(ai_guide_content) > 500 else ai_guide_content
-                        })
-                    
-                    if 'questions' in selected_sections:
-                        study_guide_sections.append({
-                            'title': 'Practice Questions',
-                            'type': 'questions',
-                            'content': [
-                                {
-                                    'question': f'What are the main takeaways from {guide_title}?',
-                                    'answer': 'The main takeaways include understanding core concepts, practical applications, and their relevance to broader topics.'
-                                },
-                                {
-                                    'question': f'How would you apply the concepts from {guide_title}?',
-                                    'answer': 'These concepts can be applied through hands-on practice, problem-solving, and real-world scenarios.'
-                                }
-                            ]
-                        })
+                    # Use the AI-generated content directly as the main content
+                    study_guide_sections.append({
+                        'title': 'AI-Generated Study Guide',
+                        'type': 'ai_content',
+                        'content': ai_guide_content
+                    })
                     
                     ai_generated = True
                 else:
@@ -675,7 +720,149 @@ def api_create_study_guide():
         print(f"Error creating study guide: {e}")
         return jsonify({'success': False, 'error': 'An error occurred while creating the study guide'}), 500
 
-# Flash Card viewing routes
+@study_tools_bp.route('/api/generate-flashcards-from-guide', methods=['POST'])
+def generate_flashcards_from_guide():
+    """API endpoint to generate flashcards from a study guide"""
+    if 'user_type' not in session or 'email' not in session:
+        return jsonify({'success': False, 'error': 'Authentication required'}), 401
+    
+    try:
+        from urllib.parse import unquote
+        user_email = session['email']
+        data = request.get_json()
+        
+        guide_title = data.get('guide_title')
+        # URL decode the guide title if needed
+        if guide_title:
+            guide_title = unquote(guide_title).strip()
+        
+        num_cards = int(data.get('num_cards', 15))
+        
+        if not guide_title:
+            return jsonify({'success': False, 'error': 'Study guide title is required'}), 400
+        
+        # Load the study guide
+        study_guides_data = load_study_guides()
+        user_study_guides = study_guides_data.get(user_email, {})
+        
+        if guide_title not in user_study_guides:
+            return jsonify({'success': False, 'error': 'Study guide not found'}), 404
+        
+        study_guide = user_study_guides[guide_title]
+        
+        # Extract content from the study guide
+        study_guide_content = ""
+        if isinstance(study_guide.get('sections'), list):
+            # New format with sections
+            for section in study_guide['sections']:
+                study_guide_content += f"\n\n## {section['title']}\n"
+                if section['type'] == 'key_concepts':
+                    for concept in section['content']:
+                        study_guide_content += f"\n**{concept['term']}**: {concept['definition']}\n"
+                        if concept.get('example'):
+                            study_guide_content += f"Example: {concept['example']}\n"
+                elif section['type'] == 'questions':
+                    for question in section['content']:
+                        study_guide_content += f"\nQ: {question['question']}\nA: {question['answer']}\n"
+                else:
+                    study_guide_content += f"\n{section['content']}\n"
+        else:
+            # Fallback to raw content
+            study_guide_content = str(study_guide.get('content', ''))
+        
+        if not study_guide_content.strip():
+            return jsonify({'success': False, 'error': 'Study guide appears to be empty'}), 400
+        
+        # Generate flashcards using AI
+        if AIService:
+            ai_service = AIService()
+            result = ai_service.generate_flashcards_from_study_guide(
+                study_guide_content=study_guide_content,
+                subject=guide_title,
+                num_cards=num_cards
+            )
+            
+            if result['success']:
+                # Parse AI response (expecting JSON format)
+                import json as json_module
+                import re
+                
+                ai_text = result['flashcards']
+                ai_cards = []
+                
+                try:
+                    # First try to parse as direct JSON
+                    ai_cards = json_module.loads(ai_text)
+                except json.JSONDecodeError:
+                    # Try to extract JSON from markdown code blocks
+                    json_match = re.search(r'```json\s*(.*?)\s*```', ai_text, re.DOTALL)
+                    if json_match:
+                        try:
+                            ai_cards = json_module.loads(json_match.group(1))
+                        except json.JSONDecodeError:
+                            pass
+                    
+                    # If still no valid JSON, try to find JSON array patterns
+                    if not ai_cards:
+                        json_array_match = re.search(r'\[\s*\{.*?\}\s*\]', ai_text, re.DOTALL)
+                        if json_array_match:
+                            try:
+                                ai_cards = json_module.loads(json_array_match.group(0))
+                            except json.JSONDecodeError:
+                                pass
+                
+                if ai_cards and isinstance(ai_cards, list):
+                    # Convert AI cards to our format
+                    cards = []
+                    for i, ai_card in enumerate(ai_cards):
+                        if isinstance(ai_card, dict) and 'question' in ai_card and 'answer' in ai_card:
+                            cards.append({
+                                'id': str(uuid.uuid4()),
+                                'front': ai_card['question'],
+                                'back': ai_card['answer'],
+                                'difficulty': ai_card.get('difficulty', 'Medium'),
+                                'type': ai_card.get('type', 'definition'),
+                                'study_guide_section': ai_card.get('study_guide_section', ''),
+                                'created_at': datetime.now().isoformat()
+                            })
+                    
+                    if cards:
+                        # Save flashcards
+                        flashcard_set_name = f"{guide_title} - Flashcards"
+                        flashcards_data = load_flashcards()
+                        if user_email not in flashcards_data:
+                            flashcards_data[user_email] = {}
+                        
+                        flashcards_data[user_email][flashcard_set_name] = {
+                            'cards': cards,
+                            'created_at': datetime.now().isoformat(),
+                            'difficulty': 'Mixed',
+                            'total_cards': len(cards),
+                            'source': 'study_guide',
+                            'source_guide': guide_title
+                        }
+                        
+                        if save_flashcards(flashcards_data):
+                            return jsonify({
+                                'success': True,
+                                'message': f'Generated {len(cards)} flashcards from study guide',
+                                'flashcard_set_name': flashcard_set_name,
+                                'cards_count': len(cards)
+                            })
+                        else:
+                            return jsonify({'success': False, 'error': 'Failed to save flashcards'}), 500
+                    else:
+                        return jsonify({'success': False, 'error': 'No valid flashcards could be generated'}), 400
+                else:
+                    return jsonify({'success': False, 'error': 'AI did not return valid flashcard data'}), 400
+            else:
+                return jsonify({'success': False, 'error': f'AI generation failed: {result.get("error")}'}), 500
+        else:
+            return jsonify({'success': False, 'error': 'AI service not available'}), 503
+            
+    except Exception as e:
+        print(f"Error generating flashcards from study guide: {e}")
+        return jsonify({'success': False, 'error': 'An error occurred while generating flashcards'}), 500# Flash Card viewing routes
 @study_tools_bp.route('/flashcards/view/<set_name>')
 def view_flashcard_set(set_name):
     """View a specific flash card set"""
@@ -740,6 +927,10 @@ def view_study_guide(guide_title):
     """View a specific study guide"""
     if 'user_type' not in session or 'email' not in session:
         return redirect(url_for('login'))
+    
+    # URL decode the guide title
+    from urllib.parse import unquote
+    guide_title = unquote(guide_title).strip()
     
     user_email = session['email']
     study_guides_data = load_study_guides()
@@ -826,6 +1017,9 @@ def delete_study_guide(guide_title):
         return jsonify({'success': False, 'error': 'Authentication required'}), 401
     
     try:
+        from urllib.parse import unquote
+        guide_title = unquote(guide_title).strip()
+        
         user_email = session['email']
         study_guides_data = load_study_guides()
         

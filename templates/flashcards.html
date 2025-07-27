@@ -20,10 +20,27 @@
                 <div class="progress-info">
                     {% set progress = user_progress.get(set_name, {}) %}
                     {% set progress_percentage = progress.get('correct_percentage', 0) %}
+                    {% set games_played = progress.get('games_played', 0) %}
+                    {% set total_questions = progress.get('total_questions', 0) %}
+                    {% set correct_answers = progress.get('correct_answers', 0) %}
+                    
                     <div class="progress-bar">
                         <div class="progress-fill" data-progress="{{ progress_percentage }}"></div>
                     </div>
                     <span class="progress-text">{{ progress_percentage|round }}% mastered</span>
+                    
+                    {% if games_played > 0 %}
+                    <div class="detailed-stats">
+                        <small class="stats-text">
+                            {{ games_played }} game{{ 's' if games_played != 1 else '' }} played • 
+                            {{ correct_answers }}/{{ total_questions }} correct overall
+                        </small>
+                    </div>
+                    {% else %}
+                    <div class="detailed-stats">
+                        <small class="stats-text">No games played yet</small>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <div class="card-actions">
@@ -115,6 +132,15 @@
 .progress-text {
     font-size: 0.9rem;
     color: var(--text-muted);
+}
+
+.detailed-stats {
+    margin-top: 0.5rem;
+}
+
+.stats-text {
+    color: var(--text-muted);
+    font-size: 0.8rem;
 }
 
 .card-actions {

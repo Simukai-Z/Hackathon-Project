@@ -9,6 +9,7 @@ from uuid import uuid4
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from werkzeug.utils import secure_filename
 from openai import AzureOpenAI
+import markdown
 
 # Import study tools blueprint
 from routes.study_tools import study_tools_bp
@@ -23,6 +24,28 @@ app.secret_key = 'your-secret-key-here'
 
 # Register blueprints
 app.register_blueprint(study_tools_bp, url_prefix='/study-tools')
+
+# Add markdown filter for templates
+@app.template_filter('markdown')
+def markdown_filter(text):
+    """Convert markdown text to HTML"""
+    if not text:
+        return ''
+    return markdown.markdown(text, extensions=['nl2br', 'fenced_code', 'tables'])
+
+# Add escapejs filter for templates
+@app.template_filter('escapejs')
+def escapejs_filter(text):
+    """Escape JavaScript strings safely"""
+    if not text:
+        return ''
+    # Escape quotes, backslashes, and newlines for JavaScript
+    return (text.replace('\\', '\\\\')
+                .replace("'", "\\'")
+                .replace('"', '\\"')
+                .replace('\n', '\\n')
+                .replace('\r', '\\r')
+                .replace('\t', '\\t'))
 
 # Configure file upload settings
 UPLOAD_FOLDER = 'uploads'

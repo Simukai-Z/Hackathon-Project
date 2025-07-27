@@ -87,7 +87,7 @@ class AIService:
             }
 
     def generate_study_guide(self, content, subject="General", style="comprehensive", include_questions=True):
-        """Generate a study guide from content using AI"""
+        """Generate a detailed and structured study guide from content using AI"""
         try:
             # Validate inputs
             if not content or len(content.strip()) < 10:
@@ -96,69 +96,183 @@ class AIService:
                     "error": "Content is too short or empty for study guide generation"
                 }
             
+            from datetime import datetime
+            
             style_instructions = {
-                "comprehensive": "Create a detailed, comprehensive study guide that covers all major topics and concepts thoroughly with extensive explanations.",
-                "concise": "Create a concise study guide that focuses on the most important points and key takeaways.",
-                "detailed": "Create a detailed study guide with in-depth explanations and examples for each concept.",
-                "exam-prep": "Create an exam-focused study guide with key points, formulas, and likely test questions."
+                "comprehensive": "Create a detailed, comprehensive study guide that covers all major topics and concepts thoroughly with extensive explanations, practical examples, and real-world applications.",
+                "concise": "Create a concise study guide that focuses on the most important points and key takeaways with clear, direct explanations.",
+                "detailed": "Create a detailed study guide with in-depth explanations, multiple examples, and comprehensive coverage of each concept.",
+                "exam-prep": "Create an exam-focused study guide with key points, formulas, likely test questions, and strategic study tips."
             }
             
-            questions_instruction = "Include 3-5 practice questions at the end of each major section." if include_questions else "Do not include practice questions."
+            current_time = datetime.now().strftime("%B %d, %Y at %I:%M %p")
             
             prompt = f"""
-            Create a comprehensive study guide from the following content for the subject "{subject}".
+            Create a comprehensive, well-structured study guide from the following content for the subject "{subject}".
             
             Content to analyze:
             {content}
             
-            Create a detailed study guide with the following structure:
+            Create a detailed study guide with the following EXACT structure and formatting:
             
-            # Study Guide: {subject}
+            # {subject}
+            **Study Guide**
+            
+            *Created: {current_time}*
+            
+            ---
+            
+            ## Table of Contents
+            1. [Overview](#overview)
+            2. [Key Concepts](#key-concepts)
+            3. [Important Details & Examples](#important-details--examples)
+            4. [Real-World Applications](#real-world-applications)
+            {"5. [Practice Questions](#practice-questions)" if include_questions else ""}
+            {"6. [Summary & Review](#summary--review)" if include_questions else "5. [Summary & Review](#summary--review)"}
+            
+            ---
             
             ## Overview
-            - Provide a brief summary of the main topics
             
-            ## Key Concepts and Topics
-            - Break down the content into 5-8 major sections
-            - For each section, provide:
-              * Clear heading
-              * Detailed explanation (2-3 paragraphs minimum)
-              * Key terms and definitions
-              * Important examples or applications
-              * Connection to other concepts
+            Provide a comprehensive introduction to the topic that includes:
+            - **Main Purpose**: What this subject/topic is about and why it's important
+            - **Core Themes**: 3-4 central themes or principles
+            - **Learning Objectives**: What students should understand after studying this material
+            - **Prerequisites**: Any background knowledge that would be helpful
             
-            ## Important Details
-            - List specific facts, formulas, or procedures
-            - Include any technical information
-            - Highlight critical points to remember
+            ---
             
-            ## Summary and Review
-            - Summarize the most important takeaways
-            - List key points for quick review
+            ## Key Concepts
+            
+            Break down the content into 5-8 major concepts. For each concept, provide:
+            
+            ### [Concept Name]
+            
+            **Definition**: Clear, precise definition
+            
+            **Explanation**: 2-3 paragraphs of detailed explanation that:
+            - Explains the concept in accessible language
+            - Describes how it works or functions
+            - Explains its significance or importance
+            - Connects it to other related concepts
+            
+            **Key Terms**:
+            - **Term 1**: Definition
+            - **Term 2**: Definition
+            - **Term 3**: Definition
+            
+            **Example**: Provide a concrete, practical example that illustrates the concept
+            
+            ---
+            
+            ## Important Details & Examples
+            
+            ### Critical Facts
+            - List 8-12 specific, important facts that students must remember
+            - Include any formulas, procedures, or technical information
+            - Highlight measurements, dates, or quantitative information
+            
+            ### Detailed Examples
+            Provide 3-4 comprehensive examples that demonstrate:
+            1. **Example 1**: [Title] - Detailed walkthrough of a practical application
+            2. **Example 2**: [Title] - Step-by-step process or procedure
+            3. **Example 3**: [Title] - Problem-solving scenario
+            4. **Example 4**: [Title] - Comparative analysis or case study
+            
+            ---
+            
+            ## Real-World Applications
+            
+            ### Practical Uses
+            Describe 4-5 ways this knowledge is applied in real situations:
+            - **Application 1**: Professional/career context
+            - **Application 2**: Daily life context
+            - **Application 3**: Academic/research context
+            - **Application 4**: Industry/business context
+            - **Application 5**: Future implications or developments
+            
+            ### Case Studies
+            Provide 2-3 brief case studies that show the concepts in action
+            
+            ---
             
             {"## Practice Questions" if include_questions else ""}
-            {questions_instruction if include_questions else ""}
             
-            Requirements:
+            {"""
+            Test your understanding with these questions:
+            
+            ### Comprehension Questions
+            1. **Question 1**: [Conceptual understanding question]
+               - *Answer*: [Detailed answer with explanation]
+            
+            2. **Question 2**: [Application question]
+               - *Answer*: [Detailed answer with explanation]
+            
+            3. **Question 3**: [Analysis question]
+               - *Answer*: [Detailed answer with explanation]
+            
+            ### Application Questions
+            4. **Question 4**: [Problem-solving question]
+               - *Answer*: [Step-by-step solution]
+            
+            5. **Question 5**: [Synthesis question]
+               - *Answer*: [Comprehensive answer]
+            
+            ### Critical Thinking Questions
+            6. **Question 6**: [Evaluation question]
+               - *Answer*: [Analytical response]
+            
+            ---
+            """ if include_questions else ""}
+            
+            ## Summary & Review
+            
+            ### Key Takeaways
+            - **Primary Learning Point 1**: [Most important concept]
+            - **Primary Learning Point 2**: [Second most important concept]
+            - **Primary Learning Point 3**: [Third most important concept]
+            - **Primary Learning Point 4**: [Fourth most important concept]
+            - **Primary Learning Point 5**: [Fifth most important concept]
+            
+            ### Quick Review Checklist
+            Use this checklist to verify your understanding:
+            - [ ] I can explain the main purpose and importance of {subject}
+            - [ ] I understand all the key concepts and their definitions
+            - [ ] I can provide examples for each major concept
+            - [ ] I can identify real-world applications
+            - [ ] I can answer practice questions confidently
+            - [ ] I can explain connections between different concepts
+            
+            ### Study Tips
+            - **For Review**: Focus on the Key Concepts section and practice explaining each concept in your own words
+            - **For Application**: Work through the examples and try to create your own similar scenarios
+            - **For Mastery**: Complete all practice questions without looking at answers first
+            - **For Retention**: Review the Summary section regularly and test yourself with the checklist
+            
+            ---
+            
+            Requirements for content creation:
             - {style_instructions.get(style, style_instructions["comprehensive"])}
-            - Use clear markdown formatting with headers (##, ###)
-            - Include bullet points and numbered lists
-            - Make it at least 800-1200 words
-            - Extract specific information from the provided content
-            - Don't use generic placeholders - use actual content from the material
-            - Be thorough and educational
+            - Use the EXACT markdown structure provided above
+            - Make content substantial (1200-1800 words minimum)
+            - Extract ALL specific information from the provided content
+            - Create original examples that relate to the actual content
+            - Ensure all information is accurate and educational
+            - Use clear, engaging language appropriate for students
+            - Include internal links using markdown anchor format
+            - Make every section comprehensive and valuable for learning
             
-            Focus on creating substantial, useful study material that a student can actually learn from.
+            Focus on creating a professional, comprehensive study guide that students can actually use to master the material.
             """
             
             response = self.client.chat.completions.create(
                 model=self.model_name,
                 messages=[
-                    {"role": "system", "content": "You are an expert educational content creator who specializes in creating comprehensive, detailed study materials. Create substantial, useful content that students can actually learn from."},
+                    {"role": "system", "content": "You are an expert educational content creator and instructional designer who specializes in creating comprehensive, well-structured study materials. Your study guides are known for their clarity, depth, and practical value to students."},
                     {"role": "user", "content": prompt}
                 ],
                 max_tokens=4000,  # Increased for longer content
-                temperature=0.5   # Lower temperature for more focused content
+                temperature=0.3   # Lower temperature for more structured, consistent content
             )
             
             ai_response = response.choices[0].message.content
@@ -170,7 +284,109 @@ class AIService:
             
             return {
                 "success": True,
-                "study_guide": ai_response or "# Study Guide\n\nNo content generated."
+                "study_guide": ai_response or f"# {subject}\n**Study Guide**\n\nNo content could be generated from the provided material."
+            }
+            
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def generate_flashcards_from_study_guide(self, study_guide_content, subject="General", num_cards=15):
+        """Generate flashcards automatically from a study guide"""
+        try:
+            if not study_guide_content or len(study_guide_content.strip()) < 100:
+                return {
+                    "success": False,
+                    "error": "Study guide content is too short for flashcard generation"
+                }
+            
+            prompt = f"""
+            Analyze the following study guide and create {num_cards} comprehensive flashcards that test understanding of the key concepts, definitions, examples, and applications.
+            
+            Study Guide Content:
+            {study_guide_content}
+            
+            Create flashcards that cover:
+            - Key definitions and concepts
+            - Important facts and details
+            - Real-world applications
+            - Examples and case studies
+            - Practice questions from the guide
+            
+            For each flashcard, create:
+            - A clear, specific question that tests understanding (not just memorization)
+            - A comprehensive answer that includes explanation and context
+            - Link back to the relevant section of the study guide
+            
+            Format your response as a JSON array with this exact structure:
+            [
+                {{
+                    "question": "What is [concept] and why is it important in {subject}?",
+                    "answer": "Detailed answer with explanation and examples",
+                    "study_guide_section": "Key Concepts",
+                    "difficulty": "Medium",
+                    "type": "definition"
+                }},
+                {{
+                    "question": "How would you apply [concept] in a real-world scenario?",
+                    "answer": "Practical application with specific examples",
+                    "study_guide_section": "Real-World Applications", 
+                    "difficulty": "Hard",
+                    "type": "application"
+                }}
+            ]
+            
+            Types of flashcards to include:
+            - "definition": Tests understanding of key terms and concepts
+            - "application": Tests ability to apply concepts practically
+            - "example": Tests understanding through specific examples
+            - "comparison": Tests ability to compare/contrast concepts
+            - "analysis": Tests critical thinking and analysis skills
+            
+            Difficulty levels:
+            - "Easy": Basic recall and simple definitions
+            - "Medium": Understanding and explanation
+            - "Hard": Application, analysis, and synthesis
+            
+            Make sure each flashcard:
+            1. Has a clear, engaging question
+            2. Includes a comprehensive answer with context
+            3. References the specific study guide section
+            4. Is appropriately difficulty-tagged
+            5. Tests real understanding, not just memorization
+            
+            Return only the JSON array, no additional text or formatting.
+            """
+            
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=[
+                    {"role": "system", "content": "You are an expert educational assessment creator who specializes in creating effective flashcards that test deep understanding rather than memorization. Always respond with valid JSON format only."},
+                    {"role": "user", "content": prompt}
+                ],
+                max_tokens=3000,
+                temperature=0.4
+            )
+            
+            ai_response = response.choices[0].message.content
+            
+            # Clean the response to ensure valid JSON
+            ai_response = ai_response.strip()
+            if ai_response.startswith('```json'):
+                ai_response = ai_response.replace('```json', '').replace('```', '').strip()
+            elif ai_response.startswith('```'):
+                ai_response = ai_response.replace('```', '').strip()
+            
+            # Add debug logging
+            print(f"Flashcard Generation - Raw response length: {len(ai_response) if ai_response else 0}")
+            if ai_response:
+                print(f"Flashcard Generation - Response preview: {ai_response[:200]}...")
+            
+            return {
+                "success": True,
+                "flashcards": ai_response or "[]"
             }
             
         except Exception as e:

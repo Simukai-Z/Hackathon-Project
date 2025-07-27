@@ -330,5 +330,89 @@
         "ai_feedback": "Good attempt! You're on the right track with understanding weak tables. The key concept is that they do not prevent keys or values from being garbage collected. Try thinking about their role in memory management."
       }
     ]
+  },
+  {
+    "timestamp": "2025-07-27T06:33:15.084548",
+    "user_email": "epicrbot20099@gmail.com",
+    "flashcard_set_name": "Basic Roblox Lua",
+    "total_score": 73,
+    "total_questions": 9,
+    "correct_answers": 6,
+    "accuracy": "66.7",
+    "is_win": false,
+    "detailed_results": [
+      {
+        "question": "How does inheritance work in Roblox Lua?",
+        "correct_answer": "Inheritance in Roblox Lua is achieved through metatables. Objects can inherit properties and methods from other objects by setting metatables.",
+        "user_answer": "it can get stuff from theprevious class",
+        "is_correct": true,
+        "time_taken": 11,
+        "ai_feedback": "Great job! Your answer shows you understand that inheritance allows getting properties from a previous class. Keep up the good work!"
+      },
+      {
+        "question": "How does Roblox Lua handle error handling and exceptions?",
+        "correct_answer": "Roblox Lua uses pcall and xpcall functions for error handling and exceptions. pcall is used to protect calls to functions that may fail, while xpcall provides more control over error handling.",
+        "user_answer": "pcall function",
+        "is_correct": true,
+        "time_taken": 7,
+        "ai_feedback": "Great job! Your answer shows you understand that Roblox Lua error handling involves using the pcall function. Keep up the good work!"
+      },
+      {
+        "question": "What is the difference between 'pairs' and 'ipairs' functions in Roblox Lua?",
+        "correct_answer": "'pairs' function in Roblox Lua iterates over all key-value pairs in a table, while 'ipairs' function specifically iterates over integer keys and their corresponding values.",
+        "user_answer": "idk",
+        "is_correct": false,
+        "time_taken": 3,
+        "ai_feedback": "Good attempt! You're on the right track with lack of knowledge. The key concept is the difference between 'pairs' and 'ipairs' functions in Roblox Lua. Try thinking about how 'pairs' and 'ipairs' function differently."
+      },
+      {
+        "question": "Explain the concept of weak tables in Roblox Lua.",
+        "correct_answer": "Weak tables in Roblox Lua are tables that do not prevent their keys or values from being garbage collected. They are useful for managing memory efficiently.",
+        "user_answer": "umm it's weak just like me?",
+        "is_correct": true,
+        "time_taken": 7,
+        "ai_feedback": "Great job! Your answer shows you understand that weak tables are not strong or lasting. Keep it up!"
+      },
+      {
+        "question": "What are the advantages of using modules in Roblox Lua programming?",
+        "correct_answer": "Modules in Roblox Lua help organize code into reusable units, encapsulate functionality, and promote code reusability and maintainability.",
+        "user_answer": "it makes it easier to readand it easier to edit later",
+        "is_correct": true,
+        "time_taken": 17,
+        "ai_feedback": "Great job! Your answer shows you understand that modules in Roblox Lua make it easier to read and edit later, promoting code maintainability. Well done!"
+      },
+      {
+        "question": "Explain the difference between '==' and '~=' operators in Roblox Lua.",
+        "correct_answer": "'==' is the equality operator in Roblox Lua, checking if two values are equal. '~=' is the inequality operator, checking if two values are not equal.",
+        "user_answer": "== means if somthing s equal and ~= is if somthing is not equal",
+        "is_correct": true,
+        "time_taken": 7,
+        "ai_feedback": "Great job! Your answer shows you understand that '==' means something is equal and '~=' means something is not equal. Keep up the good work!"
+      },
+      {
+        "question": "How can you implement a singleton pattern in Roblox Lua?",
+        "correct_answer": "To implement a singleton pattern in Roblox Lua, you can create a module that returns a single instance of an object, ensuring there is only one instance throughout the game's execution.",
+        "user_answer": "idk",
+        "is_correct": false,
+        "time_taken": 2,
+        "ai_feedback": "Good attempt! You're on the right track with some understanding missing. The key concept is implementing a single instance of an object in Roblox Lua. Try thinking about how to ensure there is only one instance throughout the game's execution."
+      },
+      {
+        "question": "Explain the concept of memoization in Roblox Lua.",
+        "correct_answer": "Memoization is a technique in Roblox Lua used to cache the results of expensive function calls to improve performance by avoiding unnecessary recalculations.",
+        "user_answer": "it save to memorty",
+        "is_correct": true,
+        "time_taken": 6,
+        "ai_feedback": "Great job! Your answer shows you understand that memoization involves saving data to memory to improve performance. Keep up the good work!"
+      },
+      {
+        "question": "What are closures in Roblox Lua?",
+        "correct_answer": "Closures are functions that capture variables from their surrounding lexical scope. They are commonly used for callbacks and event handling.",
+        "user_answer": "idk",
+        "is_correct": false,
+        "time_taken": 3,
+        "ai_feedback": "Good attempt! You're on the right track with not knowing the answer. The key concept is closures are functions that capture variables from their surrounding lexical scope. They are often used for callbacks and event handling. Try thinking about how functions can remember and access variables from where they were defined."
+      }
+    ]
   }
 ]
