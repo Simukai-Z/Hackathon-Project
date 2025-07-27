@@ -11,8 +11,11 @@ from werkzeug.utils import secure_filename
 from openai import AzureOpenAI
 import markdown
 
+
 # Import study tools blueprint
 from routes.study_tools import study_tools_bp
+# Import API blueprint
+from routes.api import api_bp
 
 dotenv.load_dotenv()
 AOAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -22,8 +25,10 @@ MODEL_NAME = "gpt-35-turbo"
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
 
+
 # Register blueprints
 app.register_blueprint(study_tools_bp, url_prefix='/study-tools')
+app.register_blueprint(api_bp, url_prefix='/api')
 
 # Add markdown filter for templates
 @app.template_filter('markdown')
@@ -619,7 +624,7 @@ def chat():
     elif user_type == 'teacher':
         teacher = next((t for t in users['teachers'] if t['email'] == email), None)
         if teacher:
-            accessible_classes = [c for c in classrooms_data['classrooms'] if c['teacher_email'] == email]
+            accessible_classes = [c for c in classrooms_data['classrooms'] if (('teacher_emails' in c and email in c['teacher_emails']) or (c.get('teacher_email') == email))]
             selected_class = data.get('class_code')
             class_obj = next((c for c in accessible_classes if c['code'] == selected_class), None) if selected_class else (accessible_classes[0] if accessible_classes else None)
             if class_obj:
@@ -2053,7 +2058,7 @@ def uploaded_file(filename):
     has_access = False
     
     for classroom in classrooms.get('classrooms', []):
-        if classroom.get('teacher_email') == session['email']:
+        if (('teacher_emails' in classroom and session['email'] in classroom['teacher_emails']) or (classroom.get('teacher_email') == session['email'])):
             for assignment in classroom.get('assignments', []):
                 for submission in assignment.get('submissions', []):
                     if submission.get('filename') == filename:
@@ -2098,7 +2103,7 @@ def teacher_main():
     classrooms_data = load_classrooms()
     schools = {}
     for c in classrooms_data['classrooms']:
-        if c['teacher_email'] == session['email']:
+        if (('teacher_emails' in c and session['email'] in c['teacher_emails']) or (c.get('teacher_email') == session['email'])):
             if c['school'] not in schools:
                 schools[c['school']] = []
             schools[c['school']].append(c)
@@ -2106,7 +2111,7 @@ def teacher_main():
     class_obj = None
     if selected_class:
         for c in classrooms_data['classrooms']:
-            if c['code'] == selected_class and c['teacher_email'] == session['email']:
+            if c['code'] == selected_class and (('teacher_emails' in c and session['email'] in c['teacher_emails']) or (c.get('teacher_email') == session['email'])):
                 class_obj = c
                 break
     now = datetime.datetime.now(datetime.UTC)
@@ -2252,8 +2257,8 @@ def join_classroom_link(code):
             else:
                 flash('Classroom not found.')
                 return redirect(url_for('student_main'))
-    session['pending_join_code'] = code
-    return redirect(url_for('login'))
+    # If not logged in as student, show modern join page
+    return render_template('join_classroom.html', join_code=code)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

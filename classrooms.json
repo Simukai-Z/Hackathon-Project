@@ -2,7 +2,9 @@
   "classrooms": [
     {
       "code": "d2e9cbc7",
-      "teacher_email": "Roblox@gmail.com",
+      "teacher_emails": [
+        "Roblox@gmail.com"
+      ],
       "class_name": "EPIC",
       "school": "Roblox",
       "students": [
@@ -156,14 +158,18 @@
     },
     {
       "code": "701af262",
-      "teacher_email": "epic@gmail.com",
+      "teacher_emails": [
+        "epic@gmail.com"
+      ],
       "class_name": "EPIC",
       "school": "Sudo",
       "students": []
     },
     {
       "code": "42ffd86a",
-      "teacher_email": "epic99@gmail",
+      "teacher_emails": [
+        "epic99@gmail"
+      ],
       "class_name": "1234",
       "school": "fortnite",
       "students": [
@@ -192,6 +198,33 @@
           ]
         }
       ]
+    },
+    {
+      "code": "9828d9ae",
+      "teacher_emails": [
+        "teacher1@example.com",
+        "teacher2@example.com"
+      ],
+      "class_name": "Biology 101",
+      "school": "Test High School",
+      "students": [],
+      "assignments": [],
+      "rubrics": [],
+      "created_at": "2025-07-27T16:10:08.380436"
+    },
+    {
+      "code": "ba9db5a1",
+      "teacher_emails": [
+        "Roblox@gmail.com"
+      ],
+      "class_name": "New kool class",
+      "school": "Vector",
+      "students": [
+        "epicrbot20099@gmail.com"
+      ],
+      "assignments": [],
+      "rubrics": [],
+      "created_at": "2025-07-27T16:48:03.645123"
     }
   ]
 }

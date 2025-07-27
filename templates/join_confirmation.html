@@ -2,20 +2,123 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Classroom Joined - StudyCoach</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='modern.css') }}">
+    <script src="{{ url_for('static', filename='modern.js') }}"></script>
 </head>
 <body>
-    <div class="container">
-        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 8px;">
-            <img src="https://img.icons8.com/color/96/000000/microsoft.png" alt="logo" style="height: 48px;">
-            <h1 style="margin: 0;">StudyCoach</h1>
+    <div class="container join-confirmation-outer">
+        <div class="join-confirmation-header">
+            <img src="{{ url_for('static', filename='study_coach_logo_fallback.svg') }}" alt="StudyCoach Logo" class="join-logo">
+            <h1 class="join-title">StudyCoach</h1>
         </div>
-        <div class="card">
-            <h2>Classroom Joined!</h2>
-            <p>You have successfully joined the classroom <b>{{ classroom.class_name }}</b> at <b>{{ classroom.school }}</b>.</p>
-            <a href="{{ url_for('student_main') }}">Go to your dashboard</a>
+        <div class="card join-confirmation-card">
+            <h2 class="join-confirmation-title">Classroom Joined!</h2>
+            <p class="join-confirmation-desc">You have successfully joined the classroom <b>{{ classroom.class_name }}</b> at <b>{{ classroom.school }}</b>.</p>
+            <a href="{{ url_for('student_main') }}" class="join-confirmation-btn">Go to your dashboard</a>
         </div>
+        <button onclick="toggleTheme()" class="theme-toggle-btn">Toggle Light/Dark Mode</button>
     </div>
+    <style>
+        body {
+            min-height: 100vh;
+            background: var(--background-light);
+            color: var(--text-primary-light);
+            transition: background 0.3s, color 0.3s;
+        }
+        body.dark-mode {
+            background: var(--background-dark) !important;
+            color: var(--text-primary-dark) !important;
+        }
+        .join-confirmation-outer {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .join-confirmation-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .join-logo {
+            height: 56px;
+        }
+        .join-title {
+            margin: 0;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+        .join-confirmation-card {
+            max-width: 480px;
+            width: 100%;
+            padding: 2.5rem 2.5rem 2rem 2.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            background: var(--surface-light);
+            text-align: center;
+            transition: background 0.3s, color 0.3s;
+        }
+        body.dark-mode .join-confirmation-card {
+            background: var(--surface-dark) !important;
+            color: var(--text-primary-dark) !important;
+        }
+        .join-confirmation-title {
+            margin-bottom: 1.5rem;
+            color: var(--primary-light);
+            font-weight: 700;
+            font-size: 2rem;
+        }
+        body.dark-mode .join-confirmation-title {
+            color: var(--primary-dark);
+        }
+        .join-confirmation-desc {
+            font-size: 1.15rem;
+            color: var(--text-primary-light);
+        }
+        body.dark-mode .join-confirmation-desc {
+            color: var(--text-primary-dark);
+        }
+        .join-confirmation-btn {
+            display: inline-block;
+            margin-top: 1.5rem;
+            background: var(--primary-light);
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+            border: none;
+        }
+        .join-confirmation-btn:hover {
+            background: var(--secondary-light);
+        }
+        body.dark-mode .join-confirmation-btn {
+            background: var(--primary-dark);
+            color: #fff;
+        }
+        body.dark-mode .join-confirmation-btn:hover {
+            background: var(--secondary-dark);
+        }
+        .theme-toggle-btn {
+            margin-top: 2.5rem;
+            background: none;
+            border: none;
+            color: var(--primary-light);
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        body.dark-mode .theme-toggle-btn {
+            color: var(--primary-dark);
+        }
+    </style>
+    <script>initializeTheme();</script>
 </body>
 </html>

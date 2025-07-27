@@ -11,6 +11,15 @@
             Flash Cards & Study Guides
         </a>
     </div>
+    <div class="action-group">
+        <div class="action-group-title">Class Management</div>
+        <button class="nav-item btn btn-primary" style="width:100%;margin-bottom:6px;" onclick="openCreateClassModal()">
+            <span class="nav-icon">➕</span> Create New Class
+        </button>
+        <button class="nav-item btn btn-secondary" style="width:100%;" onclick="openJoinClassModal()">
+            <span class="nav-icon">🔗</span> Join Class as Teacher
+        </button>
+    </div>
 </div>
 
 <div class="schools-nav">
@@ -32,6 +41,54 @@
     {% else %}
         <p class="empty-state">No schools added yet</p>
     {% endif %}
+</div>
+
+<!-- Create Class Modal -->
+<div id="createClassModal" class="modal" style="display:none;">
+    <div class="modal-content card">
+        <div class="modal-header">
+            <h2>Create New Class</h2>
+            <button class="modal-close" onclick="closeCreateClassModal()">&times;</button>
+        </div>
+        <form id="createClassForm" onsubmit="submitCreateClass(event)">
+            <div class="form-group">
+                <label>Class Name</label>
+                <input type="text" name="class_name" class="form-control" required autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>School (optional)</label>
+                <input type="text" name="school" class="form-control" autocomplete="off">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeCreateClassModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="createClassBtn">Create</button>
+                <span id="createClassSpinner" style="display:none;margin-left:10px;">⏳</span>
+            </div>
+        </form>
+        <div id="createClassMsg" style="margin-top:10px;"></div>
+    </div>
+</div>
+
+<!-- Join Class Modal -->
+<div id="joinClassModal" class="modal" style="display:none;">
+    <div class="modal-content card">
+        <div class="modal-header">
+            <h2>Join Class as Teacher</h2>
+            <button class="modal-close" onclick="closeJoinClassModal()">&times;</button>
+        </div>
+        <form id="joinClassForm" onsubmit="submitJoinClass(event)">
+            <div class="form-group">
+                <label>Class Code</label>
+                <input type="text" name="class_code" class="form-control" required maxlength="8" autocomplete="off">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeJoinClassModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" id="joinClassBtn">Join</button>
+                <span id="joinClassSpinner" style="display:none;margin-left:10px;">⏳</span>
+            </div>
+        </form>
+        <div id="joinClassMsg" style="margin-top:10px;"></div>
+    </div>
 </div>
 {% endblock %}
 
@@ -2246,304 +2303,122 @@
 
 {% block extra_js %}
 <script>
-function showTab(tabId) {
-    console.log('showTab called with:', tabId);
-    
-    // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-        console.log('Removed active from:', tab.id);
-    });
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    
-    // Show selected tab
-    const selectedTab = document.getElementById(tabId);
-    if (selectedTab) {
-        selectedTab.classList.add('active');
-        console.log('Added active to:', tabId);
-    } else {
-        console.error('Tab not found:', tabId);
-    }
-    
-    try {
-        const selectedBtn = document.querySelector(`[onclick="showTab('${tabId}')"]`);
-        if (selectedBtn) {
-            selectedBtn.classList.add('active');
-            console.log('Added active to button for:', tabId);
-        } else {
-            console.error('Button not found for:', tabId);
-        }
-    } catch (e) {
-        console.error('Error selecting button:', e);
-    }
-}
-
+// --- Copy Join Link Logic ---
 function copyJoinLink() {
-    const joinUrl = document.getElementById('joinUrl').textContent;
-    navigator.clipboard.writeText(joinUrl).then(() => {
-        showToast('Join link copied to clipboard!', 'success');
-    });
-}
-
-function toggleSubmissions(assignmentId) {
-    const submissionsList = document.getElementById('submissions-' + assignmentId);
-    if (submissionsList.style.display === 'none') {
-        submissionsList.style.display = 'block';
+    const urlElem = document.getElementById('joinUrl');
+    if (!urlElem) return;
+    // If code element, get textContent
+    const link = urlElem.textContent || urlElem.innerText;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(link).then(() => {
+            showToast('Class join link copied!', 'success');
+        }, () => {
+            fallbackCopyTextToClipboard(link);
+        });
     } else {
-        submissionsList.style.display = 'none';
+        fallbackCopyTextToClipboard(link);
     }
 }
 
-function aiGradeSubmission(submissionId) {
-    if (confirm('Use AI to automatically grade this submission?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/ai_grade_assignment';
-        
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'submission_id';
-        input.value = submissionId;
-        
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-function toggleRegrade(submissionId) {
-    const regradeForm = document.getElementById('regrade-' + submissionId);
-    if (regradeForm.style.display === 'none') {
-        regradeForm.style.display = 'block';
-    } else {
-        regradeForm.style.display = 'none';
-    }
-}
-
-function setQuickGrade(submissionId, grade) {
-    const gradeInput = document.getElementById('grade-' + submissionId);
-    const feedbackInput = document.getElementById('feedback-' + submissionId);
-    
-    if (gradeInput) {
-        gradeInput.value = grade;
-        gradeInput.focus();
-    }
-    
-    // Add quick feedback suggestions based on grade
-    if (feedbackInput && !feedbackInput.value) {
-        let quickFeedback = '';
-        if (grade >= 90) {
-            quickFeedback = 'Excellent work! You demonstrated a strong understanding of the material and exceeded expectations.';
-        } else if (grade >= 80) {
-            quickFeedback = 'Good work! You showed solid understanding. Consider reviewing [specific areas] for even better results.';
-        } else if (grade >= 70) {
-            quickFeedback = 'Satisfactory effort. You grasped the main concepts but could improve on [specific areas].';
-        } else if (grade >= 60) {
-            quickFeedback = 'This shows some understanding, but needs improvement. Please review [concepts] and feel free to ask for help.';
-        } else {
-            quickFeedback = 'This submission needs significant work. Please see me during office hours to discuss how to improve.';
-        }
-        feedbackInput.value = quickFeedback;
-    }
-}
-
-function aiUpdateGrade(submissionId) {
-    if (confirm('Use AI to re-grade this submission with fresh analysis?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/ai_grade_assignment';
-        
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'submission_id';
-        input.value = submissionId;
-        
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-//Copy feedback function for teacher view
-function copyFeedback(index) {
-    const feedbackTextarea = document.getElementById('feedback-copy-' + index);
-    if (feedbackTextarea) {
-        feedbackTextarea.select();
-        feedbackTextarea.setSelectionRange(0, 99999); // For mobile devices
+function fallbackCopyTextToClipboard(text) {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
         document.execCommand('copy');
-        showToast('Feedback copied to clipboard!', 'success');
+        showToast('Class join link copied!', 'success');
+    } catch (err) {
+        showToast('Failed to copy link', 'error');
     }
+    document.body.removeChild(textArea);
+}
+// --- Class Management Modal Logic ---
+function openCreateClassModal() {
+    document.getElementById('createClassModal').style.display = 'block';
+}
+function closeCreateClassModal() {
+    document.getElementById('createClassModal').style.display = 'none';
+    document.getElementById('createClassMsg').innerHTML = '';
+    document.getElementById('createClassForm').reset();
+}
+function openJoinClassModal() {
+    document.getElementById('joinClassModal').style.display = 'block';
+}
+function closeJoinClassModal() {
+    document.getElementById('joinClassModal').style.display = 'none';
+    document.getElementById('joinClassMsg').innerHTML = '';
+    document.getElementById('joinClassForm').reset();
 }
 
-// Teacher Assignment Modal Functions
-function openTeacherAssignmentModal(assignmentId) {
-    const modal = document.getElementById('teacherAssignmentModal' + assignmentId);
-    if (modal) {
-        modal.style.display = 'block';
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function closeTeacherAssignmentModal(assignmentId) {
-    const modal = document.getElementById('teacherAssignmentModal' + assignmentId);
-    if (modal) {
-        modal.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
-}
-
-// Modal-specific regrade toggle
-function toggleModalRegrade(submissionId, assignmentId) {
-    const regradeForm = document.getElementById('modal-regrade-' + submissionId + '-' + assignmentId);
-    if (regradeForm.style.display === 'none') {
-        regradeForm.style.display = 'block';
-    } else {
-        regradeForm.style.display = 'none';
-    }
-}
-
-// Modal-specific quick grade setting
-function setModalQuickGrade(submissionId, assignmentId, grade) {
-    const gradeInput = document.getElementById('modal-grade-' + submissionId + '-' + assignmentId);
-    const feedbackInput = document.getElementById('modal-feedback-' + submissionId + '-' + assignmentId);
-    
-    if (gradeInput) {
-        gradeInput.value = grade;
-        gradeInput.focus();
-    }
-    
-    // Add quick feedback suggestions based on grade
-    if (feedbackInput && !feedbackInput.value) {
-        let quickFeedback = '';
-        if (grade >= 90) {
-            quickFeedback = 'Excellent work! You demonstrated a strong understanding of the material and exceeded expectations.';
-        } else if (grade >= 80) {
-            quickFeedback = 'Good work! You showed solid understanding. Consider reviewing [specific areas] for even better results.';
-        } else if (grade >= 70) {
-            quickFeedback = 'Satisfactory effort. You grasped the main concepts but could improve on [specific areas].';
-        } else if (grade >= 60) {
-            quickFeedback = 'This shows some understanding, but needs improvement. Please review [concepts] and feel free to ask for help.';
+function submitCreateClass(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('createClassBtn');
+    const spinner = document.getElementById('createClassSpinner');
+    btn.disabled = true;
+    spinner.style.display = 'inline-block';
+    document.getElementById('createClassMsg').innerHTML = '';
+    const data = {
+        class_name: form.class_name.value,
+        school: form.school.value
+    };
+    fetch('/api/create_class', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(res => {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        if (res.success) {
+            document.getElementById('createClassMsg').innerHTML = '<span style="color:green">Class created!<br>Class Code: <b>' + res.classroom.code + '</b></span>';
+            setTimeout(() => { closeCreateClassModal(); location.reload(); }, 1200);
         } else {
-            quickFeedback = 'This submission needs significant work. Please see me during office hours to discuss how to improve.';
+            document.getElementById('createClassMsg').innerHTML = '<span style="color:red">' + (res.error || 'Error') + '</span>';
         }
-        feedbackInput.value = quickFeedback;
-    }
-}
-
-// Modal-specific AI grading
-function aiGradeModalSubmission(submissionId, assignmentId) {
-    if (confirm('Use AI to automatically grade this submission?')) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/ai_grade_assignment';
-        
-        const input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'submission_id';
-        input.value = submissionId;
-        
-        form.appendChild(input);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-// Enhanced modal closing with ESC key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        // Close teacher assignment modals
-        const openModals = document.querySelectorAll('.assignment-modal[style*="block"]');
-        openModals.forEach(modal => {
-            modal.style.display = 'none';
-        });
-        
-        // Close regular modals
-        const regularModals = document.querySelectorAll('.modal[style*="block"]');
-        regularModals.forEach(modal => {
-            modal.style.display = 'none';
-        });
-        
-        document.body.style.overflow = 'auto';
-    }
-});
-
-// Initialize progress bars
-document.addEventListener('DOMContentLoaded', function() {
-    const progressFills = document.querySelectorAll('.progress-fill[data-progress]');
-    progressFills.forEach(fill => {
-        const progress = fill.getAttribute('data-progress');
-        fill.style.width = progress + '%';
+    })
+    .catch(() => {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        document.getElementById('createClassMsg').innerHTML = '<span style="color:red">Network error</span>';
     });
-});
-
-// Enhanced modal click outside to close
-window.onclick = function(event) {
-    if (event.target.classList.contains('modal')) {
-        event.target.style.display = 'none';
-    }
-    if (event.target.classList.contains('assignment-modal')) {
-        event.target.style.display = 'none';
-        document.body.style.overflow = 'auto';
-    }
 }
 
-//Copy feedback function for teacher view
-function copyFeedback(index) {
-    const feedbackTextarea = document.getElementById('feedback-copy-' + index);
-    if (feedbackTextarea) {
-        feedbackTextarea.select();
-        feedbackTextarea.setSelectionRange(0, 99999); // For mobile devices
-        
-        try {
-            document.execCommand('copy');
-            showToast('Feedback copied to clipboard!', 'success');
-        } catch (err) {
-            // Fallback for modern browsers
-            navigator.clipboard.writeText(feedbackTextarea.value).then(() => {
-                showToast('Feedback copied to clipboard!', 'success');
-            }).catch(() => {
-                showToast('Failed to copy feedback', 'error');
-            });
+function submitJoinClass(e) {
+    e.preventDefault();
+    const form = e.target;
+    const btn = document.getElementById('joinClassBtn');
+    const spinner = document.getElementById('joinClassSpinner');
+    btn.disabled = true;
+    spinner.style.display = 'inline-block';
+    document.getElementById('joinClassMsg').innerHTML = '';
+    const data = {
+        class_code: form.class_code.value
+    };
+    fetch('/api/join_class_as_teacher', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(r => r.json())
+    .then(res => {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        if (res.success) {
+            document.getElementById('joinClassMsg').innerHTML = '<span style="color:green">Joined class!</span>';
+            setTimeout(() => { closeJoinClassModal(); location.reload(); }, 1200);
+        } else {
+            document.getElementById('joinClassMsg').innerHTML = '<span style="color:red">' + (res.error || 'Error') + '</span>';
         }
-    }
-}
-
-// Toast notification function
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#007bff'};
-        color: white;
-        padding: 1rem 1.5rem;
-        border-radius: 8px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        z-index: 10000;
-        font-weight: 500;
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-    `;
-    toast.textContent = message;
-    
-    document.body.appendChild(toast);
-    
-    // Animate in
-    setTimeout(() => {
-        toast.style.transform = 'translateX(0)';
-    }, 100);
-    
-    // Remove after 3 seconds
-    setTimeout(() => {
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => {
-            document.body.removeChild(toast);
-        }, 300);
-    }, 3000);
+    })
+    .catch(() => {
+        btn.disabled = false;
+        spinner.style.display = 'none';
+        document.getElementById('joinClassMsg').innerHTML = '<span style="color:red">Network error</span>';
+    });
 }
 </script>
 {% endblock %}

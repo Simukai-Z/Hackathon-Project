@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Join a Classroom | StudyCoach</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='modern.css') }}">
+    <script src="{{ url_for('static', filename='modern.js') }}"></script>
+</head>
+<body>
+    <div class="container" style="min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px;">
+            <img src="{{ url_for('static', filename='study_coach_logo_fallback.svg') }}" alt="StudyCoach Logo" style="height: 56px;">
+            <h1 style="margin: 0; font-size: 2.2rem; font-weight: 700; letter-spacing: -1px;">StudyCoach</h1>
+        </div>
+        <div class="card" style="max-width: 420px; width: 100%; padding: 2.5rem 2.5rem 2rem 2.5rem; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); background: var(--surface-light); text-align: center;">
+            <h2 style="margin-bottom: 1.5rem; color: var(--primary-light); font-weight: 700; font-size: 2rem;">Join a Classroom</h2>
+            <form method="post" autocomplete="off" style="margin-bottom: 1.5rem;">
+                <label for="join_code" style="font-weight: 600; margin-bottom: 0.5rem; display: block; color: var(--text-primary-light);">Classroom Code</label>
+                <input type="text" id="join_code" name="join_code" maxlength="16" placeholder="Enter class code" required autofocus style="width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-md); border: 1px solid var(--border-light); font-size: 1.1rem; margin-bottom: 1.25rem; background: var(--background-light); color: var(--text-primary-light);">
+                <button type="submit" style="width: 100%; padding: 0.75rem 1rem; border-radius: var(--radius-md); background: var(--primary-light); color: #fff; font-weight: 600; font-size: 1.1rem; border: none; cursor: pointer; transition: background 0.2s;">Join Classroom</button>
+            </form>
+            <div class="info" style="margin-top: 1.5rem; color: var(--text-secondary-light); font-size: 1rem;">
+                Enter the code provided by your teacher to join your class.<br>
+                Need help? <a href="{{ url_for('home') }}">Contact support</a>.
+            </div>
+        </div>
+        <button onclick="toggleTheme()" style="margin-top: 2.5rem; background: none; border: none; color: var(--primary-light); font-size: 1.2rem; cursor: pointer;">Toggle Light/Dark Mode</button>
+    </div>
+    <script>initializeTheme();</script>
+</body>
+</html>
