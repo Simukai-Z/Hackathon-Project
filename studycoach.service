@@ -1,0 +1,20 @@
+[Unit]
+Description=StudyCoach AI-Powered Educational Platform
+After=network.target
+
+[Service]
+Type=simple
+User=codespace
+WorkingDirectory=/workspaces/Hackathon-Project
+Environment=PATH=/workspaces/Hackathon-Project/venv/bin
+ExecStart=/workspaces/Hackathon-Project/venv/bin/python /workspaces/Hackathon-Project/app.py
+Restart=always
+RestartSec=10
+
+# Standard output and error logs
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=studycoach
+
+[Install]
+WantedBy=multi-user.target

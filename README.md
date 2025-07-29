@@ -44,6 +44,39 @@ nano .env
 ./scripts/start_dev.sh
 ```
 
+### Auto-Start Setup
+```bash
+# Setup auto-start scripts
+./scripts/setup_autostart.sh
+
+# Start StudyCoach (runs in background)
+./scripts/autostart.sh
+
+# Check status
+./scripts/status.sh
+
+# Stop StudyCoach
+./scripts/stop.sh
+```
+
+### GitHub Codespaces Auto-Start
+```bash
+# Setup StudyCoach to start automatically when codespace opens
+./scripts/setup_codespace_autostart.sh
+
+# Disable codespace auto-start
+./scripts/disable_codespace_autostart.sh
+```
+
+For production auto-start with systemd:
+```bash
+sudo cp studycoach.service /etc/systemd/system/
+sudo systemctl enable studycoach
+sudo systemctl start studycoach
+```
+
+📋 **See [AUTOSTART_README.md](AUTOSTART_README.md) for detailed auto-start configuration options.**
+
 
 ## 📖 Documentation
 
