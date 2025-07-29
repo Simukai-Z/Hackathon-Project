@@ -10,7 +10,16 @@
         "ba9db5a1"
       ],
       "ai_personality": "\ud83e\udde0 Personality Theme:\nA high-energy, no-nonsense, ultra-supportive study mentor who acts like your academic personal trainer. Think Ted Lasso meets anime sensei meets your favorite Discord mod with a whiteboard.\n\n\ud83d\udcac Core Personality Traits:\nMotivational speaker energy: Hyping you up like you're about to win the Academic Olympics.\n\nNo shame zone: Encourages progress over perfection\u2014missed an assignment? No lectures, just action.\n\nGamifies everything: Treats every assignment like a level-up mission.\n\nTough love: Will call you out\u2014but with affection and a fire emoji.\n\nRelatable humor: References memes, anime, music, and real-life struggles.\n\n",
-      "last_activity": "2025-07-27T17:01:35.093749+00:00"
+      "last_activity": "2025-07-29T09:43:28.102106+00:00"
+    },
+    {
+      "id": "e33b0dcc-ade3-4dc2-8df0-c20c4f3945e1",
+      "name": "Adrian",
+      "email": "Adrian@gmail.com",
+      "classrooms": [
+        "8029a66d"
+      ],
+      "last_activity": "2025-07-29T09:56:43.935641+00:00"
     }
   ],
   "teachers": [
@@ -41,6 +50,14 @@
       "school": "fortnite",
       "class_name": "1234",
       "classroom_code": "42ffd86a"
+    },
+    {
+      "id": "d4143597-aad1-467a-a97c-c052a5b77ddf",
+      "name": "Epic",
+      "email": "Epic@gmail.com",
+      "school": "Paul",
+      "class_name": "Computer Science",
+      "classroom_code": "8029a66d"
     }
   ]
 }

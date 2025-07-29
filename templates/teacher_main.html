@@ -2303,6 +2303,112 @@
 
 {% block extra_js %}
 <script>
+// --- Tab Management Logic ---
+function showTab(tabId) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab
+    document.getElementById(tabId).classList.add('active');
+    document.querySelector(`[onclick="showTab('${tabId}')"]`).classList.add('active');
+}
+
+// --- Assignment Modal Logic ---
+function openTeacherAssignmentModal(assignmentId) {
+    document.getElementById('teacherAssignmentModal' + assignmentId).style.display = 'block';
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+}
+
+function closeTeacherAssignmentModal(assignmentId) {
+    document.getElementById('teacherAssignmentModal' + assignmentId).style.display = 'none';
+    document.body.style.overflow = 'auto'; // Re-enable scrolling
+}
+
+// --- Grading Modal Logic ---
+function toggleModalRegrade(submissionId, assignmentId) {
+    const regradeDiv = document.getElementById('regrade-' + submissionId + '-' + assignmentId);
+    const toggleBtn = regradeDiv.previousElementSibling.querySelector('.btn-outline');
+    
+    if (regradeDiv.style.display === 'none' || regradeDiv.style.display === '') {
+        regradeDiv.style.display = 'block';
+        toggleBtn.textContent = 'Cancel Edit';
+    } else {
+        regradeDiv.style.display = 'none';
+        toggleBtn.textContent = 'Edit Grade';
+    }
+}
+
+function setModalQuickGrade(submissionId, assignmentId, grade) {
+    const gradeInput = document.getElementById('modal-grade-' + submissionId + '-' + assignmentId);
+    if (gradeInput) {
+        gradeInput.value = grade;
+    }
+}
+
+function aiGradeModalSubmission(submissionId, assignmentId) {
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> AI Grading...';
+    btn.disabled = true;
+
+    // Make AJAX request to AI grading endpoint
+    fetch('/api/ai_grade_submission', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            submission_id: submissionId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Fill in the grade and feedback
+            const gradeInput = document.getElementById('modal-grade-' + submissionId + '-' + assignmentId);
+            const feedbackInput = document.getElementById('modal-feedback-' + submissionId + '-' + assignmentId);
+            
+            if (gradeInput) gradeInput.value = data.grade;
+            if (feedbackInput) feedbackInput.value = data.feedback;
+            
+            showToast('AI grading completed!', 'success');
+        } else {
+            showToast('AI grading failed: ' + (data.error || 'Unknown error'), 'error');
+        }
+    })
+    .catch(error => {
+        console.error('AI grading error:', error);
+        showToast('AI grading failed: Network error', 'error');
+    })
+    .finally(() => {
+        // Restore button state
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    });
+}
+
+function copyFeedback(elementId) {
+    const feedbackElement = document.getElementById(elementId);
+    if (!feedbackElement) return;
+    
+    const text = feedbackElement.textContent || feedbackElement.innerText;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Feedback copied!', 'success');
+        }, () => {
+            fallbackCopyTextToClipboard(text);
+        });
+    } else {
+        fallbackCopyTextToClipboard(text);
+    }
+}
+
 // --- Copy Join Link Logic ---
 function copyJoinLink() {
     const urlElem = document.getElementById('joinUrl');

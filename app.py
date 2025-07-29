@@ -1791,7 +1791,9 @@ def ai_grade_assignment():
     if submission_id:
         # Old format - find by submission_id
         for c in classrooms.get('classrooms', []):
-            if c.get('teacher_email') == session['email']:
+            # Check both old format (teacher_email) and new format (teacher_emails)
+            if (('teacher_emails' in c and session['email'] in c['teacher_emails']) or 
+                (c.get('teacher_email') == session['email'])):
                 for a in c.get('assignments', []):
                     for s in a.get('submissions', []):
                         if s.get('id') == submission_id:
@@ -1806,7 +1808,10 @@ def ai_grade_assignment():
     else:
         # New format - find by classroom_id, assignment_id, student_email
         for c in classrooms.get('classrooms', []):
-            if c.get('code') == classroom_id and c.get('teacher_email') == session['email']:
+            # Check both old format (teacher_email) and new format (teacher_emails)
+            if (c.get('code') == classroom_id and 
+                (('teacher_emails' in c and session['email'] in c['teacher_emails']) or 
+                 (c.get('teacher_email') == session['email']))):
                 for a in c.get('assignments', []):
                     if a.get('id') == assignment_id:
                         for s in a.get('submissions', []):
@@ -2159,7 +2164,10 @@ def add_rubric():
         content = rubric_file.read().decode('utf-8')
     import datetime
     classrooms = load_classrooms()
-    classroom = next((c for c in classrooms['classrooms'] if c['code'] == code and c['teacher_email'] == session['email']), None)
+    classroom = next((c for c in classrooms['classrooms'] 
+                     if c['code'] == code and 
+                     (('teacher_emails' in c and session['email'] in c['teacher_emails']) or 
+                      (c.get('teacher_email') == session['email']))), None)
     if classroom:
         rubric_id = str(uuid4())
         classroom.setdefault('rubrics', []).append({
@@ -2189,7 +2197,10 @@ def add_assignment():
         description = desc_file.read().decode('utf-8')
     import datetime
     classrooms = load_classrooms()
-    classroom = next((c for c in classrooms['classrooms'] if c['code'] == code and c['teacher_email'] == session['email']), None)
+    classroom = next((c for c in classrooms['classrooms'] 
+                     if c['code'] == code and 
+                     (('teacher_emails' in c and session['email'] in c['teacher_emails']) or 
+                      (c.get('teacher_email') == session['email']))), None)
     if classroom:
         assignment_id = str(uuid4())
         classroom.setdefault('assignments', []).append({
@@ -2210,7 +2221,10 @@ def edit_assignment(class_code, assignment_id):
     if 'user_type' not in session or session['user_type'] != 'teacher':
         return redirect(url_for('login'))
     classrooms = load_classrooms()
-    classroom = next((c for c in classrooms['classrooms'] if c['code'] == class_code and c['teacher_email'] == session['email']), None)
+    classroom = next((c for c in classrooms['classrooms'] 
+                     if c['code'] == class_code and 
+                     (('teacher_emails' in c and session['email'] in c['teacher_emails']) or 
+                      (c.get('teacher_email') == session['email']))), None)
     if not classroom:
         flash('Classroom not found.')
         return redirect(url_for('teacher_main'))
@@ -2398,8 +2412,13 @@ def grading_page():
     classrooms = load_classrooms()
     users = load_users()
     
-    # Get teacher's classrooms
-    teacher_classrooms = [c for c in classrooms.get('classrooms', []) if c['teacher_email'] == session['email']]
+    # Get teacher's classrooms (handle both old and new format)
+    teacher_classrooms = []
+    for c in classrooms.get('classrooms', []):
+        # Check both old format (teacher_email) and new format (teacher_emails)
+        if (('teacher_emails' in c and session['email'] in c['teacher_emails']) or 
+            (c.get('teacher_email') == session['email'])):
+            teacher_classrooms.append(c)
     
     # Collect all submissions with student info
     all_submissions = []
@@ -2534,7 +2553,10 @@ def view_submission(classroom_id, assignment_id, student_email):
     classroom = None
     
     for c in classrooms.get('classrooms', []):
-        if c.get('code') == classroom_id and c.get('teacher_email') == session['email']:
+        # Check both old format (teacher_email) and new format (teacher_emails)
+        if (c.get('code') == classroom_id and 
+            (('teacher_emails' in c and session['email'] in c['teacher_emails']) or 
+             (c.get('teacher_email') == session['email']))):
             for a in c.get('assignments', []):
                 if a.get('id') == assignment_id:
                     for s in a.get('submissions', []):
